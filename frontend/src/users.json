@@ -1,0 +1,20 @@
+[
+  {
+    "username": "admin",
+    "password": "123",
+    "role": "admin",
+    "name": "Firma Mamă"
+  },
+  {
+    "username": "colab",
+    "password": "456",
+    "role": "collaborator",
+    "name": "Compania Acme"
+  },
+  {
+    "username": "paznic",
+    "password": "789",
+    "role": "guard",
+    "name": "Ion Popescu"
+  }
+]
