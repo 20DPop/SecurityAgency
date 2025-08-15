@@ -13,6 +13,9 @@ function Dashboard({ user, onLogout }) {
   let content;
 
   switch (user.role) {
+    case 'administrator':
+      content = <AdminDashboard/>
+      break;
     case 'admin':
       content = <AdminDashboard />;
       break;

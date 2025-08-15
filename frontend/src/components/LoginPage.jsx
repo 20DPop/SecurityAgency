@@ -1,31 +1,37 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom'; // Importă useNavigate
 import './LoginPage.css';
+import axios from 'axios';
 import users from '../users.json'; // Importă direct fișierul JSON
 
 // LoginPage primește o funcție onLogin ca prop
 export default function LoginPage({ onLogin }) {
-  const [username, setUsername] = useState('');
+  const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const navigate = useNavigate(); // Hook pentru a redirecționa
 
-  const handleLogin = (event) => {
-    event.preventDefault(); // Oprește reîncărcarea paginii
+    const handleLogin = async (event) => {
+    event.preventDefault();
+    try {
+    
+      const config = {
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      };
 
-    // Caută utilizatorul în lista importată
-    const foundUser = users.find(
-      (user) => user.username === username && user.password === password
-    );
+      const { data } = await axios.post(
+        'http://localhost:3000/api/auth/login', 
+        { email, password }, 
+        config
+      );
 
-    if (foundUser) {
-      // Dacă utilizatorul este găsit, apelează funcția onLogin din App.jsx
-      onLogin(foundUser);
-      // Și redirecționează utilizatorul către pagina principală
+      onLogin(data); 
       navigate('/');
-    } else {
-      // Dacă nu, afișează o eroare
-      setError('Username sau parolă incorectă!');
+
+    } catch (err) {
+      setError(err.response?.data?.message || 'A apărut o eroare. Vă rugăm să încercați din nou.');
     }
   };
 
@@ -35,14 +41,14 @@ export default function LoginPage({ onLogin }) {
         <h2>Log In</h2>
         <form onSubmit={handleLogin}>
           <div className="form-group">
-            <label htmlFor="usernameOrEmail">Username</label>
+            <label htmlFor="email">Email</label>
             <input
-              type="text"
-              id="usernameOrEmail"
-              name="usernameOrEmail"
-              placeholder="Introdu username"
-              value={username}
-              onChange={(e) => setUsername(e.target.value)}
+              type="email"
+              id="email"
+              name="email"
+              placeholder="Introdu email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
             />
           </div>
           <div className="form-group">
