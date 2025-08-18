@@ -23,8 +23,26 @@ const importData = async () => {
       password: 'IsbiBenob1880<<!', // Alege o parolă sigură
       role: 'administrator',
       nume: 'Pop',
-      prenume: 'Daniel',
+      prenume: 'Denisa',
       telefon: '0747553586'
+    };
+
+    const Beneficiar = {
+      email: 'denisaghiriti7@gmail.com',
+      password: 'IsBeneficiar123', // Alege o parolă sigură
+      role: 'beneficiar',
+      nume: 'Ghiriti',
+      prenume: 'Denisa',
+      telefon: '0724034031'
+    };
+
+    const Paznic = {
+      email: 'panicexemplu@gmail.com',
+      password: 'IsPaznic::1', // Alege o parolă sigură
+      role: 'paznic',
+      nume: 'Pop',
+      prenume: 'Ioan',
+      telefon: '0744444444'
     };
 
     await User.create(superAdmin);
@@ -32,6 +50,20 @@ const importData = async () => {
     console.log('-----------------------------------');
     console.log('Email: superadmin@example.com');
     console.log('Parola: supersecretpassword');
+    console.log('-----------------------------------');
+
+    await User.create(Beneficiar);
+    console.log('Beneficiar a fost creat cu succes!');
+    console.log('-----------------------------------');
+    console.log(`Email: ${Beneficiar.email}`);
+    console.log(`Parola: ${Beneficiar.password}`);
+    console.log('-----------------------------------');
+
+    await User.create(Paznic);
+    console.log('Paznicul a fost creat cu succes!');
+    console.log('-----------------------------------');
+    console.log(`Email: ${Paznic.email}`);
+    console.log(`Parola: ${Paznic.password}`);
     console.log('-----------------------------------');
 
     process.exit();

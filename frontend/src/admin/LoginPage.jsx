@@ -2,7 +2,6 @@ import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom'; // Importă useNavigate
 import './LoginPage.css';
 import axios from 'axios';
-import users from '../users.json'; // Importă direct fișierul JSON
 
 // LoginPage primește o funcție onLogin ca prop
 export default function LoginPage({ onLogin }) {
