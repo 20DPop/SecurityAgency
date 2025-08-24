@@ -56,6 +56,10 @@ const createAdminAccount = async (req, res) => {
     res.status(500).json({ message: `Eroare de server: ${error.message}` });
   }
 };
+const getUserProfile = (req, res) => {
+  res.status(200).json(req.user);
+};
+
 
 module.exports = { getUserProfile, createUser, getUsersByRole, createAdminAccount };
 
