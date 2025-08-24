@@ -1,0 +1,68 @@
+.paznic-dashboard {
+  background-color: #adbbdd; /* fundal crem */
+  min-height: 100vh;
+  font-family: Arial, sans-serif;
+  color: #0d1b2a;
+}
+
+.paznic-header {
+  background-color: #0d1b2a;
+  padding: 15px 30px;
+  color: white;
+  font-weight: bold;
+  font-size: 20px;
+}
+
+.page-title {
+  font-size: 36px;
+  font-weight: bold;
+  margin: 30px;
+}
+
+.cards-container {
+  /* Am schimbat din 'grid' în 'flex' */
+  display: flex;
+  
+  /* Această proprietate centrează elementele pe orizontală */
+  justify-content: center; 
+  
+  /* Am scos grid-template-columns, nu mai este necesar */
+  /* grid-template-columns: repeat(4, 1fr); */
+
+  gap: 20px;
+  padding: 0 30px 30px 30px;
+}
+
+.card {
+  background-color: white;
+  border-radius: 10px;
+  padding: 30px 15px;
+  text-align: center;
+  font-size: 16px;
+  box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+  cursor: pointer;
+  transition: all 0.2s ease-in-out;
+  
+  /* ADAUGĂ ACEASTĂ LINIE */
+  width: 250px; /* Poți ajusta această valoare după preferințe */
+}
+
+.card:hover {
+  background-color: #ffe4b5;
+  transform: translateY(-3px);
+}
+
+.card p {
+  margin-top: 10px;
+  font-weight: bold;
+}
+
+.link-card {
+  text-decoration: none; /* scoate sublinierea */
+  color: inherit; /* folosește culoarea textului din card */
+}
+
+.link-card:hover {
+  text-decoration: none; /* asigură că nu apare sublinierea la hover */
+  color: inherit;
+}

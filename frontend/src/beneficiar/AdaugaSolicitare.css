@@ -1,0 +1,59 @@
+.adauga-solicitare-container {
+  max-width: 600px;
+  margin: auto;
+  padding: 40px 20px;
+  text-align: center;
+}
+
+.adauga-solicitare-container h1 {
+  margin-bottom: 30px;
+}
+
+.adauga-solicitare-form {
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+}
+
+.adauga-solicitare-form input,
+.adauga-solicitare-form textarea {
+  width: 100%;
+  padding: 12px;
+  border-radius: 8px;
+  border: 1px solid #ccc;
+  font-size: 1rem;
+  box-sizing: border-box;
+}
+
+.adauga-solicitare-form textarea {
+  min-height: 150px;
+  resize: vertical;
+}
+
+.form-buttons {
+  display: flex;
+  justify-content: space-between;
+  gap: 15px;
+  margin-top: 20px;
+}
+
+.form-buttons button {
+  flex-grow: 1;
+  padding: 12px 20px;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 1rem;
+  font-weight: bold;
+  transition: background-color 0.2s ease-in-out;
+}
+
+.back-btn-form {
+  background-color: #f0f0f0;
+  color: #333;
+}
+
+.submit-btn-form {
+  background-color: #4caf50;
+  color: white;
+}
