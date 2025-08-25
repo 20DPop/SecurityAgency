@@ -1,0 +1,73 @@
+.buttons {
+  display: flex;
+  justify-content: space-between; /* Înapoi la stânga, Salvează la dreapta */
+  margin-top: 20px;
+}
+
+.adauga-angajat {
+  padding: 20px;
+  max-width: 500px;
+  margin: auto;
+  font-family: Arial, sans-serif;
+}
+
+h2 {
+  text-align: center;
+  margin-bottom: 20px;
+}
+
+.form-container {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.form-group {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+label {
+  width: 120px;        /* lățime fixă pentru aliniere */
+  font-weight: bold;
+}
+
+.form-input {
+  flex: 1;             /* input-ul ocupă restul spațiului */
+  height: 35px;
+  padding: 5px 10px;
+  border: 1px solid #333;
+  border-radius: 5px;
+  font-size: 16px;
+  box-sizing: border-box;
+}
+
+.save-btn {
+  padding: 8px 16px;      /* micșorat */
+  width: auto;            /* nu mai ocupă toată lățimea */
+  background-color: #2d89ef;
+  color: white;
+  border: none;
+  border-radius: 5px;
+  font-size: 15px;
+  cursor: pointer;
+}
+
+.save-btn:hover {
+  background-color: #1d5bbf;
+}
+
+.back-btn {
+  padding: 8px 16px;
+  background-color: #ccc;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 15px;
+  transition: background 0.3s;
+}
+
+.back-btn:hover {
+  background-color: #999;
+}

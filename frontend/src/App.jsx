@@ -17,6 +17,8 @@ import AdaugaSolicitare from './beneficiar/AdaugaSolicitare';
 import PaznicDashboard from './paznic/PaznicDashboard';
 import LoginPageP from './paznic/LoginPageP'; 
 import AdministratorDashboard from './administrator/AdministratorDashboard'; 
+import AdaugaAngajat from "./admin/AdaugaAngajat";
+import AdaugaFirma from "./admin/AdaugaFirma";
 
 function Dashboard({ user, onLogout }) {
   let content;
@@ -124,6 +126,8 @@ export default function App() {
           path="/solicitari/:id" 
           element={<SolicitariDetalii solicitari={solicitari} setSolicitari={setSolicitari} />} 
         />
+        <Route path="/adauga-angajat" element={<AdaugaAngajat />} />   {/* ✅ mutat în interiorul Routes */}
+        <Route path="/adauga-firma" element={<AdaugaFirma />} />
         {/* --- BENEFICIAR --- */}
         <Route 
           path="/beneficiar" 
@@ -192,6 +196,7 @@ export default function App() {
         }
       />
       </Routes>
+      
     </Router>
   );
 }
