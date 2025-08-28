@@ -6,26 +6,27 @@ import LoginPage from './admin/LoginPage';
 import AdminDashboard from './admin/AdminDashboard';
 import Sesizari from './admin/Sesizari';
 import SesizareDetalii from './admin/SesizareDetalii';
-import Solicitari  from './admin/Solicitari';
+import Solicitari from './admin/Solicitari';
 import SolicitariDetalii from './admin/SolicitariDatalii';
 import BeneficiarDashboard from './beneficiar/BeneficiarDashboard';
 import LoginPageB from './beneficiar/LoginPageB';
 import SesizariB from './beneficiar/SesizariB';
 import AdaugaSesizare from './beneficiar/AdaugaSesizare';
-import SolicitariB from './beneficiar/SolicitariB'; 
-import AdaugaSolicitare from './beneficiar/AdaugaSolicitare'; 
+import SolicitariB from './beneficiar/SolicitariB';
+import AdaugaSolicitare from './beneficiar/AdaugaSolicitare';
 import PaznicDashboard from './paznic/PaznicDashboard';
-import LoginPageP from './paznic/LoginPageP'; 
-import AdministratorDashboard from './administrator/AdministratorDashboard'; 
+import LoginPageP from './paznic/LoginPageP';
+import AdministratorDashboard from './administrator/AdministratorDashboard';
 import AdaugaAngajat from "./admin/AdaugaAngajat";
 import AdaugaFirma from "./admin/AdaugaFirma";
+import PontarePage from './paznic/PontarePage';
 
-function Dashboard({ user, onLogout }) {
+function Dashboard({ user }) {
   let content;
 
   switch (user.role) {
     case 'administrator':
-      content = <AdminDashboard/>, <BeneficiarDashboard />,  <PaznicDashboard />;
+      content = <AdministratorDashboard />;
       break;
     case 'admin':
       content = <AdminDashboard />;
@@ -37,17 +38,14 @@ function Dashboard({ user, onLogout }) {
       content = <PaznicDashboard />;
       break;
     default:
-      content = <p style={{ padding: '50px', textAlign: 'center' }}>
-        Rol necunoscut.
-      </p>;
+      content = (
+        <p style={{ padding: '50px', textAlign: 'center' }}>
+          Rol necunoscut.
+        </p>
+      );
   }
 
-  return (
-    <div>
-      {content}
-
-    </div>
-  );
+  return <div>{content}</div>;
 }
 
 export default function App() {
@@ -65,7 +63,7 @@ export default function App() {
   });
   const [solicitari, setSolicitari] = useState({
     prelucrata: [
-      { id: 1, titlu: "Sesizare exemplu", data: "14/08/2025", firma: "Firma A", descriere: "O defecțiune a fost raportată la sistemul de supraveghere video de la poarta de nord.", pasi: "S-a contactat firma de mentenanță.", dataFinalizare: null }
+      { id: 1, titlu: "Solicitare exemplu", data: "14/08/2025", firma: "Firma A", descriere: "O defecțiune a fost raportată la sistemul de supraveghere video de la poarta de nord.", pasi: "S-a contactat firma de mentenanță.", dataFinalizare: null }
     ],
     inCurs: [
       { id: 2, titlu: "Incident minor", data: "13/08/2025", firma: "Firma B", descriere: "Un vizitator neînregistrat a încercat să intre în clădire.", pasi: "Agentul de pază a reținut persoana și a anunțat poliția.", dataFinalizare: null }
@@ -78,7 +76,6 @@ export default function App() {
   const [sesizariBeneficiar, setSesizariBeneficiar] = useState([]);
   const [solicitariBeneficiar, setSolicitariBeneficiar] = useState([]);
 
-
   useEffect(() => {
     const savedUser = localStorage.getItem("currentUser");
     if (savedUser) {
@@ -88,12 +85,12 @@ export default function App() {
 
   const handleLogin = (user) => {
     setCurrentUser(user);
-    localStorage.setItem("currentUser", JSON.stringify(user)); 
+    localStorage.setItem("currentUser", JSON.stringify(user));
   };
 
   const handleLogout = () => {
     setCurrentUser(null);
-    localStorage.removeItem("currentUser"); 
+    localStorage.removeItem("currentUser");
   };
 
   return (
@@ -107,27 +104,43 @@ export default function App() {
         <Route path="/login" element={<LoginPage onLogin={handleLogin} />} />
         <Route path="/loginB" element={<LoginPageB onLogin={handleLogin} />} />
         <Route path="/loginP" element={<LoginPageP onLogin={handleLogin} />} />
-        {/* Pasăm starea și funcția de setare către componente */}
+
+        {/* ✅ Ruta pentru Pontare */}
+        <Route 
+          path="/pontare" 
+          element={
+            currentUser && currentUser.role === "paznic" 
+              ? <PontarePage /> 
+              : <p style={{ padding: "50px", textAlign: "center" }}>
+                  Acces interzis.
+                </p>
+          } 
+        />
+
+        {/* --- SESIZĂRI --- */}
         <Route 
           path="/sesizari" 
           element={<Sesizari sesizari={sesizari} setSesizari={setSesizari} />} 
         />
-        {/* Adăugăm noua rută pentru detalii */}
         <Route 
           path="/sesizare/:id" 
           element={<SesizareDetalii sesizari={sesizari} setSesizari={setSesizari} />} 
         />
+
+        {/* --- SOLICITĂRI --- */}
         <Route 
           path="/solicitari" 
           element={<Solicitari solicitari={solicitari} setSolicitari={setSolicitari} />} 
         />
-        {/* Adăugăm noua rută pentru detalii */}
         <Route 
           path="/solicitari/:id" 
           element={<SolicitariDetalii solicitari={solicitari} setSolicitari={setSolicitari} />} 
         />
-        <Route path="/adauga-angajat" element={<AdaugaAngajat />} />   {/* ✅ mutat în interiorul Routes */}
+
+        {/* --- ADMIN --- */}
+        <Route path="/adauga-angajat" element={<AdaugaAngajat />} />
         <Route path="/adauga-firma" element={<AdaugaFirma />} />
+
         {/* --- BENEFICIAR --- */}
         <Route 
           path="/beneficiar" 
@@ -141,62 +154,58 @@ export default function App() {
         />
 
         <Route
-        path="/sesizariB"
-        element={
-          currentUser && currentUser.role === "beneficiar"
-          
-            ? <SesizariB 
-                sesizari={sesizariBeneficiar} 
-                setSesizari={setSesizariBeneficiar} 
-                currentUser={currentUser} 
-              />
-            : <p style={{ padding: "50px", textAlign: "center" }}>
-                Acces interzis.
-              </p>
-        }
-      />
-      <Route
+          path="/sesizariB"
+          element={
+            currentUser && currentUser.role === "beneficiar"
+              ? <SesizariB 
+                  sesizari={sesizariBeneficiar} 
+                  setSesizari={setSesizariBeneficiar} 
+                  currentUser={currentUser} 
+                />
+              : <p style={{ padding: "50px", textAlign: "center" }}>
+                  Acces interzis.
+                </p>
+          }
+        />
+        <Route
           path="/adauga-sesizare"
           element={
             currentUser && currentUser.role === "beneficiar"
-            ? <AdaugaSesizare 
-                setSesizari={setSesizariBeneficiar} 
-                currentUser={currentUser} 
-              />
-            : <p style={{ padding: "50px", textAlign: "center" }}>
-                Acces interzis.
-              </p>
+              ? <AdaugaSesizare 
+                  setSesizari={setSesizariBeneficiar} 
+                  currentUser={currentUser} 
+                />
+              : <p style={{ padding: "50px", textAlign: "center" }}>
+                  Acces interzis.
+                </p>
           }
         />
-        {/* --- ADAUGĂ NOILE RUTE PENTRU SOLICITĂRI BENEFICIAR --- */}
-        <Route
-        path="/solicitariB"
-        element={
-          currentUser && currentUser.role === "beneficiar"
-            // MODIFICAT: Folosim SolicitariB și trimitem doar prop-ul necesar
-            ? <SolicitariB solicitari={solicitariBeneficiar} /> 
-            : <p style={{ padding: "50px", textAlign: "center" }}>
-                Acces interzis.
-              </p>
-        }
-      />
 
-      {/* Ruta pentru adăugarea unei solicitări (rămâne la fel) */}
-      <Route
-        path="/adauga-solicitare"
-        element={
-          currentUser && currentUser.role === "beneficiar"
-          ? <AdaugaSolicitare 
-              setSolicitari={setSolicitariBeneficiar} 
-              currentUser={currentUser} 
-            />
-          : <p style={{ padding: "50px", textAlign: "center" }}>
-              Acces interzis.
-            </p>
-        }
-      />
+        {/* --- SOLICITĂRI BENEFICIAR --- */}
+        <Route
+          path="/solicitariB"
+          element={
+            currentUser && currentUser.role === "beneficiar"
+              ? <SolicitariB solicitari={solicitariBeneficiar} /> 
+              : <p style={{ padding: "50px", textAlign: "center" }}>
+                  Acces interzis.
+                </p>
+          }
+        />
+        <Route
+          path="/adauga-solicitare"
+          element={
+            currentUser && currentUser.role === "beneficiar"
+              ? <AdaugaSolicitare 
+                  setSolicitari={setSolicitariBeneficiar} 
+                  currentUser={currentUser} 
+                />
+              : <p style={{ padding: "50px", textAlign: "center" }}>
+                  Acces interzis.
+                </p>
+          }
+        />
       </Routes>
-      
     </Router>
   );
 }
