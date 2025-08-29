@@ -1,127 +1,117 @@
-// // Cale: backend/utils/seeder.js (Versiune FINALĂ, cu TOȚI userii tăi și toate 9 colecțiile)
+// Cale: backend/utils/seeder.js (Versiune FINALĂ și SIGURĂ pentru toate entitățile)
 
-// const mongoose = require('mongoose');
-// const dotenv = require('dotenv');
-// const path = require('path');
-// const connectDB = require('../src/config/database');
+const mongoose = require('mongoose');
+const dotenv = require('dotenv');
+const path = require('path');
+const connectDB = require('../src/config/database');
 
-// // --- PASUL 1: Importăm TOATE 9 modelele ---
-// const User = require('../src/models/user.model');
-// const Post = require('../src/models/post.model');
-// const Pontaj = require('../src/models/pontaj.model');
-// const Sesizare = require('../src/models/sesizare.model');
-// const Incident = require('../src/models/incident.model');
-// const JurnalConectari = require('../src/models/jurnalConectari.model');
-// const JurnalStatusSesizari = require('../src/models/jurnalStatusSesizari.model');
-// const AtasamentIncident = require('../src/models/atasamentIncident.model');
-// const Raport = require('../src/models/raport.model');
+// Importăm TOATE modelele
+const User = require('../src/models/user.model');
+const Post = require('../src/models/post.model');
+const Pontaj = require('../src/models/pontaj.model');
+const ProcesVerbal = require('../src/models/procesVerbal.model');
+// ... poți adăuga și celelalte modele dacă vrei să le populezi
 
-// // --- Funcția de a șterge toate datele vechi ---
-// const destroyData = async () => {
-//   try {
-//     await Raport.deleteMany();
-//     await AtasamentIncident.deleteMany();
-//     await JurnalStatusSesizari.deleteMany();
-//     await JurnalConectari.deleteMany();
-//     await Incident.deleteMany();
-//     await Pontaj.deleteMany();
-//     await Sesizare.deleteMany();
-//     await Post.deleteMany();
-//     await User.deleteMany();
-//     console.log('✅ Datele vechi au fost șterse!');
-//   } catch (error) {
-//     console.error(`❌ Eroare la ștergerea datelor: ${error.message}`);
-//     process.exit(1);
-//   }
-// };
+// --- Funcție "inteligentă" de creare, care NU șterge ---
+const createIfNotExists = async (model, query, data) => {
+  try {
+    const doc = await model.findOne(query);
+    if (!doc) {
+      const newDoc = await model.create(data);
+      console.log(`✅ Creat: Un nou document în colecția '${model.modelName}'`);
+      return newDoc;
+    } else {
+      console.log(`🟡 Ignorat: Documentul care se potrivește cu ${JSON.stringify(query)} există deja în '${model.modelName}'.`);
+      return doc;
+    }
+  } catch (error) {
+    if (error.code === 11000) { // Gestionează eroarea de duplicat dacă apare între findOne și create
+      console.log(`🟡 Ignorat: Documentul care se potrivește cu ${JSON.stringify(query)} există deja în '${model.modelName}'.`);
+      return model.findOne(query);
+    }
+    throw error;
+  }
+};
 
-// // --- Funcția principală de import ---
-// const importData = async () => {
-//   try {
-//     // --- PASUL 2: Creăm TOȚI utilizatorii definiți de tine, plus un Admin ---
-    
-//     // 2a. Utilizatorul tău ADMINISTRATOR
-//     const administrator = await User.create({
-//       email: '16dpop@gmail.com',
-//       password: 'IsbiBenob1880<<!',
-//       role: 'administrator',
-//       nume: 'Pop',
-//       prenume: 'Denisa',
-//       telefon: '0747553586',
-    
-//     });
-    
+// --- Funcția de a șterge DOAR datele de test, NU și userii ---
+const destroyTestData = async () => {
+  try {
+    await ProcesVerbal.deleteMany();
+    await Pontaj.deleteMany();
+    // await Sesizare.deleteMany(); // Poți decomenta dacă vrei să ștergi și sesizările
+    await Post.deleteMany();
+    console.log('✅ Datele de test vechi (Post, Pontaj, etc.) au fost șterse!');
+  } catch (error) {
+    console.error(`❌ Eroare la ștergerea datelor de test: ${error.message}`);
+    process.exit(1);
+  }
+};
 
-//     // 2b. Un ADMIN (Agenție de Pază) necesar pentru a lega celelalte conturi
-//     const adminAgentie = await User.create({
-//       email: 'admin@agentie.com',
-//       password: 'password123',
-//       role: 'admin',
-//       nume: 'Admin',
-//       prenume: 'Agentie',
-//       profile: { nume_firma: 'Security Agency SRL' },
-//     });
+// --- Funcția principală de import ---
+const importTestData = async () => {
+  try {
+    console.log('--- Se adaugă date de test (mod sigur) ---');
     
-//     // 2c. Utilizatorul tău BENEFICIAR, legat de Adminul creat mai sus
-//     const beneficiarClient = await User.create({
-//       email: 'denisaghiriti7@gmail.com',
-//       password: 'IsBeneficiar123',
-//       role: 'beneficiar',
-//       nume: 'Ghiriti',
-//       prenume: 'Denisa',
-//       telefon: '0724034031',
-//       creatDeAdminId: adminAgentie._id, // <-- Legătura logică
-//       profile: { nume_companie: 'Client Test SRL' }
-//     });
-    
-//     // 2d. Utilizatorul tău PAZNIC, legat de Adminul creat mai sus
-//     const paznicAngajat = await User.create({
-//       email: 'panicexemplu@gmail.com',
-//       password: 'IsPaznic::1',
-//       role: 'paznic',
-//       nume: 'Pop',
-//       prenume: 'Ioan',
-//       telefon: '0744444444',
-//       creatDeAdminId: adminAgentie._id, // <-- Legătura logică
-//       profile: { nr_legitimatie: 'PZ-DP-001' }
-//     });
-    
-//     console.log('✅ Toți utilizatorii au fost creați!');
+    // --- PASUL 1: Căutăm utilizatorii ESENȚIALI ---
+    const adminAgentie = await User.findOne({ email: 'admin@agentie.com' });
+    const beneficiarClient = await User.findOne({ email: 'denisaghiriti7@gmail.com' });
+    const paznicAngajat = await User.findOne({ email: 'panicexemplu@gmail.com' });
 
-//     // --- PASUL 3: Creăm restul datelor de test, legate de userii de mai sus ---
+    if (!adminAgentie || !beneficiarClient || !paznicAngajat) {
+      console.error('❌ EROARE FATALĂ: Unul dintre utilizatorii de bază nu a fost găsit. Rulează seeder-ul original pentru useri dacă e nevoie.');
+      process.exit(1);
+    }
+    console.log('✅ Utilizatorii de bază au fost găsiți.');
     
-//     const postPrincipal = await Post.create({ nume_post: 'Punct de lucru principal - Client Test SRL', adresa_post: 'Str. Exemplului Nr. 123', qr_code_identifier: 'qr-client-test-principal-xyz', beneficiaryId: beneficiarClient._id, createdByAdminId: adminAgentie._id });
-//     const sesizareInitiala = await Sesizare.create({ titlu: 'Verificare sistem de alarmă', descriere: 'Aș dori o verificare de rutină a sistemului de alarmă.', status: 'prelucrata', createdByBeneficiaryId: beneficiarClient._id, assignedAdminId: adminAgentie._id });
-//     await Pontaj.create({ paznicId: paznicAngajat._id, postId: postPrincipal._id, ora_intrare: new Date(), ora_iesire: null });
-//     const incidentInitial = await Incident.create({ titlu: 'Alarmă falsă de incendiu', descriere: 'Senzorul de fum a fost activat de abur.', paznicId: paznicAngajat._id, postId: postPrincipal._id });
-//     await JurnalConectari.create({ userId: administrator._id, adresaIp: '127.0.0.1', agentUtilizator: 'SeederScript/1.0', status: 'succes' });
-//     await JurnalStatusSesizari.create({ sesizareId: sesizareInitiala._id, statusVechi: 'prelucrata', statusNou: 'inCurs', modificatDe: adminAgentie._id });
-//     await AtasamentIncident.create({ incidentId: incidentInitial._id, numeFisier: 'raport_senzor.pdf', caleStocare: '/uploads/raport_senzor_123.pdf', tipFisier: 'application/pdf', incarcatDe: paznicAngajat._id });
+    // --- PASUL 2: Creăm un Post doar dacă nu există ---
+    const postPrincipal = await createIfNotExists(Post, { qr_code_identifier: 'qr-client-test-principal-xyz' }, {
+      nume_post: 'Punct de lucru principal - Client Test SRL',
+      adresa_post: 'Str. Exemplului Nr. 123',
+      qr_code_identifier: 'qr-client-test-principal-xyz',
+      beneficiaryId: beneficiarClient._id,
+      createdByAdminId: adminAgentie._id,
+      assignedPazniciIds: [paznicAngajat._id]
+    });
+
+    // --- PASUL 3: Creăm un Pontaj doar dacă nu există ---
+    const pontajIncheiat = await createIfNotExists(Pontaj, { paznicId: paznicAngajat._id, ora_intrare: new Date('2024-05-16T08:00:00Z') }, {
+      paznicId: paznicAngajat._id,
+      postId: postPrincipal._id,
+      ora_intrare: new Date('2024-05-16T08:00:00Z'),
+      ora_iesire: new Date('2024-05-16T16:00:00Z')
+    });
     
-//     const dataExpirareRaport = new Date();
-//     dataExpirareRaport.setMonth(dataExpirareRaport.getMonth() + 3);
-//     await Raport.create({ tipRaport: 'pontaj', generatDe: adminAgentie._id, parametrii: { startDate: '2024-04-01', endDate: '2024-04-30' }, caleStocare: '/arhiva/raport_pontaj_aprilie.pdf', dataExpirare: dataExpirareRaport });
-
-//     console.log('✅ Toate celelalte date de test au fost create și legate!');
-//     console.log('\n--- BAZA DE DATE A FOST POPULATĂ CU SUCCES! ---');
+    // --- PASUL 4: Creăm un Proces Verbal doar dacă nu există unul pentru acest pontaj ---
+    await createIfNotExists(ProcesVerbal, { pontajId: pontajIncheiat._id }, {
+      pontajId: pontajIncheiat._id,
+      paznicId: paznicAngajat._id,
+      postId: postPrincipal._id,
+      // ... restul datelor pentru proces verbal
+      reprezentant_beneficiar: 'Manager Magazin',
+      ora_declansare_alarma: new Date('2024-05-16T10:00:00Z'),
+      ora_prezentare_echipaj: new Date('2024-05-16T10:05:00Z'),
+      ora_incheiere_misiune: new Date('2024-05-16T10:20:00Z'),
+      caleStocarePDF: '/uploads/procese-verbale/pv_exemplu_seeder.pdf'
+    });
     
-//   } catch (error) {
-//     console.error(`❌ Eroare la importul datelor: ${error.message}`);
-//   }
-// };
+    console.log('\n--- Scriptul a terminat de adăugat datele de test. ---');
+    
+  } catch (error) {
+    console.error(`❌ Eroare la importul datelor de test: ${error.message}`);
+  }
+};
 
-// // --- Logica de rulare ---
-// const run = async () => {
-//     dotenv.config({ path: path.resolve(__dirname, '../.env') });
-//     await connectDB();
-//     if (process.argv[2] === '--destroy') {
-//         await destroyData();
-//     } else {
-//         await destroyData();
-//         await importData();
-//     }
-//     await mongoose.connection.close();
-//     process.exit();
-// };
+// --- Logica de rulare ---
+const run = async () => {
+    dotenv.config({ path: path.resolve(__dirname, '../.env') });
+    await connectDB();
+    if (process.argv[2] === '--destroy') {
+        await destroyTestData();
+    } else {
+        await importTestData();
+    }
+    await mongoose.connection.close();
+    process.exit();
+};
 
-// run();
+run();

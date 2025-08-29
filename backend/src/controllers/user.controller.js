@@ -48,7 +48,9 @@ const createAdminAccount = async (req, res) => {
       role: 'admin',
       nume,
       prenume,
+      telefon,
       profile,
+      creatDeAdminId: req.user._id,
     });
 
     res.status(201).json({ _id: adminUser._id, email: adminUser.email, role: adminUser.role });
