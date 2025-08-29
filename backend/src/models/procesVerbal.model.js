@@ -17,8 +17,6 @@ const procesVerbalSchema = new mongoose.Schema({
   pontajId: { 
     type: mongoose.Schema.Types.ObjectId, 
     ref: 'Pontaj', 
-    required: true, 
-    unique: true // Un singur proces verbal per pontaj/tură
   },
   paznicId: { 
     type: mongoose.Schema.Types.ObjectId, 

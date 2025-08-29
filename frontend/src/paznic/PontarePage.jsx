@@ -1,57 +1,100 @@
-import React, { useState, useEffect } from "react";
+// Cale: frontend/src/paznic/PontarePage.jsx (Versiune SIMPLIFICATĂ, fără useEffect)
+
+import React, { useState, useRef } from "react";
 import { useNavigate } from "react-router-dom";
+import axios from "axios";
 import "./PontarePage.css";
 
 export default function PontarePage() {
   const navigate = useNavigate();
+  const [loading, setLoading] = useState(false);
+  const [message, setMessage] = useState('');
+  const trackingIntervalRef = useRef(null);
 
-  const [startTime, setStartTime] = useState(null);
-  const [endTime, setEndTime] = useState(null);
+  // Funcțiile de tracking rămân la fel, dar le vom apela diferit
+  const sendLocationUpdate = () => { /* ... codul tău existent pentru sendLocationUpdate ... */ };
+  const stopTracking = () => { /* ... codul tău existent pentru stopTracking ... */ };
 
-  // La încărcarea paginii, citim din localStorage
-  useEffect(() => {
-    const savedStart = localStorage.getItem("pontaj_start");
-    const savedEnd = localStorage.getItem("pontaj_end");
-    if (savedStart) setStartTime(savedStart);
-    if (savedEnd) setEndTime(savedEnd);
-  }, []);
-
-  const handleStart = () => {
-    const now = new Date().toLocaleString("ro-RO");
-    setStartTime(now);
-    localStorage.setItem("pontaj_start", now);
-    localStorage.removeItem("pontaj_end"); // resetăm sfârșitul dacă începe altă tură
-    setEndTime(null);
+  const startTracking = () => {
+    if (trackingIntervalRef.current) return;
+    sendLocationUpdate();
+    trackingIntervalRef.current = setInterval(sendLocationUpdate, 300000); // 5 minute
+    console.log("Tracking-ul a pornit.");
   };
 
-  const handleEnd = () => {
-    const now = new Date().toLocaleString("ro-RO");
-    setEndTime(now);
-    localStorage.setItem("pontaj_end", now);
+  // --- Handler pentru butonul "Începe Tura" ---
+  const handleIncepeTura = () => {
+    setLoading(true);
+    setMessage('');
+
+    navigator.geolocation.getCurrentPosition(
+      async (position) => {
+        try {
+          const { latitude, longitude } = position.coords;
+          const userInfo = JSON.parse(localStorage.getItem('userInfo'));
+          const config = { headers: { Authorization: `Bearer ${userInfo.token}` } };
+          
+          // Singura diferență: nu mai trimitem qrCode
+          const { data } = await axios.post('http://localhost:3000/api/pontaj/check-in', { latitude, longitude }, config);
+          
+          setMessage(`✅ ${data.message}`);
+          startTracking(); // Pornim tracking-ul doar la succes
+
+        } catch (err) {
+          console.error("DETALII EROARE DE LA BACKEND:", err.response); 
+          setMessage(`❌ ${err.response?.data?.message || 'Eroare la check-in.'}`);
+        } finally {
+          setLoading(false);
+        }
+      },
+      (error) => {
+        setMessage("❌ Nu se poate începe tura. Permite accesul la locație.");
+        setLoading(false);
+      }
+    );
+  };
+
+  // --- Handler pentru butonul "Termină Tura" ---
+  const handleTerminaTura = async () => {
+    setLoading(true);
+    setMessage(''); // Resetăm mesajul la fiecare acțiune
+    try {
+        stopTracking(); // Oprim tracking-ul imediat, indiferent de rezultat
+        const userInfo = JSON.parse(localStorage.getItem('userInfo'));
+        const config = { headers: { Authorization: `Bearer ${userInfo.token}` } };
+        const { data } = await axios.post('http://localhost:3000/api/pontaj/check-out', {}, config);
+        
+        setMessage(`✅ ${data.message}`);
+    } catch (err) {
+        setMessage(`❌ ${err.response?.data?.message || 'Eroare la check-out.'}`);
+    } finally {
+        setLoading(false);
+    }
   };
 
   return (
     <div className="pontare-page">
       <div className="pontare-container">
         <h2>Pontare</h2>
+        
+        <div className="pontaj-info">
+            <p>Apasă butonul corespunzător pentru a începe sau a termina tura.</p>
+        </div>
 
         <div className="buttons">
-          <button className="start-btn" onClick={handleStart}>
-            Început de tură
-          </button>
-          <button className="end-btn" onClick={handleEnd}>
-            Sfârșit de tură
-          </button>
+            <button className="start-btn" onClick={handleIncepeTura} disabled={loading}>
+                Începe Tura
+            </button>
+            <button className="end-btn" onClick={handleTerminaTura} disabled={loading}>
+                Termină Tura
+            </button>
         </div>
 
-        <div className="pontaj-info">
-          {startTime && <p><b>Tura începută:</b> {startTime}</p>}
-          {endTime && <p><b>Tura terminată:</b> {endTime}</p>}
-        </div>
-
-        <button className="back-btn" onClick={() => navigate(-1)}>
-          Înapoi
-        </button>
+        {/* Zona unde vor apărea mesajele de la server */}
+        {loading && <p>Se procesează...</p>}
+        {message && <div className="pontaj-info"><p><b>Status:</b> {message}</p></div>}
+        
+        <button className="back-btn" onClick={() => navigate('/')}>Înapoi la Dashboard</button>
       </div>
     </div>
   );

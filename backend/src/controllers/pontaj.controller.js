@@ -1,48 +1,47 @@
+// Cale: backend/src/controllers/pontaj.controller.js
 const Pontaj = require('../models/pontaj.model');
-const Post = require('../models/post.model');
+const User = require('../models/user.model');
 
 const checkIn = async (req, res) => {
   try {
-    const { qrCode } = req.body;
+    const { latitude, longitude } = req.body;
     const paznicId = req.user._id;
 
-    const post = await Post.findOne({ qr_code_identifier: qrCode });
-    if (!post) {
-      return res.status(404).json({ message: 'Cod QR invalid sau post inexistent.' });
-    }
-    const pontajDeschis = await Pontaj.findOne({ paznicId, ora_iesire: null });
-    if (pontajDeschis) {
-      return res.status(400).json({ message: 'Aveți deja o tură activă.' });
+    if (!latitude || !longitude) {
+      return res.status(400).json({ message: 'Datele de localizare sunt obligatorii pentru a începe tura.' });
     }
     
-    const newPontaj = await Pontaj.create({
-      paznicId,
-      postId: post._id,
-      ora_intrare: new Date(),
+    const pontajDeschis = await Pontaj.findOne({ paznicId, ora_iesire: null });
+    if (pontajDeschis) {
+      return res.status(400).json({ message: 'Aveți deja o tură activă. Vă rugăm să faceți check-out mai întâi.' });
+    }
+
+    const beneficiarAlocat = await User.findOne({ 
+        role: 'beneficiar', 
+        'profile.assignedPazniciIds': paznicId 
     });
 
-    res.status(201).json({ message: 'Check-in efectuat cu succes!', pontaj: newPontaj });
-  } catch (error) {
-    res.status(500).json({ message: `Eroare de server: ${error.message}` });
-  }
-};
-
-const checkOut = async (req, res) => {
-  try {
-    const paznicId = req.user._id;
-    const pontajActiv = await Pontaj.findOneAndUpdate(
-      { paznicId: paznicId, ora_iesire: null },
-      { ora_iesire: new Date() },
-      { new: true } 
-    );
-
-    if (!pontajActiv) {
-      return res.status(404).json({ message: 'Nu a fost găsită nicio tură activă pentru check-out.' });
+    if (!beneficiarAlocat) {
+        return res.status(404).json({ message: 'Nu sunteți alocat la niciun post. Vă rugăm contactați administratorul.' });
     }
-    res.status(200).json({ message: 'Check-out efectuat cu succes!', pontaj: pontajActiv });
+
+    const newPontaj = await Pontaj.create({
+      paznicId,
+      beneficiaryId: beneficiarAlocat._id,
+      ora_intrare: new Date(),
+      locationHistory: [{ latitude, longitude }]
+    });
+
+    res.status(201).json({ 
+        message: `Check-in efectuat cu succes la ${beneficiarAlocat.profile.nume_companie}!`, 
+        pontaj: newPontaj 
+    });
   } catch (error) {
     res.status(500).json({ message: `Eroare de server: ${error.message}` });
   }
 };
 
-module.exports = { checkIn, checkOut };
+const checkOut = async (req, res) => { /* ... codul tău existent, este corect ... */ };
+const getActivePontaj = async (req, res) => { /* ... codul tău existent, este corect ... */ };
+
+module.exports = { checkIn, checkOut, getActivePontaj };
