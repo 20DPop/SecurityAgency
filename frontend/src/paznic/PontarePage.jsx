@@ -31,7 +31,7 @@ export default function PontarePage() {
       async (position) => {
         try {
           const { latitude, longitude } = position.coords;
-          const userInfo = JSON.parse(localStorage.getItem('userInfo'));
+          const userInfo = JSON.parse(localStorage.getItem('currentUser'));
           const config = { headers: { Authorization: `Bearer ${userInfo.token}` } };
           
           // Singura diferență: nu mai trimitem qrCode
@@ -60,7 +60,7 @@ export default function PontarePage() {
     setMessage(''); // Resetăm mesajul la fiecare acțiune
     try {
         stopTracking(); // Oprim tracking-ul imediat, indiferent de rezultat
-        const userInfo = JSON.parse(localStorage.getItem('userInfo'));
+        const userInfo = JSON.parse(localStorage.getItem('currentUser'));
         const config = { headers: { Authorization: `Bearer ${userInfo.token}` } };
         const { data } = await axios.post('http://localhost:3000/api/pontaj/check-out', {}, config);
         

@@ -35,7 +35,7 @@ const getUsersByRole = async (req, res) => {
 const createAdminAccount = async (req, res) => {
   try {
     
-    const { email, password, nume, prenume, profile } = req.body;
+    const { email, password, nume, prenume,telefon, profile } = req.body;
 
     const userExists = await User.findOne({ email });
     if (userExists) {

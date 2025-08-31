@@ -132,3 +132,31 @@
   font-weight: bold;
   margin-top: 1rem;
 }
+.load-posts-section {
+  text-align: center;
+  padding: 3rem;
+  background-color: #fff;
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+}
+
+.load-btn {
+  padding: 0.75rem 1.5rem;
+  font-size: 1.1rem;
+  font-weight: bold;
+  cursor: pointer;
+  border: none;
+  border-radius: 4px;
+  background-color: #007bff;
+  color: white;
+  transition: background-color 0.2s;
+}
+
+.load-btn:hover {
+  background-color: #0056b3;
+}
+
+.load-btn:disabled {
+  background-color: #aaa;
+  cursor: not-allowed;
+}

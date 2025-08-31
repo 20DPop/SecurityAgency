@@ -20,7 +20,8 @@ import AdministratorDashboard from './administrator/AdministratorDashboard';
 import AdaugaAngajat from "./admin/AdaugaAngajat";
 import AdaugaFirma from "./admin/AdaugaFirma";
 import PontarePage from './paznic/PontarePage';
-import ProcesVerbal from './documents/ProcesVerbal'; // --- ADAUGAT --- Am importat componenta lipsă
+import ProcesVerbal from './documents/ProcesVerbal';
+import AlocarePaznici from './admin/AlocarePaznici'; 
 
 // Componenta care decide ce dashboard se afișează pe ruta principală
 function Dashboard({ user }) {
@@ -122,6 +123,13 @@ export default function App() {
         {/* --- ADMIN (creare) --- */}
         <Route path="/adauga-angajat" element={<AdaugaAngajat />} />
         <Route path="/adauga-firma" element={<AdaugaFirma />} />
+
+         {/* --- ADAUGĂ RUTA NOUĂ AICI --- */}
+        <Route path="/alocare-paznici" element={
+          <ProtectedRoute user={currentUser} allowedRoles={['admin', 'administrator']}>
+            <AlocarePaznici />
+          </ProtectedRoute>
+        }/>
 
         {/* --- RUTE BENEFICIAR (protejate) --- */}
         <Route path="/beneficiar" element={ <ProtectedRoute user={currentUser} allowedRoles={['beneficiar']}><BeneficiarDashboard /></ProtectedRoute>} />

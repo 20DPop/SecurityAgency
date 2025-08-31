@@ -1,94 +1,121 @@
-// Cale: backend/utils/seeder.js (Versiune care NU se atinge de Users)
+// Cale: backend/utils/seeder.js (Versiune FINALĂ de RESETARE COMPLETĂ)
 
 const mongoose = require('mongoose');
 const dotenv = require('dotenv');
 const path = require('path');
 const connectDB = require('../src/config/database');
 
-// Importăm modelele necesare
-const User = require('../src/models/user.model'); // Îl importăm DOAR pentru a CĂUTA
+// --- PASUL 1: Importăm TOATE modelele necesare ---
+const User = require('../src/models/user.model');
 const Post = require('../src/models/post.model');
 const Pontaj = require('../src/models/pontaj.model');
+const Sesizare = require('../src/models/sesizare.model');
+const Incident = require('../src/models/incident.model');
 const ProcesVerbal = require('../src/models/procesVerbal.model');
+const JurnalConectari = require('../src/models/jurnalConectari.model');
+const JurnalStatusSesizari = require('../src/models/jurnalStatusSesizari.model');
+const AtasamentIncident = require('../src/models/atasamentIncident.model');
+const Raport = require('../src/models/raport.model');
 
-
-// --- Funcția de a șterge DOAR datele de test, NU și userii ---
-const destroyTestData = async () => {
+// --- Funcția de a șterge TOATE datele vechi (inclusiv Userii) ---
+const destroyData = async () => {
   try {
-    // Ștergem DOAR datele care NU sunt utilizatori
+    await Raport.deleteMany();
+    await AtasamentIncident.deleteMany();
+    await JurnalStatusSesizari.deleteMany();
+    await JurnalConectari.deleteMany();
     await ProcesVerbal.deleteMany();
+    await Incident.deleteMany();
     await Pontaj.deleteMany();
+    await Sesizare.deleteMany();
     await Post.deleteMany();
-    console.log('✅ Datele de test vechi (Post, Pontaj, ProcesVerbal) au fost șterse!');
+    await User.deleteMany(); // Ștergem și toți userii
+
+    console.log('✅ Baza de date a fost GOLITĂ complet!');
   } catch (error) {
-    console.error(`❌ Eroare la ștergerea datelor de test: ${error.message}`);
+    console.error(`❌ Eroare la ștergerea datelor: ${error.message}`);
     process.exit(1);
   }
 };
 
-// --- Funcția principală care adaugă datele de test ---
-const importTestData = async () => {
+// --- Funcția principală de import ---
+const importData = async () => {
   try {
-    console.log('--- Se adaugă date de test (Post, Pontaj, Proces Verbal...) ---');
+    console.log('--- Începe crearea datelor de test de la zero ---');
     
-    // --- PASUL 1: Căutăm utilizatorii ESENȚIALI care TREBUIE să existe deja ---
-    // NOTĂ: Dacă nu ai un admin de test, îl poți adăuga manual o singură dată.
-    const adminAgentie = await User.findOne({ email: 'admin@agentie.com' });
-    const beneficiarClient = await User.findOne({ email: 'denisaghiriti7@gmail.com' });
-    const paznicAngajat = await User.findOne({ email: 'panicexemplu@gmail.com' });
-
-    // --- VERIFICARE CRITICĂ ---
-    if (!adminAgentie || !beneficiarClient || !paznicAngajat) {
-      console.error('❌ EROARE FATALĂ: Unul dintre utilizatorii de bază (admin@agentie.com, denisaghiriti7@gmail.com, panicexemplu@gmail.com) nu a fost găsit în baza de date.');
-      console.error('Asigură-te că acești utilizatori există înainte de a rula scriptul.');
-      return; // Oprește execuția funcției
-    }
-    console.log('✅ Utilizatorii de bază au fost găsiți.');
+    // --- PASUL 2: Creăm utilizatorii cu parole cunoscute ---
     
-    // --- PASUL 2: Creăm un Post de test, legat de userii găsiți ---
-    const postData = {
-      nume_post: 'Punct de lucru de test pentru PV',
-      qr_code_identifier: 'qr-pv-test-unic-12345',
-      beneficiaryId: beneficiarClient._id,
-      createdByAdminId: adminAgentie._id
-    };
-    // Folosim findOneAndUpdate cu upsert:true pentru a crea doar dacă nu există
-    const postDeTest = await Post.findOneAndUpdate({ qr_code_identifier: postData.qr_code_identifier }, postData, { new: true, upsert: true });
-    console.log('✅ Post de test creat sau găsit.');
+    const administrator = await User.create({
+      email: '16dpop@gmail.com',
+      password: 'IsbiBenob1880!',
+      role: 'administrator',
+      nume: 'Admin',
+      prenume: 'Principal (Dev)',
+      telefon: '0700000001',
+    });
 
-    // --- PASUL 3: Creăm un Pontaj de test ---
-    const pontajData = {
-      paznicId: paznicAngajat._id,
-      postId: postDeTest._id,
-      ora_intrare: new Date('2024-05-20T08:00:00Z'),
-      ora_iesire: new Date('2024-05-20T16:00:00Z')
-    };
-    const pontajDeTest = await Pontaj.findOneAndUpdate({ paznicId: pontajData.paznicId, ora_intrare: pontajData.ora_intrare }, pontajData, { new: true, upsert: true });
-    console.log('✅ Pontaj de test creat sau găsit.');
+    const adminAgentie = await User.create({
+      email: 'admin@test.com',
+      password: 'test123',
+      role: 'admin',
+      nume: 'Admin',
+      prenume: 'Agentie',
+      profile: { nume_firma: 'Security Agency SRL' },
+    });
 
-    // --- PASUL 4: Creăm Procesul Verbal ---
-    const pvData = {
-        pontajId: pontajDeTest._id,
-        paznicId: paznicAngajat._id,
-        postId: postDeTest._id,
-        reprezentant_beneficiar: 'Manager de tura',
-        ora_declansare_alarma: new Date('2024-05-20T11:30:00Z'),
-        // ... restul datelor pentru PV ...
-        caleStocarePDF: '/uploads/procese-verbale/pv_exemplu_seeder.pdf'
-    };
-    await ProcesVerbal.findOneAndUpdate({ pontajId: pvData.pontajId }, pvData, { new: true, upsert: true });
-    console.log('✅ Proces Verbal de test creat sau găsit!');
-
-    // --- PASUL 5 (CEL MAI IMPORTANT): Afișăm ID-ul de care ai nevoie ---
-    console.log('\n----------------------------------------------------');
-    console.log('--- ID DE PONTAJ VALID PENTRU TESTARE PDF ---');
-    console.log(pontajDeTest._id.toString());
-    console.log('----------------------------------------------------');
+    const beneficiarClient = await User.create({
+      email: 'beneficiar@test.com',
+      password: 'test123',
+      role: 'beneficiar',
+      nume: 'Client',
+      prenume: 'NumeClient',
+      telefon: '0700000002',
+      creatDeAdminId: adminAgentie._id, 
+      profile: { 
+          nume_companie: 'Client Test SRL',
+          punct_de_lucru: 'Str. Victoriei 1' 
+      }
+    });
     
-    console.log('\n--- Scriptul a terminat de adăugat datele de test. ---');
+    const paznicAngajat = await User.create({
+      email: 'paznic@test.com',
+      password: 'test123',
+      role: 'paznic',
+      nume: 'Paznic',
+      prenume: 'NumePaznic',
+      telefon: '0700000003',
+      creatDeAdminId: adminAgentie._id, 
+      profile: { nr_legitimatie: 'PZ-123-TEST' }
+    });
+    
+    console.log('✅ 4 utilizatori de test creați (toți au parola: password123)');
+
+    // --- PASUL 3: Facem alocarea Paznicului la Beneficiar ---
+    beneficiarClient.profile.assignedPazniciIds.push(paznicAngajat._id);
+    await beneficiarClient.save();
+    console.log('✅ Paznic alocat la beneficiar!');
+
+    // --- PASUL 4: Creăm restul datelor de test legate ---
+    
+    const postPrincipal = await Post.create({ nume_post: 'Punct de lucru principal - Client Test SRL', adresa_post: 'Str. Exemplului Nr. 123', qr_code_identifier: 'qr-client-test-principal-xyz', beneficiaryId: beneficiarClient._id, createdByAdminId: adminAgentie._id, assignedPazniciIds: [paznicAngajat._id] });
+    console.log('✅ Post de test creat!');
+
+    await Sesizare.create({ titlu: 'Verificare sistem de alarmă', descriere: 'O sesizare de test...', status: 'prelucrata', createdByBeneficiaryId: beneficiarClient._id, assignedAdminId: adminAgentie._id });
+    console.log('✅ Sesizare de test creată!');
+    
+    const pontajIncheiat = await Pontaj.create({ paznicId: paznicAngajat._id, beneficiaryId: beneficiarClient._id, ora_intrare: new Date('2024-05-16T08:00:00Z'), ora_iesire: new Date('2024-05-16T16:00:00Z') });
+    console.log('✅ Pontaj de test (încheiat) creat!');
+    
+    console.log('\n--- BAZA DE DATE A FOST RESETATĂ ȘI POPULATĂ CU SUCCES! ---');
+    console.log('\n--- Date de login ---');
+    // MODIFICAT: Folosim variabile pentru a afișa datele reale
+    console.log(`Administrator: ${administrator.email} / IsbiBenob1880!`);
+    console.log(`Admin Agenție: ${adminAgentie.email} / test123`);
+    console.log(`Beneficiar:    ${beneficiarClient.email} / test123`);
+    console.log(`Paznic:        ${paznicAngajat.email} / test123`);
     
   } catch (error) {
-    console.error(`❌ Eroare la importul datelor de test: ${error.message}`);
+    console.error(`❌ Eroare la importul datelor: ${error.message}`);
   }
 };
 
@@ -97,9 +124,10 @@ const run = async () => {
     dotenv.config({ path: path.resolve(__dirname, '../.env') });
     await connectDB();
     if (process.argv[2] === '--destroy') {
-        await destroyTestData();
+        await destroyData();
     } else {
-        await importTestData();
+        await destroyData(); // Curățăm totul
+        await importData(); // Și adăugăm datele proaspete
     }
     await mongoose.connection.close();
     process.exit();
