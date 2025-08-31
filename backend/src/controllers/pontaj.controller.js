@@ -2,6 +2,9 @@
 const Pontaj = require('../models/pontaj.model');
 const User = require('../models/user.model');
 
+// @desc    Începe o nouă tură (check-in)
+// @route   POST /api/pontaj/check-in
+// @access  Private (Paznic)
 const checkIn = async (req, res) => {
   try {
     const { latitude, longitude } = req.body;
@@ -22,7 +25,7 @@ const checkIn = async (req, res) => {
     });
 
     if (!beneficiarAlocat) {
-        return res.status(404).json({ message: 'Nu sunteți alocat la niciun post. Vă rugăm contactați administratorul.' });
+        return res.status(404).json({ message: 'Nu sunteți alocat la niciun beneficiar. Vă rugăm contactați administratorul.' });
     }
 
     const newPontaj = await Pontaj.create({
@@ -41,7 +44,58 @@ const checkIn = async (req, res) => {
   }
 };
 
-const checkOut = async (req, res) => { /* ... codul tău existent, este corect ... */ };
-const getActivePontaj = async (req, res) => { /* ... codul tău existent, este corect ... */ };
+// @desc    Încheie tura curentă (check-out)
+// @route   POST /api/pontaj/check-out
+// @access  Private (Paznic)
+const checkOut = async (req, res) => {
+  try {
+    const paznicId = req.user._id;
+
+    // Căutăm tura activă (cea care nu are o oră de ieșire setată)
+    const turaActiva = await Pontaj.findOne({ 
+      paznicId, 
+      ora_iesire: null 
+    });
+
+    // Verificăm dacă a fost găsită o tură activă
+    if (!turaActiva) {
+      return res.status(404).json({ message: 'Nu aveți nicio tură activă pe care să o încheiați.' });
+    }
+
+    // Setăm ora de ieșire la momentul actual
+    turaActiva.ora_iesire = new Date();
+    
+    // Salvăm modificările în baza de date
+    await turaActiva.save();
+
+    // Trimitem un răspuns de succes înapoi la client
+    res.status(200).json({ 
+        message: 'Check-out efectuat cu succes. Tura a fost încheiată.',
+        pontaj: turaActiva 
+    });
+
+  } catch (error) {
+    // În caz de eroare, trimitem un răspuns de eroare
+    res.status(500).json({ message: `Eroare de server: ${error.message}` });
+  }
+};
+
+// @desc    Preia tura activă pentru paznicul logat
+// @route   GET /api/pontaj/active
+// @access  Private (Paznic)
+const getActivePontaj = async (req, res) => {
+    try {
+        const paznicId = req.user._id;
+        const turaActiva = await Pontaj.findOne({ paznicId, ora_iesire: null });
+
+        if (turaActiva) {
+            res.status(200).json(turaActiva);
+        } else {
+            res.status(200).json(null); // Trimitem null dacă nu există o tură activă
+        }
+    } catch (error) {
+        res.status(500).json({ message: `Eroare de server: ${error.message}` });
+    }
+};
 
 module.exports = { checkIn, checkOut, getActivePontaj };

@@ -7,7 +7,6 @@ const postRoutes = require('./posts.routes');
 const pontajRoute = require('./pontaj.routes');
 const procesVerbalRoutes = require('./procesVerbal.routes');
 const trackingRoutes = require('./tracking.routes');
-const pontajRoutes = require('./pontaj.routes');
 const assignmentRoutes = require('./assignments.routes'); // <-- LINIE NOUĂ
 
 

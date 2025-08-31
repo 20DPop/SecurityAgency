@@ -21,6 +21,7 @@
     "mongodb": "^6.18.0",
     "mongoose": "^8.17.1",
     "pdfkit": "^0.17.1",
+    "pdfkit-table": "^0.1.99",
     "uuid": "^11.1.0"
   },
   "devDependencies": {
