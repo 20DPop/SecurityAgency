@@ -22,6 +22,12 @@ import AdaugaFirma from "./admin/AdaugaFirma";
 import PontarePage from './paznic/PontarePage';
 import ProcesVerbal from './documents/ProcesVerbal';
 import AlocarePaznici from './admin/AlocarePaznici'; 
+import Angajati from "./admin/Angajati";
+import PrezentaAngajati from './beneficiar/PrezentaAngajati';
+
+// 🔹 NOU: import pentru paginile beneficiarului cu angajați
+import AngajatiB from "./beneficiar/AngajatiB";
+import DetaliiAngajatB from "./beneficiar/AngajatBDetalii";
 
 // Componenta care decide ce dashboard se afișează pe ruta principală
 function Dashboard({ user }) {
@@ -56,9 +62,30 @@ function ProtectedRoute({ user, allowedRoles, children }) {
 // --- Componenta Principală App ---
 export default function App() {
   const [currentUser, setCurrentUser] = useState(null);
-  // State-urile tale (le lasăm neschimbate)
-  const [sesizari, setSesizari] = useState({ prelucrata: [{ id: 1, titlu: "Sesizare exemplu", data: "14/08/2025", firma: "Firma A", descriere: "O defecțiune a fost raportată la sistemul de supraveghere video de la poarta de nord.", pasi: "S-a contactat firma de mentenanță.", dataFinalizare: null }], inCurs: [{ id: 2, titlu: "Incident minor", data: "13/08/2025", firma: "Firma B", descriere: "Un vizitator neînregistrat a încercat să intre în clădire.", pasi: "Agentul de pază a reținut persoana și a anunțat poliția.", dataFinalizare: null }], rezolvata: [{ id: 3, titlu: "Alarmă falsă", data: "12/08/2025", firma: "Firma A", descriere: "Alarma de incendiu a pornit din cauza aburului de la bucătărie.", pasi: "S-a resetat sistemul de alarmă.", dataFinalizare: "12/08/2025" }] });
-  const [solicitari, setSolicitari] = useState({ prelucrata: [{ id: 1, titlu: "Solicitare exemplu", data: "14/08/2025", firma: "Firma A", descriere: "O defecțiune a fost raportată la sistemul de supraveghere video de la poarta de nord.", pasi: "S-a contactat firma de mentenanță.", dataFinalizare: null }], inCurs: [{ id: 2, titlu: "Incident minor", data: "13/08/2025", firma: "Firma B", descriere: "Un vizitator neînregistrat a încercat să intre în clădire.", pasi: "Agentul de pază a reținut persoana și a anunțat poliția.", dataFinalizare: null }], rezolvata: [{ id: 3, titlu: "Alarmă falsă", data: "12/08/2025", firma: "Firma A", descriere: "Alarma de incendiu a pornit din cauza aburului de la bucătărie.", pasi: "S-a resetat sistemul de alarmă.", dataFinalizare: "12/08/2025" }] });
+  const [sesizari, setSesizari] = useState({
+    prelucrata: [
+      { id: 1, titlu: "Sesizare exemplu", data: "14/08/2025", firma: "Firma A", descriere: "O defecțiune a fost raportată la sistemul de supraveghere video de la poarta de nord.", pasi: "S-a contactat firma de mentenanță.", dataFinalizare: null }
+    ],
+    inCurs: [
+      { id: 2, titlu: "Incident minor", data: "13/08/2025", firma: "Firma B", descriere: "Un vizitator neînregistrat a încercat să intre în clădire.", pasi: "Agentul de pază a reținut persoana și a anunțat poliția.", dataFinalizare: null }
+    ],
+    rezolvata: [
+      { id: 3, titlu: "Alarmă falsă", data: "12/08/2025", firma: "Firma A", descriere: "Alarma de incendiu a pornit din cauza aburului de la bucătărie.", pasi: "S-a resetat sistemul de alarmă.", dataFinalizare: "12/08/2025" }
+    ]
+  });
+
+  const [solicitari, setSolicitari] = useState({
+    prelucrata: [
+      { id: 1, titlu: "Solicitare exemplu", data: "14/08/2025", firma: "Firma A", descriere: "O defecțiune a fost raportată la sistemul de supraveghere video de la poarta de nord.", pasi: "S-a contactat firma de mentenanță.", dataFinalizare: null }
+    ],
+    inCurs: [
+      { id: 2, titlu: "Incident minor", data: "13/08/2025", firma: "Firma B", descriere: "Un vizitator neînregistrat a încercat să intre în clădire.", pasi: "Agentul de pază a reținut persoana și a anunțat poliția.", dataFinalizare: null }
+    ],
+    rezolvata: [
+      { id: 3, titlu: "Alarmă falsă", data: "12/08/2025", firma: "Firma A", descriere: "Alarma de incendiu a pornit din cauza aburului de la bucătărie.", pasi: "S-a resetat sistemul de alarmă.", dataFinalizare: "12/08/2025" }
+    ]
+  });
+
   const [sesizariBeneficiar, setSesizariBeneficiar] = useState([]);
   const [solicitariBeneficiar, setSolicitariBeneficiar] = useState([]);
 
@@ -83,7 +110,7 @@ export default function App() {
     <Router>
       <Header user={currentUser} onLogout={handleLogout} />
       <Routes>
-        {/* Ruta principală care afișează dashboard-ul corect în funcție de rol */}
+        {/* Ruta principală */}
         <Route path="/" element={currentUser ? <Dashboard user={currentUser} /> : <HomePage />} />
         
         {/* Rutele de Login */}
@@ -91,53 +118,75 @@ export default function App() {
         <Route path="/loginB" element={<LoginPageB onLogin={handleLogin} />} />
         <Route path="/loginP" element={<LoginPageP onLogin={handleLogin} />} />
 
-        {/* --- RUTE PAZNIC (accesibile și de administrator) --- */}
+        {/* --- RUTE PAZNIC --- */}
         <Route path="/pontare/:qrCode" element={
           <ProtectedRoute user={currentUser} allowedRoles={['paznic', 'administrator']}>
             <PontarePage />
           </ProtectedRoute>
         }/>
-        
-        {/* --- ADAUGAT --- Ruta pentru Proces Verbal care lipsea */}
         <Route path="/proces-verbal/:pontajId" element={
           <ProtectedRoute user={currentUser} allowedRoles={['paznic', 'administrator']}>
             <ProcesVerbal />
           </ProtectedRoute>
         }/>
 
-        {/* --- RUTE DE VIZUALIZARE PENTRU ADMINISTRATOR --- */}
+        {/* --- DASHBOARD-URI --- */}
         <Route path="/admin/dashboard" element={currentUser?.role === 'administrator' ? <AdminDashboard /> : <p>Acces interzis.</p>} />
         <Route path="/beneficiar/dashboard" element={currentUser?.role === 'administrator' ? <BeneficiarDashboard /> : <p>Acces interzis.</p>} />
-        
-        {/* --- ADAUGAT --- Ruta pentru vizualizarea dashboard-ului de paznic care lipsea */}
         <Route path="/paznic/dashboard" element={currentUser?.role === 'administrator' ? <PaznicDashboard /> : <p>Acces interzis.</p>} />
 
         {/* --- SESIZĂRI & SOLICITĂRI (Admin) --- */}
-        {/* --- ADAUGAT --- Rutele pentru Sesizări care lipseau */}
         <Route path="/sesizari" element={<Sesizari sesizari={sesizari} setSesizari={setSesizari} />} />
         <Route path="/sesizare/:id" element={<SesizareDetalii sesizari={sesizari} setSesizari={setSesizari} />} />
-        
         <Route path="/solicitari" element={<Solicitari solicitari={solicitari} setSolicitari={setSolicitari} />} />
         <Route path="/solicitari/:id" element={<SolicitariDetalii solicitari={solicitari} setSolicitari={setSolicitari} />} />
 
-        {/* --- ADMIN (creare) --- */}
+        {/* --- ADMIN --- */}
         <Route path="/adauga-angajat" element={<AdaugaAngajat />} />
         <Route path="/adauga-firma" element={<AdaugaFirma />} />
-
-         {/* --- ADAUGĂ RUTA NOUĂ AICI --- */}
         <Route path="/alocare-paznici" element={
           <ProtectedRoute user={currentUser} allowedRoles={['admin', 'administrator']}>
             <AlocarePaznici />
           </ProtectedRoute>
         }/>
+        <Route path="/angajati" element={<Angajati />} />
 
-        {/* --- RUTE BENEFICIAR (protejate) --- */}
-        <Route path="/beneficiar" element={ <ProtectedRoute user={currentUser} allowedRoles={['beneficiar']}><BeneficiarDashboard /></ProtectedRoute>} />
-        <Route path="/sesizariB" element={ <ProtectedRoute user={currentUser} allowedRoles={['beneficiar']}><SesizariB sesizari={sesizariBeneficiar} /></ProtectedRoute>} />
-        <Route path="/adauga-sesizare" element={ <ProtectedRoute user={currentUser} allowedRoles={['beneficiar']}><AdaugaSesizare setSesizari={setSesizariBeneficiar} currentUser={currentUser} /></ProtectedRoute> } />
-        <Route path="/solicitariB" element={ <ProtectedRoute user={currentUser} allowedRoles={['beneficiar']}><SolicitariB solicitari={solicitariBeneficiar} /></ProtectedRoute>} />
-        <Route path="/adauga-solicitare" element={ <ProtectedRoute user={currentUser} allowedRoles={['beneficiar']}><AdaugaSolicitare setSolicitari={setSolicitariBeneficiar} currentUser={currentUser} /></ProtectedRoute>} />
-      
+        {/* --- RUTE BENEFICIAR --- */}
+        <Route path="/beneficiar" element={
+          <ProtectedRoute user={currentUser} allowedRoles={['beneficiar']}>
+            <BeneficiarDashboard />
+          </ProtectedRoute>
+        }/>
+        <Route path="/sesizariB" element={
+          <ProtectedRoute user={currentUser} allowedRoles={['beneficiar']}>
+            <SesizariB sesizari={sesizariBeneficiar} />
+          </ProtectedRoute>
+        }/>
+        <Route path="/adauga-sesizare" element={
+          <ProtectedRoute user={currentUser} allowedRoles={['beneficiar']}>
+            <AdaugaSesizare setSesizari={setSesizariBeneficiar} currentUser={currentUser} />
+          </ProtectedRoute>
+        }/>
+        <Route path="/solicitariB" element={
+          <ProtectedRoute user={currentUser} allowedRoles={['beneficiar']}>
+            <SolicitariB solicitari={solicitariBeneficiar} />
+          </ProtectedRoute>
+        }/>
+        <Route path="/adauga-solicitare" element={
+          <ProtectedRoute user={currentUser} allowedRoles={['beneficiar']}>
+            <AdaugaSolicitare setSolicitari={setSolicitariBeneficiar} currentUser={currentUser} />
+          </ProtectedRoute>
+        }/>
+        <Route path="/angajatiB" element={
+          <ProtectedRoute user={currentUser} allowedRoles={['beneficiar']}>
+            <AngajatiB />
+          </ProtectedRoute>
+        }/>
+        <Route path="/angajatiB/:id" element={
+          <ProtectedRoute user={currentUser} allowedRoles={['beneficiar']}>
+            <DetaliiAngajatB />
+          </ProtectedRoute>
+        }/>
       </Routes>
     </Router>
   );

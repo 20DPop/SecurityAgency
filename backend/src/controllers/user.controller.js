@@ -20,6 +20,24 @@ const createUser = async (req, res) => {
   }
 };
 
+const updateUser = async (req, res) => {
+  try {
+    const user = await User.findById(req.params.id);
+    if (!user) return res.status(404).json({ message: 'Utilizatorul nu a fost găsit.' });
+
+    // Actualizează doar câmpurile trimise în request body
+    const updatableFields = ['nume', 'prenume', 'telefon', 'esteActiv', 'profile', 'role'];
+    updatableFields.forEach(field => {
+      if (req.body[field] !== undefined) user[field] = req.body[field];
+    });
+
+    await user.save();
+    res.status(200).json(user);
+  } catch (error) {
+    res.status(500).json({ message: `Eroare de server: ${error.message}` });
+  }
+};
+
 const getUsersByRole = async (req, res) => {
   try {
     const role = req.params.role;
@@ -62,6 +80,25 @@ const getUserProfile = (req, res) => {
   res.status(200).json(req.user);
 };
 
+const changePassword = async (req, res) => {
+  try {
+    const { newPassword } = req.body;
+    if (!newPassword || newPassword.length < 6) {
+      return res.status(400).json({ message: "Parola trebuie să aibă minim 6 caractere." });
+    }
 
-module.exports = { getUserProfile, createUser, getUsersByRole, createAdminAccount };
+    const user = await User.findById(req.params.id);
+    if (!user) return res.status(404).json({ message: "Utilizatorul nu a fost găsit." });
+
+    user.password = newPassword; // va fi criptată automat de pre('save')
+    await user.save();
+
+    res.status(200).json({ message: "Parola a fost schimbată cu succes!" });
+  } catch (error) {
+    res.status(500).json({ message: `Eroare server: ${error.message}` });
+  }
+};
+
+
+module.exports = { getUserProfile, createUser, getUsersByRole, createAdminAccount, updateUser, changePassword };
 

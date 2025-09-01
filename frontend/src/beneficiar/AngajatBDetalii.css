@@ -1,0 +1,103 @@
+/* === Stiluri generale pentru pagini === */
+.angajatiB-container,
+.angajatB-detalii {
+  padding: 20px;
+}
+
+.table-responsive {
+  overflow-x: auto;
+}
+
+.angajatiB-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 10px;
+}
+
+.angajatiB-table th,
+.angajatiB-table td {
+  border: 1px solid #ddd;
+  padding: 10px;
+  text-align: left;
+}
+
+.angajatiB-table th {
+  background-color: #f4f4f4;
+  font-weight: bold;
+}
+
+.angajatiB-table tr:nth-child(even) {
+  background-color: #fafafa;
+}
+
+/* Buton Detalii */
+.detalii-btn {
+  background-color: #007bff;
+  color: white;
+  border: none;
+  padding: 6px 12px;
+  border-radius: 4px;
+  cursor: pointer;
+  text-decoration: none;
+  display: inline-block;
+}
+
+.detalii-btn:hover {
+  background-color: #0056b3;
+}
+
+/* Buton Înapoi */
+.back-btn {
+  margin-top: 20px;
+  background-color: #6c757d;
+  color: white;
+  border: none;
+  padding: 8px 14px;
+  border-radius: 4px;
+  cursor: pointer;
+  position: fixed;
+  bottom: 20px;
+  left: 20px;
+}
+
+.back-btn:hover {
+  background-color: #5a6268;
+}
+
+/* === Pagina de detalii === */
+.angajatB-detalii {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.detalii-box {
+  background: #f9f9f9;
+  padding: 20px 25px;
+  border-radius: 10px;
+  border: 1px solid #ddd;
+  max-width: 500px;
+  width: 100%;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+}
+
+.detalii-box p {
+  margin: 8px 0;
+  font-size: 16px;
+}
+
+.detalii-box strong {
+  color: #333;
+}
+
+/* === Responsivitate === */
+@media (max-width: 768px) {
+  .angajatiB-table th, .angajatiB-table td {
+    padding: 8px;
+    font-size: 14px;
+  }
+
+  .detalii-box {
+    padding: 15px;
+  }
+}

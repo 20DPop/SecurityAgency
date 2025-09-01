@@ -1,0 +1,44 @@
+.prezenta-container {
+  padding: 1rem;
+  max-width: 1200px;
+  margin: auto;
+}
+
+.prezenta-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-bottom: 1rem;
+}
+
+.prezenta-table th, .prezenta-table td {
+  border: 1px solid #ddd;
+  padding: 0.5rem;
+  text-align: left;
+}
+
+.prezenta-table th {
+  background-color: #f2f2f2;
+}
+
+.map-container {
+  margin-top: 1rem;
+}
+
+button {
+  padding: 0.3rem 0.7rem;
+  cursor: pointer;
+  background-color: #007bff;
+  color: white;
+  border: none;
+  border-radius: 4px;
+}
+
+button:hover {
+  background-color: #0056b3;
+}
+
+@media (max-width: 768px) {
+  .prezenta-table th, .prezenta-table td {
+    font-size: 0.8rem;
+  }
+}

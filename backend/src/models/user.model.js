@@ -35,11 +35,12 @@ const userSchema = new mongoose.Schema({
 userSchema.pre('save', async function (next) {
   // Rulează funcția doar dacă parola a fost modificată
   if (!this.isModified('password')) {
-    next();
+    return next();
   }
 
   const salt = await bcrypt.genSalt(10);
   this.password = await bcrypt.hash(this.password, salt);
+  next();
 });
 
 // Metodă pentru a compara parola introdusă cu cea din baza de date

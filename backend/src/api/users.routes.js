@@ -5,11 +5,14 @@ const {
   getUserProfile, 
   createUser, 
   getUsersByRole, 
-  createAdminAccount 
+  createAdminAccount,
+  updateUser
+  // changePassword // Aceasta este exportată, dar nu ai o rută directă pentru ea în fișierul `routes`
 } = require('../controllers/user.controller');
 
+const User = require('../models/user.model'); // Adaugă User aici pentru a-l folosi în rutele inline
+
 // Ruta pentru a obține profilul utilizatorului logat
-// Este o practică bună să o avem, deși nu e cauza problemei
 router.get('/profile', protect, getUserProfile);
 
 // Ruta pentru a crea un utilizator nou (paznic, beneficiar) de către un admin
@@ -18,13 +21,92 @@ router.post('/create', protect, authorize('admin', 'administrator'), createUser)
 // Ruta pentru a lista utilizatorii după rol (folosită în pagina de Alocări)
 router.get('/list/:role', protect, authorize('admin', 'administrator'), getUsersByRole);
 
-// Ruta pentru a crea un cont de 'admin' (de către un 'administrator')
-// --- AICI A FOST CORECTURA PRINCIPALĂ ---
+// --- ADAUGĂ ACEASTĂ RUTĂ NOUĂ PENTRU A OBȚINE DETALIILE UNUI UTILIZATOR DUPĂ ID ---
+router.get('/:id', protect, authorize('admin', 'administrator', 'beneficiar'), async (req, res) => {
+  try {
+    const user = await User.findById(req.params.id).select('-password'); // Exclude parola
+
+    if (!user) {
+      return res.status(404).json({ message: 'Utilizatorul nu a fost găsit.' });
+    }
+
+    // Logică de verificare suplimentară pentru rolul 'beneficiar':
+    // Un beneficiar poate vedea detalii doar despre paznicii care îi sunt alocați
+    // SAU despre propriul profil (dacă ID-ul este al lui).
+    if (req.user.role === 'beneficiar') {
+        // Caută beneficiarul logat pentru a-i vedea paznicii alocați
+        const beneficiarLogat = await User.findById(req.user.id);
+
+        // Verifică dacă utilizatorul cerut (cel cu ID-ul din URL) este unul dintre paznicii alocați
+        const isAssignedPaznic = beneficiarLogat.profile.assignedPazniciIds &&
+                                 beneficiarLogat.profile.assignedPazniciIds.includes(req.params.id);
+        
+        // Verifică dacă utilizatorul cerut este propriul beneficiar logat
+        const isOwnProfile = req.user.id === req.params.id;
+
+        // Dacă nu este nici paznic alocat, nici propriul profil, atunci refuză accesul
+        if (!isAssignedPaznic && !isOwnProfile) {
+            return res.status(403).json({ message: 'Acces interzis. Nu ai permisiunea de a vizualiza detaliile acestui angajat.' });
+        }
+    }
+    
+    res.status(200).json(user);
+  } catch (error) {
+    console.error("Eroare la obținerea detaliilor utilizatorului:", error);
+    res.status(500).json({ message: error.message || "Eroare internă de server." });
+  }
+});
+// ---------------------------------------------------------------------------------
+
+// Ruta pentru a actualiza un utilizator (de către un admin)
+router.put('/:id', protect, authorize('admin', 'administrator'), updateUser);
+
+router.put('/:id/password', protect, authorize('admin','administrator'), async (req, res) => {
+  // const User = require('../models/user.model'); // Nu mai este necesar aici dacă ai declarat-o sus
+
+  try {
+    const { newPassword } = req.body;
+    if (!newPassword || newPassword.length < 6) {
+      return res.status(400).json({ message: "Parola trebuie să aibă minim 6 caractere." });
+    }
+
+    const user = await User.findById(req.params.id);
+    if (!user) return res.status(404).json({ message: 'Utilizatorul nu a fost găsit.' });
+
+    user.password = newPassword; 
+
+    await user.save(); 
+    res.status(200).json({ message: 'Parola a fost schimbată cu succes.' });
+  } catch (error) {
+    console.error("Eroare la schimbarea parolei:", error); 
+    res.status(500).json({ message: error.message || "Eroare internă de server." });
+  }
+});
+
+router.get('/beneficiar/angajati', protect, authorize('beneficiar'), async (req, res) => {
+  // const User = require('../models/user.model'); // Nu mai este necesar aici dacă ai declarat-o sus
+
+  try {
+    const beneficiarId = req.user.id;
+
+    const beneficiar = await User.findById(beneficiarId).populate('profile.assignedPazniciIds', '-password');
+
+    if (!beneficiar) {
+      return res.status(404).json({ message: 'Beneficiarul nu a fost găsit.' });
+    }
+
+    res.status(200).json(beneficiar.profile.assignedPazniciIds || []);
+  } catch (error) {
+    console.error("Eroare la obținerea angajaților beneficiarului:", error);
+    res.status(500).json({ message: "Eroare server." });
+  }
+});
+
 router.post(
   '/create-admin',
   protect,
   authorize('administrator'),
-  createAdminAccount // Am adăugat funcția controller care lipsea
+  createAdminAccount
 );
 
 module.exports = router;
