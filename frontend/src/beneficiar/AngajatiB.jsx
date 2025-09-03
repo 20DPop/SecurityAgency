@@ -11,27 +11,31 @@ export default function AngajatiB() {
   const navigate = useNavigate();
 
   useEffect(() => {
-    const fetchAngajati = async () => {
-      try {
-        const token = JSON.parse(localStorage.getItem("currentUser"))?.token;
-        if (!token) {
-          setError("Nu ești autentificat.");
-          setLoading(false);
-          return;
-        }
-        const res = await axios.get("http://localhost:3000/api/users/beneficiar/angajati", {
-          headers: { Authorization: `Bearer ${token}` },
-        });
-        setAngajati(res.data);
-      } catch (err) {
-        console.error("Eroare la încărcarea angajaților beneficiarului:", err);
-        setError("Eroare la încărcarea angajaților. Asigură-te că ești logat ca beneficiar.");
-      } finally {
+  const fetchAngajati = async () => {
+    try {
+      const token = JSON.parse(localStorage.getItem("currentUser"))?.token;
+      if (!token) {
+        setError("Nu ești autentificat.");
         setLoading(false);
+        return;
       }
-    };
-    fetchAngajati();
-  }, []);
+      const res = await axios.get("http://localhost:3000/api/users/beneficiar/angajati", {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+
+      // Sortează alfabetic după nume
+      const angajatiSortati = res.data.sort((a, b) => a.nume.localeCompare(b.nume));
+      setAngajati(angajatiSortati);
+
+    } catch (err) {
+      console.error("Eroare la încărcarea angajaților beneficiarului:", err);
+      setError("Eroare la încărcarea angajaților. Asigură-te că ești logat ca beneficiar.");
+    } finally {
+      setLoading(false);
+    }
+  };
+  fetchAngajati();
+}, []);
 
   if (loading) return <p>Se încarcă...</p>;
   if (error) return <p style={{ color: "red" }}>{error}</p>;

@@ -6,7 +6,8 @@ const {
   createUser, 
   getUsersByRole, 
   createAdminAccount,
-  updateUser
+  updateUser,
+  deleteUser
   // changePassword // Aceasta este exportată, dar nu ai o rută directă pentru ea în fișierul `routes`
 } = require('../controllers/user.controller');
 
@@ -18,9 +19,20 @@ router.get('/profile', protect, getUserProfile);
 // Ruta pentru a crea un utilizator nou (paznic, beneficiar) de către un admin
 router.post('/create', protect, authorize('admin', 'administrator'), createUser);
 
+router.delete("/:id", protect, authorize("admin", "administrator"), deleteUser);
+
 // Ruta pentru a lista utilizatorii după rol (folosită în pagina de Alocări)
 router.get('/list/:role', protect, authorize('admin', 'administrator'), getUsersByRole);
 
+router.get('/beneficiari', protect, authorize('admin', 'administrator'), async (req, res) => {
+  try {
+    const beneficiari = await User.find({ role: "beneficiar" }).select('-password');
+    res.json(beneficiari);
+  } catch (err) {
+    console.error("Eroare la obținerea beneficiari:", err);
+    res.status(500).json({ message: "Eroare la obținerea utilizatorilor" });
+  }
+});
 // --- ADAUGĂ ACEASTĂ RUTĂ NOUĂ PENTRU A OBȚINE DETALIILE UNUI UTILIZATOR DUPĂ ID ---
 router.get('/:id', protect, authorize('admin', 'administrator', 'beneficiar'), async (req, res) => {
   try {
@@ -57,9 +69,20 @@ router.get('/:id', protect, authorize('admin', 'administrator', 'beneficiar'), a
   }
 });
 // ---------------------------------------------------------------------------------
+// Ruta pentru a lista beneficiarii (trebuie să fie înainte de '/:id')
 
 // Ruta pentru a actualiza un utilizator (de către un admin)
 router.put('/:id', protect, authorize('admin', 'administrator'), updateUser);
+
+// router.get('/beneficiari', async (req, res) => {
+//   try {
+//     const beneficiari = await User.find({ role: "beneficiar" }); // ✅ corect
+//     res.json(beneficiari);
+//   } catch (err) {
+//     console.error("Eroare la obținerea beneficiari:", err);
+//     res.status(500).json({ message: "Eroare la obținerea utilizatorilor" });
+//   }
+// });
 
 router.put('/:id/password', protect, authorize('admin','administrator'), async (req, res) => {
   // const User = require('../models/user.model'); // Nu mai este necesar aici dacă ai declarat-o sus
@@ -101,6 +124,8 @@ router.get('/beneficiar/angajati', protect, authorize('beneficiar'), async (req,
     res.status(500).json({ message: "Eroare server." });
   }
 });
+
+
 
 router.post(
   '/create-admin',

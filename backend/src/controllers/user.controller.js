@@ -2,18 +2,28 @@ const User = require('../models/user.model');
 
 const createUser = async (req, res) => {
   try {
-    const { email, password, role, nume, prenume, profile } = req.body;
+    const { email, password, role, nume, prenume, telefon, profile } = req.body;
+
     if (role === 'administrator') {
       return res.status(400).json({ message: 'Nu se poate crea un utilizator cu rol de administrator.' });
     }
+
     const userExists = await User.findOne({ email });
     if (userExists) {
       return res.status(400).json({ message: 'Acest email este deja înregistrat.' });
     }
+
     const user = await User.create({
-      email, password, role, nume, prenume, profile,
+      email,
+      password,
+      role,
+      nume,
+      prenume,
+      telefon,          // 🔥 acum se salvează
+      profile,
       creatDeAdminId: req.user._id,
     });
+
     res.status(201).json({ _id: user._id, email: user.email, role: user.role });
   } catch (error) {
     res.status(500).json({ message: `Eroare de server: ${error.message}` });
@@ -35,6 +45,20 @@ const updateUser = async (req, res) => {
     res.status(200).json(user);
   } catch (error) {
     res.status(500).json({ message: `Eroare de server: ${error.message}` });
+  }
+};
+
+const deleteUser = async (req, res) => {
+  try {
+    const user = await User.findById(req.params.id);
+    if (!user) {
+      return res.status(404).json({ message: "Utilizatorul nu a fost găsit." });
+    }
+
+    await user.deleteOne();
+    res.status(200).json({ message: "Utilizator șters cu succes!" });
+  } catch (error) {
+    res.status(500).json({ message: `Eroare server: ${error.message}` });
   }
 };
 
@@ -100,5 +124,5 @@ const changePassword = async (req, res) => {
 };
 
 
-module.exports = { getUserProfile, createUser, getUsersByRole, createAdminAccount, updateUser, changePassword };
+module.exports = { getUserProfile, createUser, getUsersByRole, createAdminAccount, updateUser, changePassword, deleteUser };
 

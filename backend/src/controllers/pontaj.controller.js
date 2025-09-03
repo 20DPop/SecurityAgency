@@ -98,4 +98,32 @@ const getActivePontaj = async (req, res) => {
     }
 };
 
-module.exports = { checkIn, checkOut, getActivePontaj };
+const getActiveEmployees = async (req, res) => {
+  try {
+    const pontajeActive = await Pontaj.find({ ora_iesire: null })
+      .populate("paznicId", "nume prenume email telefon") // preia datele paznicului
+      .populate("beneficiaryId", "profile.nume_companie"); // preia compania beneficiarului
+
+    res.status(200).json(pontajeActive);
+  } catch (error) {
+    res.status(500).json({ message: `Eroare de server: ${error.message}` });
+  }
+};
+
+const getActiveEmployeesForBeneficiar = async (req, res) => {
+  try {
+    const beneficiaryId = req.user._id;
+
+    // Preluăm doar pontajele active pentru beneficiar
+    const pontajeActive = await Pontaj.find({ ora_iesire: null, beneficiaryId })
+      .populate("paznicId", "nume prenume email telefon") // datele paznicului
+      .populate("beneficiaryId", "profile.nume_companie"); // datele firmei
+
+    res.status(200).json(pontajeActive);
+  } catch (error) {
+    console.error("Eroare backend:", error);
+    res.status(500).json({ message: `Eroare de server: ${error.message}` });
+  }
+};
+
+module.exports = { checkIn, checkOut, getActivePontaj, getActiveEmployees, getActiveEmployeesForBeneficiar };

@@ -1,41 +1,38 @@
 import React, { useEffect, useState } from "react";
-import "./Angajati.css";
+import "./Firmacolaboratoare.css";
 import axios from "axios";
 
-export default function Angajati() {
-  const [paznici, setPaznici] = useState([]);
+export default function Firmacolaboratoare() {
+  const [beneficiari, setBeneficiari] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
-  const [editUser, setEditUser] = useState(null); // utilizator selectat pentru editare
-  const [passwordUser, setPasswordUser] = useState(null); // utilizator selectat pentru schimbare parolă
+  const [editUser, setEditUser] = useState(null);
+  const [passwordUser, setPasswordUser] = useState(null);
   const [formData, setFormData] = useState({
     nume: "",
     prenume: "",
     email: "",
     telefon: "",
+    nume_companie: "",
+    punct_de_lucru: "",
   });
   const [newPassword, setNewPassword] = useState("");
-  const [searchTerm, setSearchTerm] = useState("");
 
-  // Preluarea paznicilor de la backend
+  // --- FETCH BENEFICIARI ---
   useEffect(() => {
-    const fetchPaznici = async () => {
+    const fetchBeneficiari = async () => {
       try {
         const token = JSON.parse(localStorage.getItem("currentUser"))?.token;
         if (!token) throw new Error("Utilizator neautentificat!");
 
-        const res = await fetch("http://localhost:3000/api/users/list/paznic", {
+        const res = await fetch("http://localhost:3000/api/users/beneficiari", {
           headers: { Authorization: `Bearer ${token}` },
         });
 
-        if (!res.ok) {
-          throw new Error("Eroare la preluarea paznicilor");
-        }
+        if (!res.ok) throw new Error("Eroare la preluarea beneficiarilor");
 
         const data = await res.json();
-        // Sortare alfabetic după nume
-        data.sort((a, b) => a.nume.localeCompare(b.nume));
-        setPaznici(data);
+        setBeneficiari(data);
       } catch (err) {
         console.error("Eroare:", err);
         setError(err.message);
@@ -44,17 +41,20 @@ export default function Angajati() {
       }
     };
 
-    fetchPaznici();
+    fetchBeneficiari();
   }, []);
 
   // --- FUNCȚII ---
   const handleEdit = (user) => {
     setEditUser(user);
+
     setFormData({
-      nume: user.nume,
-      prenume: user.prenume,
-      email: user.email,
+      nume: user.nume || "",
+      prenume: user.prenume || "",
+      email: user.email || "",
       telefon: user.telefon || "",
+      nume_companie: user.profile?.nume_companie || "",
+      punct_de_lucru: user.profile?.punct_de_lucru || "",
     });
   };
 
@@ -67,6 +67,25 @@ export default function Angajati() {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
+  const handleDelete = async (userId) => {
+  if (!window.confirm("Ești sigur că vrei să ștergi acest beneficiar?")) return;
+
+  try {
+    const token = JSON.parse(localStorage.getItem("currentUser"))?.token;
+    if (!token) throw new Error("Utilizator neautentificat!");
+
+    await axios.delete(`http://localhost:3000/api/users/${userId}`, {
+      headers: { Authorization: `Bearer ${token}` },
+    });
+
+    alert("Beneficiar șters cu succes!");
+    setBeneficiari((prev) => prev.filter((u) => u._id !== userId));
+  } catch (err) {
+    console.error(err);
+    setError("Eroare la ștergerea beneficiarului.");
+  }
+  };
+
   const handleSave = async () => {
     try {
       const token = JSON.parse(localStorage.getItem("currentUser"))?.token;
@@ -74,44 +93,36 @@ export default function Angajati() {
 
       const config = { headers: { Authorization: `Bearer ${token}` } };
 
+      // reconstruim structura pentru backend
+      const updatedUser = {
+        nume: formData.nume,
+        prenume: formData.prenume,
+        email: formData.email,
+        telefon: formData.telefon,
+        profile: {
+          nume_companie: formData.nume_companie,
+          punct_de_lucru: formData.punct_de_lucru,
+        },
+      };
+
       await axios.put(
         `http://localhost:3000/api/users/${editUser._id}`,
-        formData,
+        updatedUser,
         config
       );
 
       alert("Datele au fost salvate!");
       setEditUser(null);
 
-      // Reîncarcă lista paznicilor
-      const res = await fetch("http://localhost:3000/api/users/list/paznic", {
+      // reîncarcă lista
+      const res = await fetch("http://localhost:3000/api/users/beneficiari", {
         headers: { Authorization: `Bearer ${token}` },
       });
       const data = await res.json();
-      data.sort((a, b) => a.nume.localeCompare(b.nume));
-      setPaznici(data);
+      setBeneficiari(data);
     } catch (err) {
       console.error(err);
       setError("Eroare la salvarea datelor.");
-    }
-  };
-
-  const handleDelete = async (userId) => {
-    if (!window.confirm("Ești sigur că vrei să ștergi acest angajat?")) return;
-
-    try {
-      const token = JSON.parse(localStorage.getItem("currentUser"))?.token;
-      if (!token) throw new Error("Utilizator neautentificat!");
-
-      await axios.delete(`http://localhost:3000/api/users/${userId}`, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-
-      alert("Angajat șters cu succes!");
-      setPaznici((prev) => prev.filter((u) => u._id !== userId));
-    } catch (err) {
-      console.error(err);
-      setError("Eroare la ștergerea angajatului.");
     }
   };
 
@@ -140,21 +151,14 @@ export default function Angajati() {
     setPasswordUser(null);
   };
 
-  // --- FILTRARE PAZNICI DUPĂ SEARCH ---
-  const filteredPaznici = paznici.filter(
-    (user) =>
-      user.nume.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      user.prenume.toLowerCase().includes(searchTerm.toLowerCase())
-  );
-
   // --- RENDER ---
-  if (loading) return <div className="loading">Se încarcă lista paznicilor...</div>;
+  if (loading) return <div className="loading">Se încarcă lista beneficiarilor...</div>;
   if (error) return <div className="loading">Eroare: {error}</div>;
 
   // --- FORMULAR SCHIMBARE PAROLĂ ---
   if (passwordUser) {
     return (
-      <div className="angajati-container edit-form-container">
+      <div className="beneficiari-container edit-form-container">
         <h1>Schimbare Parolă pentru {passwordUser.nume} {passwordUser.prenume}</h1>
         <div className="form-group">
           <label>Parola nouă</label>
@@ -175,14 +179,14 @@ export default function Angajati() {
   // --- FORMULAR EDITARE ---
   if (editUser) {
     return (
-      <div className="angajati-container edit-form-container">
-        <h1>Editare Paznic</h1>
+      <div className="beneficiari-container edit-form-container">
+        <h1>Editare Beneficiar</h1>
         <div className="form-group">
-          <label>Nume</label>
+          <label>Nume contact</label>
           <input name="nume" value={formData.nume} onChange={handleChange} />
         </div>
         <div className="form-group">
-          <label>Prenume</label>
+          <label>Prenume contact</label>
           <input name="prenume" value={formData.prenume} onChange={handleChange} />
         </div>
         <div className="form-group">
@@ -193,6 +197,14 @@ export default function Angajati() {
           <label>Telefon</label>
           <input name="telefon" value={formData.telefon} onChange={handleChange} />
         </div>
+        <div className="form-group">
+          <label>Nume Companie</label>
+          <input name="nume_companie" value={formData.nume_companie} onChange={handleChange} />
+        </div>
+        <div className="form-group">
+          <label>Punct de lucru</label>
+          <input name="punct_de_lucru" value={formData.punct_de_lucru} onChange={handleChange} />
+        </div>
 
         <button className="save-btn" onClick={handleSave}>💾 Salvează</button>
         <button className="back-btn" onClick={handleBack}>⬅ Înapoi</button>
@@ -200,22 +212,12 @@ export default function Angajati() {
     );
   }
 
-  // --- TABEL PAZNICI ---
+  // --- TABEL BENEFICIARI ---
   return (
-    <div className="angajati-container">
-      <h1>Lista Paznicilor</h1>
-
-      <div className="search-container">
-        <input
-          type="text"
-          placeholder="Caută după nume sau prenume..."
-          value={searchTerm}
-          onChange={(e) => setSearchTerm(e.target.value)}
-        />
-      </div>
-
+    <div className="beneficiari-container">
+      <h1>Lista Beneficiarilor</h1>
       <div className="table-responsive">
-        <table className="angajati-table">
+        <table className="beneficiari-table">
           <thead>
             <tr>
               <th>Nume</th>
@@ -225,14 +227,16 @@ export default function Angajati() {
             </tr>
           </thead>
           <tbody>
-            {filteredPaznici.length > 0 ? (
-              filteredPaznici.map((user) => (
+            {beneficiari.length > 0 ? (
+              beneficiari.map((user) => (
                 <tr key={user._id}>
                   <td>{user.nume}</td>
                   <td>{user.prenume}</td>
                   <td>{user.email}</td>
                   <td>
-                    <button className="edit-btn" onClick={() => handleEdit(user)}>✏️ Editare</button>
+                    <button className="edit-btn" onClick={() => handleEdit(user)}>
+                      ✏️ Editare
+                    </button>
                     <button
                       className="edit-btn"
                       style={{ backgroundColor: "#ffc107", marginLeft: "5px" }}
@@ -241,26 +245,25 @@ export default function Angajati() {
                       🔑 Schimbă parola
                     </button>
                     <button
-                      className="edit-btn"
-                      style={{ backgroundColor: "#dc3545", marginLeft: "5px" }}
-                      onClick={() => handleDelete(user._id)}
-                    >
-                      🗑️ Șterge
-                    </button>
+                    className="edit-btn"
+                    style={{ backgroundColor: "#dc3545", marginLeft: "5px" }}
+                    onClick={() => handleDelete(user._id)}
+                  >
+                    🗑️ Șterge
+                  </button>
                   </td>
                 </tr>
               ))
             ) : (
               <tr>
                 <td colSpan="4" style={{ textAlign: "center" }}>
-                  Nu există paznici care să corespundă căutării.
+                  Nu există beneficiari înregistrați.
                 </td>
               </tr>
             )}
           </tbody>
         </table>
       </div>
-
       <button className="back-bottom-btn" onClick={() => window.history.back()}>
         ⬅ Înapoi
       </button>

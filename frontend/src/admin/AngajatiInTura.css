@@ -3,7 +3,7 @@
   font-family: Arial, sans-serif;
   display: flex;
   flex-direction: column;
-  min-height: 100vh;
+  min-height: 100vh; /* Ocupă tot ecranul */
   box-sizing: border-box;
 }
 
@@ -13,8 +13,25 @@
   color: #333;
 }
 
+/* Bara de filtrare */
+.filter-container {
+  text-align: center;
+  margin-bottom: 20px;
+}
+
+.filter-container label {
+  font-weight: bold;
+  margin-right: 10px;
+}
+
+.filter-container select {
+  padding: 6px 10px;
+  font-size: 14px;
+}
+
+/* Tabel responsive */
 .table-responsive {
-  flex: 1;
+  flex: 1; /* Tabelul ocupă tot spațiul disponibil */
   overflow-x: auto;
 }
 
@@ -22,7 +39,7 @@
   width: 100%;
   border-collapse: collapse;
   background-color: #f9f9f9;
-  min-width: 500px;
+  min-width: 600px; /* pentru scroll dacă ecran mic */
 }
 
 .angajati-table th,
@@ -50,6 +67,7 @@
   color: #555;
 }
 
+/* Buton Înapoi jos, în stânga */
 .back-button-container {
   text-align: left;
   margin-top: 20px;
