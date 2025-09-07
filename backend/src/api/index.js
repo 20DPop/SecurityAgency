@@ -8,6 +8,7 @@ const pontajRoute = require('./pontaj.routes');
 const procesVerbalRoutes = require('./procesVerbal.routes');
 const trackingRoutes = require('./tracking.routes');
 const assignmentRoutes = require('./assignments.routes'); // <-- LINIE NOUĂ
+const sesizariRoutes = require("./sesizari.routes");
 
 
 router.use('/auth', authRoutes);
@@ -16,6 +17,7 @@ router.use('/posts', postRoutes);
 router.use('/pontaj', pontajRoute);
 router.use('/proces-verbal', procesVerbalRoutes);
 router.use('/tracking', trackingRoutes);
-router.use('/assignments', assignmentRoutes); 
+router.use('/assignments', assignmentRoutes);
+router.use("/sesizari", sesizariRoutes); 
 
 module.exports = router;

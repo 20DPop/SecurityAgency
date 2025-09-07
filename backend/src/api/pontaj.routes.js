@@ -1,7 +1,8 @@
 // Cale: backend/src/api/pontaj.routes.js
 const express = require('express');
 const router = express.Router();
-const { checkIn, checkOut, getActivePontaj, getActiveEmployees, getActiveEmployeesForBeneficiar  } = require('../controllers/pontaj.controller');
+const { checkIn, checkOut, getActivePontaj, getActiveEmployees, getActiveEmployeesForBeneficiar,updateLocation,
+  getLatestLocation, getIstoricPontaje, getIstoricBeneficiar  } = require('../controllers/pontaj.controller');
 const { protect, authorize } = require('../middleware/auth.middleware');
 
 // router.use(protect, authorize('paznic', 'administrator'));
@@ -22,5 +23,21 @@ router.get("/angajati-activi", protect, authorize("admin", "administrator"), get
 
 // Ruta pentru beneficiari
 router.get("/angajati-activi-beneficiar", protect, authorize("beneficiar"), getActiveEmployeesForBeneficiar);
+
+// 🔹 Paznicul își trimite locația
+router.post("/update-location", protect, authorize("paznic"), updateLocation);
+
+// 🔹 Admin/beneficiar vede ultima locație
+router.get("/locatie/:paznicId", protect, authorize("admin", "administrator", "beneficiar"), getLatestLocation);
+
+// Ruta pentru istoric 30 zile
+router.get("/istoric-30zile", protect, authorize("admin", "administrator"), getIstoricPontaje);
+
+router.get(
+  "/istoric-30zile-beneficiar",
+  protect,
+  authorize("beneficiar"),
+  getIstoricBeneficiar
+);
 
 module.exports = router;
