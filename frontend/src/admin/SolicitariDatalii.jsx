@@ -1,43 +1,77 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
+import axios from 'axios';
 import './SolicitariDetalii.css';
 
 export default function SolicitariDetalii({ solicitari, setSolicitari }) {
-  const { id } = useParams(); // Preia ID-ul din URL
+  const { id } = useParams();
   const [sesizare, setSesizare] = useState(null);
   const [pasiRezolvare, setPasiRezolvare] = useState('');
   const [statusInitial, setStatusInitial] = useState('');
 
-  useEffect(() => {
-    let foundSesizare = null;
-    let foundStatus = '';
+useEffect(() => {
+  let foundSesizare = null;
+  let foundStatus = '';
 
-    // Caută sesizarea în toate categoriile
-    for (const key in solicitari) {
-      const item = solicitari[key].find(s => s.id === parseInt(id));
-      if (item) {
-        foundSesizare = item;
-        foundStatus = key;
-        break;
+  for (const key in solicitari) {
+    const item = solicitari[key].find(s => s.id === id || s._id === id);
+    if (item) {
+      foundSesizare = item;
+      foundStatus = key;
+      break;
+    }
+  }
+
+  if (foundSesizare) {
+    setSesizare(foundSesizare);
+    setPasiRezolvare(foundSesizare.pasi || '');
+    setStatusInitial(foundStatus);
+  } else {
+    // Dacă nu găsește în state, ia direct de la backend
+    axios.get(`http://localhost:3000/api/sesizari`)
+      .then(res => {
+        const toate = res.data.map(s => ({
+          id: s._id,
+          titlu: s.titlu,
+          descriere: s.descriere,
+          firma: s.createdByBeneficiaryId?.profile?.nume_companie || "—",
+          status: s.status,
+          pasi: s.pasiRezolvare || "",
+          data: s.createdAt ? s.createdAt.slice(0,10) : "—",
+          dataFinalizare: s.dataFinalizare
+        }));
+
+        const ses = toate.find(s => s.id === id);
+        if (ses) {
+          setSesizare(ses);
+          setPasiRezolvare(ses.pasi || '');
+          setStatusInitial(ses.status);
+        }
+      })
+      .catch(err => console.error(err));
+  }
+}, [id, solicitari]);
+
+
+  const handleSave = async () => {
+    if (!sesizare) return;
+
+    try {
+      await axios.patch(`http://localhost:3000/api/sesizari/${sesizare.id || sesizare._id}`, {
+        pasiRezolvare
+      });
+
+      const updatedsolicitari = { ...solicitari };
+      const index = updatedsolicitari[statusInitial].findIndex(s => s.id === sesizare.id || s._id === sesizare._id);
+      if (index > -1) {
+        updatedsolicitari[statusInitial][index].pasi = pasiRezolvare;
+        setSolicitari(updatedsolicitari);
       }
-    }
 
-    if (foundSesizare) {
-      setSesizare(foundSesizare);
-      setPasiRezolvare(foundSesizare.pasi || ''); // Inițializează cu pașii existenți
-      setStatusInitial(foundStatus); // Salvează statusul inițial
-    }
-  }, [id, solicitari]);
-
-  const handleSave = () => {
-    // Funcție pentru a actualiza starea globală a sesizărilor
-    const updatedsolicitari = { ...solicitari };
-    const sesizareIndex = updatedsolicitari[statusInitial].findIndex(s => s.id === parseInt(id));
-
-    if (sesizareIndex > -1) {
-      updatedsolicitari[statusInitial][sesizareIndex].pasi = pasiRezolvare;
-      setSolicitari(updatedsolicitari);
-      alert('Pașii de rezolvare au fost salvați!');
+      alert("Pașii de rezolvare au fost salvați!");
+    } catch (error) {
+      console.error(error);
+      alert("Nu s-au putut salva pașii de rezolvare.");
     }
   };
 
@@ -52,7 +86,7 @@ export default function SolicitariDetalii({ solicitari, setSolicitari }) {
 
   return (
     <div className="detalii-container">
-      <h1>Detalii Solicitare #{sesizare.id}</h1>
+      <h1>Detalii Solicitare #{sesizare.id || sesizare._id}</h1>
       <div className="detalii-card">
         <p><strong>Titlu:</strong> {sesizare.titlu}</p>
         <p><strong>Descriere:</strong> {sesizare.descriere}</p>

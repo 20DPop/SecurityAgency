@@ -119,4 +119,88 @@ const getActiveEmployeesForBeneficiar = async (req, res) => {
   }
 };
 
-module.exports = { checkIn, checkOut, getActivePontaj, getActiveEmployees, getActiveEmployeesForBeneficiar };
+const updateLocation = async (req, res) => {
+  try {
+    const { latitude, longitude } = req.body;
+
+    if (!latitude || !longitude) {
+      return res.status(400).json({ message: "Coordonate invalide!" });
+    }
+
+    // caută pontajul activ al paznicului logat
+    const pontaj = await Pontaj.findOne({ paznicId: req.user._id, ora_iesire: null });
+
+    if (!pontaj) {
+      return res.status(404).json({ message: "Nu există tura activă pentru acest paznic." });
+    }
+
+    pontaj.locationHistory.push({ latitude, longitude, timestamp: new Date() });
+    await pontaj.save();
+
+    res.status(200).json({ message: "Locația a fost actualizată." });
+  } catch (err) {
+    res.status(500).json({ message: "Eroare server: " + err.message });
+  }
+};
+
+const getLatestLocation = async (req, res) => {
+  try {
+    const { paznicId } = req.params;
+
+    const pontaj = await Pontaj.findOne({ paznicId, ora_iesire: null });
+
+    if (!pontaj || !pontaj.locationHistory.length) {
+      return res.status(404).json({ message: "Nicio locație găsită pentru acest paznic." });
+    }
+
+    const latest = pontaj.locationHistory[pontaj.locationHistory.length - 1];
+
+    res.status(200).json(latest);
+  } catch (err) {
+    res.status(500).json({ message: "Eroare server: " + err.message });
+  }
+};
+const getIstoricPontaje = async (req, res) => {
+  try {
+    const acum = new Date();
+    const acum30zile = new Date();
+    acum30zile.setDate(acum.getDate() - 30);
+
+    // Preluăm toate pontajele între acum30zile și acum
+    const pontaje = await Pontaj.find({
+      ora_intrare: { $gte: acum30zile }
+    })
+      .populate("paznicId", "nume prenume email telefon")
+      .populate("beneficiaryId", "profile.nume_companie")
+      .sort({ ora_intrare: -1 }); // cele mai recente primele
+
+    res.status(200).json(pontaje);
+  } catch (err) {
+    console.error("Eroare la preluarea istoricului pontajelor:", err);
+    res.status(500).json({ message: "Eroare de server: " + err.message });
+  }
+};
+
+const getIstoricBeneficiar = async (req, res) => {
+  try {
+    const beneficiaryId = req.user._id;
+    const startDate = new Date();
+    startDate.setDate(startDate.getDate() - 30);
+
+    const pontaje = await Pontaj.find({
+      beneficiaryId,
+      ora_intrare: { $gte: startDate }
+    })
+      .populate("paznicId", "nume prenume email telefon")
+      .populate("beneficiaryId", "profile.nume_companie")
+      .sort({ ora_intrare: -1 });
+
+    res.status(200).json(pontaje);
+  } catch (error) {
+    res.status(500).json({ message: `Eroare server: ${error.message}` });
+  }
+};
+
+module.exports = { checkIn, checkOut, getActivePontaj, getActiveEmployees, getActiveEmployeesForBeneficiar
+, updateLocation, getLatestLocation, getIstoricPontaje,getIstoricBeneficiar
+ };

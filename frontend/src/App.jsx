@@ -26,8 +26,6 @@
   import Firmacolaboratoare from "./admin/Firmacolaboratoare";
   import PrezentaAngajati from './beneficiar/PrezentaAngajati';
   import AngajatiInTura from './admin/AngajatiInTura';
-  import ProcesVerbalPredarePrimire from './paznic/ProcesVerbalPredarePrimire';
-  import RaportEveniment from './paznic/RaportEveniment';
 
   // 🔹 NOU: import pentru paginile beneficiarului cu angajați
   import AngajatiB from "./beneficiar/AngajatiB";
@@ -154,6 +152,7 @@
           {/* --- ADMIN --- */}
           <Route path="/adauga-angajat" element={<AdaugaAngajat />} />
           <Route path="/adauga-firma" element={<AdaugaFirma />} />
+          <Route path="/urmarire/:id" element={<UrmarireAngajat />} />
           <Route path="/alocare-paznici" element={
             <ProtectedRoute user={currentUser} allowedRoles={['admin', 'administrator']}>
               <AlocarePaznici />
@@ -203,7 +202,7 @@
               <SolicitariB solicitari={solicitariBeneficiar} />
             </ProtectedRoute>
           }/>
-          <Route path="/adauga-solicitare" element={
+          <Route path="/solicitariB/adauga" element={
             <ProtectedRoute user={currentUser} allowedRoles={['beneficiar']}>
               <AdaugaSolicitare setSolicitari={setSolicitariBeneficiar} currentUser={currentUser} />
             </ProtectedRoute>
@@ -213,6 +212,7 @@
               <AngajatiB />
             </ProtectedRoute>
           }/>
+          
           <Route path="/angajatiB/:id" element={
             <ProtectedRoute user={currentUser} allowedRoles={['beneficiar']}>
               <DetaliiAngajatB />
