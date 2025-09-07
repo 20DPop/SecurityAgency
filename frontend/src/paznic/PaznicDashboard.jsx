@@ -24,6 +24,9 @@ export default function PaznicDashboard() {
           <Link to={`/proces-verbal/${testPontajId}`} className="card link-card">
             📄<p>Procese Verbale</p>
           </Link>
+          <Link to="/raport-eveniment" className="card link-card">
+            🚨<p>Raport de Eveniment</p>
+          </Link>
         </div>
       </main>
     </div>

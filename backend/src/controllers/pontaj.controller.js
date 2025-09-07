@@ -1,6 +1,7 @@
 // Cale: backend/src/controllers/pontaj.controller.js
 const Pontaj = require('../models/pontaj.model');
 const User = require('../models/user.model');
+const ProcesVerbalPredarePrimire = require('../models/procesVerbalPredarePrimire.model');
 
 // @desc    Începe o nouă tură (check-in)
 // @route   POST /api/pontaj/check-in
@@ -50,35 +51,27 @@ const checkIn = async (req, res) => {
 const checkOut = async (req, res) => {
   try {
     const paznicId = req.user._id;
+    const turaActiva = await Pontaj.findOne({ paznicId, ora_iesire: null });
 
-    // Căutăm tura activă (cea care nu are o oră de ieșire setată)
-    const turaActiva = await Pontaj.findOne({ 
-      paznicId, 
-      ora_iesire: null 
-    });
-
-    // Verificăm dacă a fost găsită o tură activă
     if (!turaActiva) {
       return res.status(404).json({ message: 'Nu aveți nicio tură activă pe care să o încheiați.' });
     }
 
-    // Setăm ora de ieșire la momentul actual
+    const pvPredare = await ProcesVerbalPredarePrimire.findOne({ pontajId: turaActiva._id });
+    if (!pvPredare) {
+        return res.status(400).json({ message: 'EROARE: Procesul Verbal de Predare-Primire nu a fost găsit. Tura nu poate fi încheiată.' });
+    }
+
     turaActiva.ora_iesire = new Date();
-    
-    // Salvăm modificările în baza de date
     await turaActiva.save();
 
-    // Trimitem un răspuns de succes înapoi la client
-    res.status(200).json({ 
-        message: 'Check-out efectuat cu succes. Tura a fost încheiată.',
-        pontaj: turaActiva 
-    });
-
+    res.status(200).json({ message: 'Check-out efectuat cu succes. Tura a fost încheiată.' });
   } catch (error) {
-    // În caz de eroare, trimitem un răspuns de eroare
     res.status(500).json({ message: `Eroare de server: ${error.message}` });
   }
 };
+
+
 
 // @desc    Preia tura activă pentru paznicul logat
 // @route   GET /api/pontaj/active

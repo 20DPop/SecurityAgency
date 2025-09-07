@@ -1,179 +1,112 @@
-// Cale: backend/src/controllers/procesVerbal.controller.js
-
 const ProcesVerbal = require('../models/procesVerbal.model');
 const Post = require('../models/post.model'); 
 const User = require('../models/user.model');
-const fs = require('fs');
+const fs = require('fs').promises;
 const path = require('path');
-const PDFDocument = require('pdfkit-table'); // Folosim extensia pentru tabele
+const { PDFDocument, rgb, StandardFonts } = require('pdf-lib');
 
-// @desc    Creare Proces Verbal
+// @desc    Creare Proces Verbal de Intervenție (cu noul șablon curat)
 // @route   POST /api/proces-verbal/create
 // @access  Private (Paznic)
 const createProcesVerbal = async (req, res) => {
   try {
-    // --- PASUL 1: Preluarea datelor și identificarea postului ---
+    // --- PASUL 1: Preluarea datelor (rămâne la fel) ---
     const paznicLogat = req.user;
     const beneficiar = await User.findOne({ 'profile.assignedPazniciIds': paznicLogat._id });
-    if (!beneficiar) {
-      return res.status(404).json({ message: 'Nu sunteți alocat la niciun beneficiar.' });
-    }
+    if (!beneficiar) return res.status(404).json({ message: 'Nu sunteți alocat la niciun beneficiar.' });
+    
     const post = await Post.findOne({ beneficiaryId: beneficiar._id });
-    if (!post) {
-      return res.status(404).json({ message: 'Beneficiarul nu are niciun post configurat.' });
-    }
+    if (!post) return res.status(404).json({ message: 'Beneficiarul nu are niciun post configurat.' });
     
     const {
       reprezentant_beneficiar,
       ora_declansare_alarma,
       ora_prezentare_echipaj,
       ora_incheiere_misiune,
-      observatii_generale,
       evenimente
     } = req.body;
 
-    // --- PASUL 2: Generarea PDF detaliată ---
-    const fileName = `PV_${beneficiar.profile.nume_companie.replace(/\s/g, '_')}_${Date.now()}.pdf`;
-    const dirPath = path.join(__dirname, '..', '..', 'uploads', 'procese-verbale');
+    // --- PASUL 2: Generarea PDF folosind Noul Șablon ---
+    const templatePath = path.join(__dirname, '..', 'templates', 'PV_interventie_template.pdf');
+    const templateBytes = await fs.readFile(templatePath);
+    const pdfDoc = await PDFDocument.load(templateBytes);
+    
+    const page1 = pdfDoc.getPages()[0];
+    const page2 = pdfDoc.getPages()[1];
+    const { width, height } = page1.getSize();
+    const font = await pdfDoc.embedFont(StandardFonts.Helvetica);
+
+    const formatTime = (dateString) => new Date(dateString).toLocaleTimeString('ro-RO', { hour: '2-digit', minute: '2-digit' });
+
+    //------------------------------------------------------------------//
+    // --- CALIBRARE PAGINA 1 (Ajustează aceste valori) --- //
+    // Y=0 este în JOSUL paginii. O valoare Y mai mare înseamnă mai SUS.
+    //------------------------------------------------------------------//
+    page1.drawText(new Date().toLocaleDateString('ro-RO'), { x: 305, y: height - 128, font, size: 11 });
+    page1.drawText(`${post.nume_post}, ${post.adresa_post}`, { x: 280, y: height - 194, font, size: 11 });
+    page1.drawText(reprezentant_beneficiar || 'Nespecificat', { x: 95, y: height - 216, font, size: 11 });
+    page1.drawText(beneficiar.profile.nume_companie, { x: 440, y: height - 216, font, size: 11 });
+    page1.drawText(formatTime(ora_declansare_alarma), { x: 290, y: height - 282, font, size: 11 });
+    page1.drawText(formatTime(ora_prezentare_echipaj), { x: 340, y: height - 304, font, size: 11 });
+    page1.drawText(formatTime(ora_incheiere_misiune), { x: 245, y: height - 392, font, size: 11 });
+    // Semnăturile nu necesită text dinamic, sunt deja pe șablon.
+
+    //------------------------------------------------------------------//
+    // --- CALIBRARE PAGINA 2 (Tabelul) (Ajustează aceste valori) --- //
+    //------------------------------------------------------------------//
+    let startY = height - 110; // Poziția Y de start pentru primul rând al tabelului
+    const rowHeight = 58; // Înălțimea unui rând (distanța verticală)
+    const columnX = { // Pozițiile X pentru fiecare coloană
+      nrCrt: 50,
+      dataOra: 95,
+      tipAlarma: 190,
+      echipaj: 275,
+      oraSosirii: 360,
+      cauze: 445,
+      solutionare: 535,
+      observatii: 630
+    };
+    
+    if (evenimente && evenimente.length > 0) {
+      evenimente.forEach((event, index) => {
+        const currentY = startY - (index * rowHeight);
+        
+        page2.drawText(`${index + 1}.`, { x: columnX.nrCrt, y: currentY, font, size: 9 });
+        page2.drawText(new Date(event.dataOraReceptionarii).toLocaleString('ro-RO'), { x: columnX.dataOra, y: currentY, font, size: 9, maxWidth: 80 });
+        page2.drawText(event.tipulAlarmei, { x: columnX.tipAlarma, y: currentY, font, size: 9, maxWidth: 70 });
+        page2.drawText(event.echipajAlarmat, { x: columnX.echipaj, y: currentY, font, size: 9, maxWidth: 70 });
+        page2.drawText(formatTime(event.oraSosirii), { x: columnX.oraSosirii, y: currentY, font, size: 9, maxWidth: 70 });
+        page2.drawText(event.cauzeleAlarmei, { x: columnX.cauze, y: currentY, font, size: 9, maxWidth: 80 });
+        page2.drawText(event.modulDeSolutionare, { x: columnX.solutionare, y: currentY, font, size: 9, maxWidth: 80 });
+        page2.drawText(event.observatii || '', { x: columnX.observatii, y: currentY, font, size: 9, maxWidth: 80 });
+      });
+    }
+
+    // --- Salvarea fișierului ---
+    const pdfBytes = await pdfDoc.save();
+    const fileName = `PV_Interventie_${beneficiar.profile.nume_companie.replace(/\s/g, '_')}_${Date.now()}.pdf`;
+    const dirPath = path.join(__dirname, '..', '..', 'uploads', 'procese-verbale-interventie');
+    await fs.mkdir(dirPath, { recursive: true });
     const filePath = path.join(dirPath, fileName);
-    fs.mkdirSync(dirPath, { recursive: true });
-    
-    const doc = new PDFDocument({ size: 'A4', margin: 50 });
-    doc.pipe(fs.createWriteStream(filePath));
-    
-    // Înregistrăm fonturile standard pentru a le putea schimba ușor
-    const fontNormal = 'Helvetica';
-    const fontBold = 'Helvetica-Bold';
+    await fs.writeFile(filePath, pdfBytes);
 
-    // Funcții ajutătoare pentru formatare
-    const formatDate = (dateString) => {
-        if (!dateString) return '__________';
-        const date = new Date(dateString);
-        return date.toLocaleString('ro-RO', { day: '2-digit', month: '2-digit', year: 'numeric' });
-    };
-    const formatTime = (dateString) => {
-        if (!dateString) return '____:____';
-        const date = new Date(dateString);
-        return date.toLocaleString('ro-RO', { hour: '2-digit', minute: '2-digit', hour12: false });
-    };
-
-    // --- START PAGINA 1 ---
-    doc.font(fontBold).fontSize(16).text('PROCES – VERBAL', { align: 'center' });
-    doc.moveDown(2);
-
-    doc.font(fontNormal).fontSize(12).text('Încheiat astăzi ', { continued: true, align: 'center' });
-    doc.font(fontBold).text(new Date().toLocaleDateString('ro-RO'), { align: 'center' });
-    doc.moveDown(3);
-
-    const initialX = doc.x; // Salvăm poziția X de start a marginilor
-    
-    doc.font(fontNormal).text('La obiectivul (denumirea și adresa) ', { continued: true });
-    doc.font(fontBold).text(`${post.nume_post}, ${post.adresa_post}`);
-
-    if (reprezentant_beneficiar) {
-      doc.font(fontNormal).text('de ', { continued: true });
-      doc.font(fontBold).text(reprezentant_beneficiar, { continued: true });
-      doc.font(fontNormal).text(', reprezentant al ', { continued: true });
-      doc.font(fontBold).text(beneficiar.profile.nume_companie);
-    } else {
-        doc.moveDown(0.5); // Adaugă spațiu dacă nu există reprezentant
-    }
-
-    doc.font(fontNormal).text('ca urmare a verificării timpilor de intervenție la obiectivele monitorizate.');
-    doc.moveDown(2);
-    
-    doc.text('Alarma a fost declanșată la ora ', { continued: true });
-    doc.font(fontBold).text(formatTime(ora_declansare_alarma));
-    doc.moveDown(1);
-    
-    doc.text('Echipajul de intervenție s-a prezentat la ora ', { continued: true });
-    doc.font(fontBold).text(formatTime(ora_prezentare_echipaj));
-    doc.moveDown(2);
-
-    const observatii = observatii_generale || "În timpul intervenției echipajul de intervenție a acționat conform procedurilor în vigoare, neexistând observații din partea beneficiarului privind calitatea prestației.";
-    doc.font(fontNormal).text(observatii, { align: 'justify' });
-    doc.moveDown(2);
-
-    doc.text('Misiunea s-a încheiat la ora ', { continued: true });
-    doc.font(fontBold).text(formatTime(ora_incheiere_misiune));
-    doc.moveDown(2);
-
-    doc.font(fontNormal).text('Drept pentru care am încheiat prezentul proces-verbal în 2 (două) exemplare.');
-    doc.moveDown(5);
-
-    // Secțiunea de semnături
-    const signatureY = doc.y;
-    doc.font(fontBold).text('ECHIPA DE INTERVENȚIE', initialX, signatureY);
-    doc.text('BENEFICIAR', doc.page.width - initialX - 150, signatureY, { width: 150, align: 'right' });
-    doc.moveDown(0.5);
-    doc.font(fontNormal).text('_________________________', initialX, doc.y);
-    doc.text('_________________________', doc.page.width - initialX - 150, doc.y, { width: 150, align: 'right' });
-    
-    // --- END PAGINA 1 ---
-
-
-    // --- START PAGINA 2: TABELUL ---
-    doc.addPage();
-
-    const table = {
-        headers: [
-            { label: "Nr. crt.", property: 'nr', width: 40, align: 'center', renderer: (value, i) => i !== undefined ? `${i + 1}.` : ''},
-            { label: "Data și ora recepționării", property: 'dataOraReceptionarii', width: 90, renderer: (value) => value ? new Date(value).toLocaleString('ro-RO') : '' },
-            { label: "Tipul alarmei", property: 'tipulAlarmei', width: 80 },
-            { label: "Echipaj alarmat", property: 'echipajAlarmat', width: 80 },
-            { label: "Ora sosirii la obiectiv", property: 'oraSosirii', width: 70, renderer: (value) => formatTime(value) },
-            { label: "Cauzele alarmei", property: 'cauzeleAlarmei', width: 80 },
-            { label: "Modul de soluționare", property: 'modulDeSolutionare', width: 80 },
-            { label: "Observații", property: 'observatii' }, // Lasă lățimea automată
-        ],
-        datas: evenimente.length > 0 ? evenimente : [{}], // Asigură-te că există cel puțin un rând gol pentru a desena structura
-        options: {
-            padding: 5,
-            headerStyle: {
-                fillColor: '#E0E0E0',
-                font: fontBold,
-                fontSize: 10,
-            },
-            style: {
-                font: fontNormal,
-                fontSize: 9,
-            },
-        }
-    };
-
-    await doc.table(table);
-
-    // Adaugă rânduri goale pentru a umple pagina, dacă este necesar
-    const rowsOnPage = evenimente.length > 0 ? evenimente.length : 1;
-    const remainingRows = 10 - rowsOnPage; // Ajustează '10' la numărul total de rânduri dorit
-    if (remainingRows > 0) {
-        const emptyRow = { nr: '', dataOraReceptionarii: '', tipulAlarmei: '', echipajAlarmat: '', oraSosirii: '', cauzeleAlarmei: '', modulDeSolutionare: '', observatii: '' };
-        for (let i = 0; i < remainingRows; i++) {
-            await doc.table({ headers: table.headers, datas: [emptyRow], options: { ...table.options, hideHeader: true } });
-        }
-    }
-    // --- END PAGINA 2 ---
-
-    doc.end();
-
-    // --- PASUL 3: Salvarea înregistrării în baza de date ---
-    const caleStocareRelativa = `/uploads/procese-verbale/${fileName}`;
-    const newProcesVerbal = await ProcesVerbal.create({
+    // --- Salvarea înregistrării în baza de date ---
+    const caleStocareRelativa = `/uploads/procese-verbale-interventie/${fileName}`;
+    await ProcesVerbal.create({
       paznicId: paznicLogat._id,
       postId: post._id,
       reprezentant_beneficiar,
       ora_declansare_alarma,
       ora_prezentare_echipaj,
       ora_incheiere_misiune,
-      observatii_generale,
-      evenimente,
+      evenimente, // Observațiile generale nu mai sunt în acest șablon
       caleStocarePDF: caleStocareRelativa
     });
 
-    res.status(201).json({ message: 'Proces verbal creat cu succes!', data: newProcesVerbal });
+    res.status(201).json({ message: 'Proces verbal de intervenție creat cu succes!' });
 
   } catch (error) {
-    console.error("Eroare la crearea procesului verbal:", error);
+    console.error("Eroare la crearea procesului verbal de intervenție:", error);
     res.status(500).json({ message: `Eroare de server: ${error.message}` });
   }
 };

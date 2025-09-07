@@ -26,6 +26,8 @@
   import Firmacolaboratoare from "./admin/Firmacolaboratoare";
   import PrezentaAngajati from './beneficiar/PrezentaAngajati';
   import AngajatiInTura from './admin/AngajatiInTura';
+  import ProcesVerbalPredarePrimire from './paznic/ProcesVerbalPredarePrimire';
+  import RaportEveniment from './paznic/RaportEveniment';
 
   // 🔹 NOU: import pentru paginile beneficiarului cu angajați
   import AngajatiB from "./beneficiar/AngajatiB";
@@ -131,6 +133,12 @@
               <ProcesVerbal />
             </ProtectedRoute>
           }/>
+          {/* --- RUTĂ NOUĂ ADĂUGATĂ AICI --- */}
+        <Route path="/proces-verbal-predare/:pontajId" element={
+          <ProtectedRoute user={currentUser} allowedRoles={['paznic', 'administrator']}>
+            <ProcesVerbalPredarePrimire />
+          </ProtectedRoute>
+        }/>
 
           {/* --- DASHBOARD-URI --- */}
           <Route path="/admin/dashboard" element={currentUser?.role === 'administrator' ? <AdminDashboard /> : <p>Acces interzis.</p>} />
@@ -162,6 +170,12 @@
               <AngajatiInTura />
             </ProtectedRoute>
           }/>
+
+          <Route path="/raport-eveniment" element={
+          <ProtectedRoute user={currentUser} allowedRoles={['paznic', 'administrator']}>
+            <RaportEveniment />
+          </ProtectedRoute>
+        }/>
 
           {/* --- RUTE BENEFICIAR --- */}
           <Route path="/beneficiar" element={
