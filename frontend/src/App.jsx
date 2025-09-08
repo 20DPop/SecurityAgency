@@ -26,12 +26,12 @@
   import Firmacolaboratoare from "./admin/Firmacolaboratoare";
   import PrezentaAngajati from './beneficiar/PrezentaAngajati';
   import AngajatiInTura from './admin/AngajatiInTura';
-
-  // 🔹 NOU: import pentru paginile beneficiarului cu angajați
+  import ProcesVerbalPredarePrimire from './paznic/ProcesVerbalPredarePrimire';
   import AngajatiB from "./beneficiar/AngajatiB";
   import DetaliiAngajatB from "./beneficiar/AngajatBDetalii";
+  import UrmarireAngajat from './admin/UrmarireAngajat';
+  import RaportEveniment from './paznic/RaportEveniment';
 
-  // Componenta care decide ce dashboard se afișează pe ruta principală
   function Dashboard({ user }) {
     let content;
     switch (user.role) {
