@@ -87,3 +87,66 @@
 .back-button-container button:hover {
   background-color: #45a049;
 }
+
+/* Container pentru opțiuni și filtru */
+.view-options {
+  display: flex;
+  /* Eliminați justify-content: space-between; pentru a permite un control mai fin */
+  align-items: center;
+  margin-bottom: 20px;
+  gap: 20px; /* Mențineți gap pentru spațiere între elemente */
+}
+
+.view-options label {
+  font-weight: bold;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  white-space: nowrap; /* nu lasă textul să se rupă */
+  gap: 6px;
+}
+
+.view-options .filter-container {
+  display: flex;
+  align-items: center;
+  gap: 30px; /* Am redus gap aici pentru a economisi spațiu */
+  margin: 0; /* elimină marginile verticale */
+  /* Adăugăm margin-left: auto pentru a împinge filtrul spre dreapta */
+  margin-left: auto;
+}
+
+/* Stil pentru "Prezență angajați" - îl lăsăm în stânga */
+.view-options .prezenta-option {
+  flex-grow: 0; /* Nu crește */
+  text-align: left;
+}
+
+/* Stil pentru "Istoric prezență angajați" - îl vom pune lângă filtru */
+.view-options .istoric-option {
+  flex-grow: 0; /* Nu crește */
+  /* Îl împingem la dreapta, lângă filtru */
+  /* margin-left: auto; */ /* Nu mai e nevoie, filtrul se duce deja la dreapta */
+  order: 3; /* Asigură că este ultimul în ordine, după filtru */
+}
+
+/* Asigură că filtrul este în centru sau înainte de istoric */
+.view-options .filter-container {
+    order: 3; /* Filtrul este al doilea */
+}
+
+.view-options .prezenta-option {
+    order: 2; /* Prezența este prima */
+}
+
+
+.align-right {
+  margin-left: auto; /* împinge div-ul la capătul din dreapta */
+  text-align: right;
+}
+
+/* Am eliminat stilul vechi pentru label-ul de istoric */
+/*
+.view-options label:last-of-type {
+  text-align: right; 
+}
+*/

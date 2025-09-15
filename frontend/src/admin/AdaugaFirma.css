@@ -1,73 +1,89 @@
-.buttons {
+.form-page-container {
   display: flex;
-  justify-content: space-between; /* Înapoi la stânga, Salvează la dreapta */
-  margin-top: 20px;
-}
-
-.adauga-angajat {
-  padding: 20px;
-  max-width: 500px;
-  margin: auto;
-  font-family: Arial, sans-serif;
-}
-
-h2 {
-  text-align: center;
-  margin-bottom: 20px;
-}
-
-.form-container {
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-}
-
-.form-group {
-  display: flex;
+  justify-content: center;
   align-items: center;
-  justify-content: space-between;
-}
-
-label {
-  width: 120px;        /* lățime fixă pentru aliniere */
-  font-weight: bold;
-}
-
-.form-input {
-  flex: 1;             /* input-ul ocupă restul spațiului */
-  height: 35px;
-  padding: 5px 10px;
-  border: 1px solid #333;
-  border-radius: 5px;
-  font-size: 16px;
+  padding: 1rem; /* padding mic pe mobil */
+  background-color: #f0f2f5;
+  min-height: 100vh; /* întreg ecranul */
   box-sizing: border-box;
 }
 
-.save-btn {
-  padding: 8px 16px;      /* micșorat */
-  width: auto;            /* nu mai ocupă toată lățimea */
-  background-color: #2d89ef;
-  color: white;
-  border: none;
-  border-radius: 5px;
-  font-size: 15px;
-  cursor: pointer;
+.form-card {
+  background-color: #fff;
+  padding: 2rem;
+  border-radius: 12px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+  width: 100%;
+  max-width: 800px; /* limitează pe desktop */
+  min-height: 80vh; /* ocupă aproape tot ecranul vertical */
+  box-sizing: border-box;
+  border: 1px solid #ddd;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
 }
 
-.save-btn:hover {
-  background-color: #1d5bbf;
+/* Formular să fie responsive */
+.form-input {
+  width: 100%;
+  padding: 0.75rem;
+  font-size: 1rem;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  box-sizing: border-box;
+  margin-bottom: 1rem;
 }
 
-.back-btn {
-  padding: 8px 16px;
-  background-color: #ccc;
-  border: none;
+.form-actions {
+  display: flex;
+  justify-content: space-between;
+  flex-wrap: wrap; /* butoanele să se mute pe rând dacă ecran mic */
+  gap: 1rem;
+}
+
+/* Titlu centrat */
+.form-card h2 {
+  text-align: center;
+  margin-bottom: 2rem;
+  color: #333;
+}
+
+/* Mesaj de eroare */
+.error-message {
+  color: red;
+  text-align: center;
+  font-weight: bold;
+  margin-bottom: 1rem;
+}
+
+/* Butoane */
+.form-button {
+  flex: 1 1 45%; /* butoane flexibile, ocupă ~45% fiecare pe desktop, se ajustează pe mobil */
+  padding: 0.75rem 1rem;
   border-radius: 6px;
+  font-weight: bold;
+  font-size: 1rem;
+  border: none;
   cursor: pointer;
-  font-size: 15px;
-  transition: background 0.3s;
+  transition: all 0.2s ease;
 }
 
-.back-btn:hover {
-  background-color: #999;
+.submit-btn { background-color: #007bff; color: #fff; }
+.submit-btn:hover { background-color: #0056b3; }
+
+.back-btn { background-color: #6c757d; color: #fff; }
+.back-btn:hover { background-color: #5a6268; }
+
+.submit-btn:disabled { background-color: #aaa; cursor: not-allowed; }
+
+/* Media queries pentru telefoane */
+@media (max-width: 600px) {
+  .form-card {
+    padding: 1.5rem;
+    min-height: 90vh; /* mai aproape de întreg ecranul pe mobil */
+  }
+
+  .form-button {
+    flex: 1 1 100%; /* butoane pe rând pe ecran mic */
+  }
 }

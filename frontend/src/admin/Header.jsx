@@ -13,7 +13,11 @@ export default function Header({ user, onLogout }) {
 
   return (
     <header className="header">
-      <div className="logo">SECURITY</div>
+      <img 
+    src="/logo.png"  // înlocuiește cu calea reală către logo
+    alt="Logo Security" 
+    className="logo"
+  />
       <nav>
         <Link to="/">Home</Link>
         {user ? (

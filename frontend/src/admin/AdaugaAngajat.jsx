@@ -65,9 +65,10 @@ export default function AdaugaAngajat() {
   };
 
   return (
-    <div className="adauga-angajat">
-      <h2>Adaugă Angajat (Paznic)</h2>
-      <form onSubmit={handleSubmit} className="form-container">
+  <div className="form-page-container">
+    <div className="form-card">
+      <h2>Adaugă Angajat</h2>
+      <form onSubmit={handleSubmit}>
         <div className="form-group">
           <label htmlFor="nume">Nume:</label>
           <input id="nume" type="text" name="nume" value={formData.nume} onChange={handleChange} required className="form-input"/>
@@ -88,24 +89,23 @@ export default function AdaugaAngajat() {
           <label htmlFor="telefon">Telefon:</label>
           <input id="telefon" type="tel" name="telefon" value={formData.telefon} onChange={handleChange} className="form-input"/>
         </div>
-        {/* Câmp nou pentru profil */}
         <div className="form-group">
           <label htmlFor="nr_legitimatie">Nr. legitimație:</label>
           <input id="nr_legitimatie" type="text" name="nr_legitimatie" value={formData.nr_legitimatie} onChange={handleChange} className="form-input"/>
         </div>
-        
-        {/* Afișare eroare */}
-        {error && <p className="error-message" style={{ color: 'red', textAlign: 'center' }}>{error}</p>}
-        
-        <div className="buttons">
-          <button type="button" className="back-btn" onClick={() => navigate(-1)} disabled={loading}>
+
+        {error && <p className="error-message">{error}</p>}
+
+        <div className="form-actions">
+          <button type="button" className="form-button back-btn" onClick={() => navigate(-1)} disabled={loading}>
             ⬅ Înapoi
           </button>
-          <button type="submit" className="save-btn" disabled={loading}>
+          <button type="submit" className="form-button submit-btn" disabled={loading}>
             {loading ? 'Se salvează...' : 'Salvează'}
           </button>
         </div>
       </form>
     </div>
-  );
+  </div>
+);
 }

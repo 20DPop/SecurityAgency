@@ -67,10 +67,10 @@ export default function AdaugaFirma() {
   };
 
   return (
-    <div className="adauga-angajat">
-      <h2>Adaugă Firmă (Beneficiar)</h2>
-      <form onSubmit={handleSubmit} className="form-container">
-        {/* Am adăugat câmpuri pentru nume și prenume contact */}
+  <div className="form-page-container">
+    <div className="form-card">
+      <h2>Adaugă Firmă</h2>
+      <form onSubmit={handleSubmit}>
         <div className="form-group">
           <label htmlFor="nume">Nume contact:</label>
           <input id="nume" type="text" name="nume" value={formData.nume} onChange={handleChange} required className="form-input"/>
@@ -99,18 +99,20 @@ export default function AdaugaFirma() {
           <label htmlFor="punct_de_lucru">Punct de lucru:</label>
           <input id="punct_de_lucru" type="text" name="punct_de_lucru" value={formData.punct_de_lucru} onChange={handleChange} className="form-input"/>
         </div>
-        
-        {error && <p className="error-message" style={{ color: 'red', textAlign: 'center' }}>{error}</p>}
-        
-        <div className="buttons">
-          <button type="button" className="back-btn" onClick={() => navigate(-1)} disabled={loading}>
+
+        {error && <p className="error-message">{error}</p>}
+
+        <div className="form-actions">
+          <button type="button" className="form-button back-btn" onClick={() => navigate(-1)} disabled={loading}>
             ⬅ Înapoi
           </button>
-          <button type="submit" className="save-btn" disabled={loading}>
-             {loading ? 'Se salvează...' : 'Salvează'}
+          <button type="submit" className="form-button submit-btn" disabled={loading}>
+            {loading ? 'Se salvează...' : 'Salvează'}
           </button>
         </div>
       </form>
     </div>
-  );
+  </div>
+);
+
 }

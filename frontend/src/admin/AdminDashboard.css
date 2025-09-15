@@ -16,14 +16,17 @@
 .page-title {
   font-size: 36px;
   font-weight: bold;
-  margin: 30px;
+  /* margin: 0; */
+  margin-top: 0 !important;
 }
 
 .cards-container {
   display: grid;
-  grid-template-columns: repeat(4, 1fr); /* 4 coloane fixe */
+  grid-template-columns: repeat(4, 1fr); /* exact 4 coloane */
   gap: 20px;
   padding: 0 30px 30px 30px;
+  max-width: 1400px; /* limitează containerul */
+  margin: 0 auto; /* centru container */
 }
 
 .card {
@@ -55,4 +58,18 @@
 .link-card:hover {
   text-decoration: none; /* asigură că nu apare sublinierea la hover */
   color: inherit;
+}
+
+/* Tablete */
+@media (max-width: 1024px) {
+  .cards-container {
+    grid-template-columns: repeat(2, 1fr); /* 2 carduri pe rând */
+  }
+}
+
+/* Telefoane */
+@media (max-width: 600px) {
+  .cards-container {
+    grid-template-columns: 1fr; /* 1 card pe rând */
+  }
 }

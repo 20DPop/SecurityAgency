@@ -24,9 +24,9 @@ exports.createProcesVerbalPredarePrimire = async (req, res) => {
     const formatDate = (dateString) => new Date(dateString).toLocaleDateString('ro-RO');
 
     // --- SECȚIUNEA DE CALIBRARE (Ajustează valorile X și Y pentru aliniere perfectă) ---
-    page.drawText(formatDate(data_incheierii), { x: 220, y: height - 195, font, size: 11 });
-    page.drawText(nume_sef_formatie, { x: 150, y: height - 218, font, size: 11 });
-    page.drawText(nume_reprezentant_primire, { x: 380, y: height - 218, font, size: 11 });
+    page.drawText(formatDate(data_incheierii), { x: 200, y: height - 256, font, size: 13 });
+    page.drawText(nume_sef_formatie, { x: 150, y: height - 270, font, size: 11 });
+    page.drawText(nume_reprezentant_primire, { x: 380, y: height - 273, font, size: 13 });
     page.drawText(obiecte_predate, { x: 70, y: height - 300, font, size: 10, lineHeight: 14, maxWidth: 450 });
     page.drawText(nume_sef_formatie, { x: 130, y: 165, font, size: 11 });
     page.drawText(nume_reprezentant_primire, { x: 440, y: 165, font, size: 11 });

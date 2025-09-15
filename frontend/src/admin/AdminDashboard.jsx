@@ -6,7 +6,7 @@ export default function AdminDashboard() {
   return (
     <div className="admin-dashboard">
       <main>
-        <h1 className="page-title">Home</h1>
+        <h1 className="page-title ">Home</h1>
         <div className="cards-container">
 
           <Link to="/solicitari" className="card link-card">📄<p>Solicitări</p></Link>
