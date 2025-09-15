@@ -27,9 +27,9 @@ exports.createProcesVerbalPredarePrimire = async (req, res) => {
     page.drawText(formatDate(data_incheierii), { x: 200, y: height - 256, font, size: 13 });
     page.drawText(nume_sef_formatie, { x: 150, y: height - 270, font, size: 11 });
     page.drawText(nume_reprezentant_primire, { x: 380, y: height - 273, font, size: 13 });
-    page.drawText(obiecte_predate, { x: 70, y: height - 300, font, size: 10, lineHeight: 14, maxWidth: 450 });
+    page.drawText(obiecte_predate, { x: 90, y: height - 334, font, size: 13, lineHeight: 14, maxWidth: 450 });
     page.drawText(nume_sef_formatie, { x: 130, y: 165, font, size: 11 });
-    page.drawText(nume_reprezentant_primire, { x: 440, y: 165, font, size: 11 });
+    page.drawText(nume_reprezentant_primire, { x: 270, y: 215, font, size: 13 });
     // --- SFÂRȘIT SECȚIUNE CALIBRARE ---
 
     const pdfBytes = await pdfDoc.save();

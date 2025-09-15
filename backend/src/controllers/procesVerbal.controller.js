@@ -42,29 +42,29 @@ const createProcesVerbal = async (req, res) => {
     // --- CALIBRARE PAGINA 1 (Ajustează aceste valori) --- //
     // Y=0 este în JOSUL paginii. O valoare Y mai mare înseamnă mai SUS.
     //------------------------------------------------------------------//
-    page1.drawText(new Date().toLocaleDateString('ro-RO'), { x: 305, y: height - 128, font, size: 11 });
-    page1.drawText(`${post.nume_post}, ${post.adresa_post}`, { x: 280, y: height - 194, font, size: 11 });
-    page1.drawText(reprezentant_beneficiar || 'Nespecificat', { x: 95, y: height - 216, font, size: 11 });
+    page1.drawText(new Date().toLocaleDateString('ro-RO'), { x: 300, y: height - 107, font, size: 11 });
+    page1.drawText(`${post.nume_post}, ${post.adresa_post}`, { x: 276, y: height - 196, font, size: 11 });
+    page1.drawText(reprezentant_beneficiar || 'Nespecificat', { x: 95, y: height - 215, font, size: 11 });
     page1.drawText(beneficiar.profile.nume_companie, { x: 440, y: height - 216, font, size: 11 });
-    page1.drawText(formatTime(ora_declansare_alarma), { x: 290, y: height - 282, font, size: 11 });
-    page1.drawText(formatTime(ora_prezentare_echipaj), { x: 340, y: height - 304, font, size: 11 });
-    page1.drawText(formatTime(ora_incheiere_misiune), { x: 245, y: height - 392, font, size: 11 });
+    page1.drawText(formatTime(ora_declansare_alarma), { x: 263, y: height - 267, font, size: 11 });
+    page1.drawText(formatTime(ora_prezentare_echipaj), { x: 323, y: height - 290, font, size: 11 });
+    page1.drawText(formatTime(ora_incheiere_misiune), { x: 230, y: height - 349, font, size: 11 });
     // Semnăturile nu necesită text dinamic, sunt deja pe șablon.
 
     //------------------------------------------------------------------//
     // --- CALIBRARE PAGINA 2 (Tabelul) (Ajustează aceste valori) --- //
     //------------------------------------------------------------------//
-    let startY = height - 110; // Poziția Y de start pentru primul rând al tabelului
+    let startY = height - 125; // Poziția Y de start pentru primul rând al tabelului
     const rowHeight = 58; // Înălțimea unui rând (distanța verticală)
     const columnX = { // Pozițiile X pentru fiecare coloană
-      nrCrt: 50,
-      dataOra: 95,
-      tipAlarma: 190,
+      nrCrt: 78,
+      dataOra: 110,
+      tipAlarma: 195,
       echipaj: 275,
-      oraSosirii: 360,
-      cauze: 445,
-      solutionare: 535,
-      observatii: 630
+      oraSosirii: 347,
+      cauze: 390,
+      solutionare: 445,
+      observatii: 500
     };
     
     if (evenimente && evenimente.length > 0) {

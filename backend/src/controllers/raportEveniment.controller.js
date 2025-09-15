@@ -31,18 +31,18 @@ exports.createRaportEveniment = async (req, res) => {
     const formatDate = (dateString) => new Date(dateString).toLocaleDateString('ro-RO');
 
     // --- SECȚIUNEA DE CALIBRARE (Ajustează aceste valori) ---
-    page.drawText(numarRaport || '', { x: 130, y: height - 110, font, size: 11 });
-    page.drawText(formatDate(dataRaport), { x: 200, y: height - 110, font, size: 11 });
-    page.drawText(`${paznicLogat.nume} ${paznicLogat.prenume}`, { x: 260, y: height - 157, font, size: 11 });
-    page.drawText(functiePaznic, { x: 150, y: height - 188, font, size: 11 });
-    page.drawText(beneficiar.profile.nume_companie, { x: 320, y: height - 219, font, size: 11 });
-    page.drawText(numarPost, { x: 490, y: height - 219, font, size: 11 });
-    page.drawText(formatDate(dataConstatare), { x: 115, y: height - 250, font, size: 11 });
-    page.drawText(oraConstatare, { x: 245, y: height - 250, font, size: 11 });
-    page.drawText(numeFaptuitor, { x: 410, y: height - 250, font, size: 11 });
-    page.drawText(descriereFapta, { x: 80, y: height - 305, font, size: 11, lineHeight: 15, maxWidth: 450 });
-    page.drawText(cazSesizatLa, { x: 215, y: height - 618, font, size: 11 });
-    page.drawText(`${paznicLogat.nume} ${paznicLogat.prenume}`, { x: 140, y: height - 685, font, size: 11 });
+    page.drawText(numarRaport || '', { x: 285, y: height - 102, font, size: 11 });
+    page.drawText(formatDate(dataRaport), { x: 335, y: height - 102, font, size: 11 });
+    page.drawText(`${paznicLogat.nume} ${paznicLogat.prenume}`, { x: 260, y: height - 120, font, size: 11 });
+    page.drawText(functiePaznic, { x: 150, y: height - 153, font, size: 11 });
+    page.drawText(beneficiar.profile.nume_companie, { x: 80, y: height - 170, font, size: 11 });
+    page.drawText(numarPost, { x: 485, y: height - 170, font, size: 11 });
+    page.drawText(formatDate(dataConstatare), { x: 120 , y: height - 203, font, size: 11 });
+    page.drawText(oraConstatare, { x: 265, y: height - 203, font, size: 11 });
+    page.drawText(numeFaptuitor, { x: 418, y: height - 203, font, size: 11 });
+    page.drawText(descriereFapta, { x: 220, y: height - 253, font, size: 11, lineHeight: 15, maxWidth: 450 });
+    page.drawText(cazSesizatLa, { x: 190, y: height - 540, font, size: 11 });
+    page.drawText(`${paznicLogat.nume} ${paznicLogat.prenume}`, { x: 75, y: height - 605, font, size: 11 });
     // --- SFÂRȘIT SECȚIUNE CALIBRARE ---
 
     const pdfBytes = await pdfDoc.save();

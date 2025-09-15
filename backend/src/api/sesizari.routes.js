@@ -7,10 +7,12 @@ const { protect, authorize } = require('../middleware/auth.middleware');
 // POST - creare sesizare (folosim protect pentru a avea req.user)
 router.post("/", protect, sesizareController.createSesizare);
 
+router.get("/", sesizareController.getAllSesizari);
+
 // GET - listare sesizari beneficiar
 router.get("/:beneficiaryId", protect, sesizareController.getSesizariByBeneficiar);
 
-router.get("/", sesizareController.getAllSesizari);
+
 
 // PATCH - actualizare status
 router.patch("/:id/status", sesizareController.updateStatus);
