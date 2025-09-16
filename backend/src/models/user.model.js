@@ -6,7 +6,7 @@ const profileSchema = new mongoose.Schema({
   nume_firma: { type: String },
   cui: { type: String },
   nume_companie: { type: String },
-  punct_de_lucru: { type: String },
+  punct_de_lucru: [{ type: String }],
   nr_legitimatie: { type: String },
   assignedPazniciIds: [{
     type: mongoose.Schema.Types.ObjectId,

@@ -14,7 +14,7 @@ export default function Firmacolaboratoare() {
     email: "",
     telefon: "",
     nume_companie: "",
-    punct_de_lucru: "",
+    punct_de_lucru: [],
   });
   const [newPassword, setNewPassword] = useState("");
 
@@ -54,7 +54,9 @@ export default function Firmacolaboratoare() {
       email: user.email || "",
       telefon: user.telefon || "",
       nume_companie: user.profile?.nume_companie || "",
-      punct_de_lucru: user.profile?.punct_de_lucru || "",
+      punct_de_lucru: Array.isArray(user.profile?.punct_de_lucru)
+        ? user.profile.punct_de_lucru
+        : [user.profile?.punct_de_lucru || ""],
     });
   };
 
@@ -67,23 +69,42 @@ export default function Firmacolaboratoare() {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
-  const handleDelete = async (userId) => {
-  if (!window.confirm("Ești sigur că vrei să ștergi acest beneficiar?")) return;
+  const handlePunctDeLucruChange = (index, value) => {
+    const updated = [...formData.punct_de_lucru];
+    updated[index] = value;
+    setFormData({ ...formData, punct_de_lucru: updated });
+  };
 
-  try {
-    const token = JSON.parse(localStorage.getItem("currentUser"))?.token;
-    if (!token) throw new Error("Utilizator neautentificat!");
-
-    await axios.delete(`http://localhost:3000/api/users/${userId}`, {
-      headers: { Authorization: `Bearer ${token}` },
+  const addPunctDeLucru = () => {
+    setFormData({
+      ...formData,
+      punct_de_lucru: [...formData.punct_de_lucru, ""],
     });
+  };
 
-    alert("Beneficiar șters cu succes!");
-    setBeneficiari((prev) => prev.filter((u) => u._id !== userId));
-  } catch (err) {
-    console.error(err);
-    setError("Eroare la ștergerea beneficiarului.");
-  }
+  const removePunctDeLucru = (index) => {
+    const updated = formData.punct_de_lucru.filter((_, i) => i !== index);
+    setFormData({ ...formData, punct_de_lucru: updated });
+  };
+
+  const handleDelete = async (userId) => {
+    if (!window.confirm("Ești sigur că vrei să ștergi acest beneficiar?"))
+      return;
+
+    try {
+      const token = JSON.parse(localStorage.getItem("currentUser"))?.token;
+      if (!token) throw new Error("Utilizator neautentificat!");
+
+      await axios.delete(`http://localhost:3000/api/users/${userId}`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+
+      alert("Beneficiar șters cu succes!");
+      setBeneficiari((prev) => prev.filter((u) => u._id !== userId));
+    } catch (err) {
+      console.error(err);
+      setError("Eroare la ștergerea beneficiarului.");
+    }
   };
 
   const handleSave = async () => {
@@ -93,7 +114,16 @@ export default function Firmacolaboratoare() {
 
       const config = { headers: { Authorization: `Bearer ${token}` } };
 
-      // reconstruim structura pentru backend
+      // const updatedUser = {
+      //   nume: formData.nume,
+      //   prenume: formData.prenume,
+      //   email: formData.email,
+      //   telefon: formData.telefon,
+      //   profile: {
+      //     nume_companie: formData.nume_companie,
+      //     punct_de_lucru: formData.punct_de_lucru,
+      //   },
+      // };
       const updatedUser = {
         nume: formData.nume,
         prenume: formData.prenume,
@@ -101,7 +131,7 @@ export default function Firmacolaboratoare() {
         telefon: formData.telefon,
         profile: {
           nume_companie: formData.nume_companie,
-          punct_de_lucru: formData.punct_de_lucru,
+          punct_de_lucru: formData.punct_de_lucru.filter(Boolean), // păstrează doar valorile valide
         },
       };
 
@@ -114,7 +144,6 @@ export default function Firmacolaboratoare() {
       alert("Datele au fost salvate!");
       setEditUser(null);
 
-      // reîncarcă lista
       const res = await fetch("http://localhost:3000/api/users/beneficiari", {
         headers: { Authorization: `Bearer ${token}` },
       });
@@ -152,14 +181,17 @@ export default function Firmacolaboratoare() {
   };
 
   // --- RENDER ---
-  if (loading) return <div className="loading">Se încarcă lista beneficiarilor...</div>;
+  if (loading)
+    return <div className="loading">Se încarcă lista beneficiarilor...</div>;
   if (error) return <div className="loading">Eroare: {error}</div>;
 
   // --- FORMULAR SCHIMBARE PAROLĂ ---
   if (passwordUser) {
     return (
       <div className="beneficiari-container edit-form-container">
-        <h1>Schimbare Parolă pentru {passwordUser.nume} {passwordUser.prenume}</h1>
+        <h1>
+          Schimbare Parolă pentru {passwordUser.nume} {passwordUser.prenume}
+        </h1>
         <div className="form-group">
           <label>Parola nouă</label>
           <input
@@ -171,7 +203,9 @@ export default function Firmacolaboratoare() {
         <button className="save-btn" onClick={handleSavePassword}>
           💾 Salvează parola
         </button>
-        <button className="back-btn" onClick={handleBack}>⬅ Înapoi</button>
+        <button className="back-btn" onClick={handleBack}>
+          ⬅ Înapoi
+        </button>
       </div>
     );
   }
@@ -187,7 +221,11 @@ export default function Firmacolaboratoare() {
         </div>
         <div className="form-group">
           <label>Prenume contact</label>
-          <input name="prenume" value={formData.prenume} onChange={handleChange} />
+          <input
+            name="prenume"
+            value={formData.prenume}
+            onChange={handleChange}
+          />
         </div>
         <div className="form-group">
           <label>Email</label>
@@ -195,19 +233,54 @@ export default function Firmacolaboratoare() {
         </div>
         <div className="form-group">
           <label>Telefon</label>
-          <input name="telefon" value={formData.telefon} onChange={handleChange} />
+          <input
+            name="telefon"
+            value={formData.telefon}
+            onChange={handleChange}
+          />
         </div>
         <div className="form-group">
           <label>Nume Companie</label>
-          <input name="nume_companie" value={formData.nume_companie} onChange={handleChange} />
+          <input
+            name="nume_companie"
+            value={formData.nume_companie}
+            onChange={handleChange}
+          />
         </div>
         <div className="form-group">
-          <label>Punct de lucru</label>
-          <input name="punct_de_lucru" value={formData.punct_de_lucru} onChange={handleChange} />
+          <label>Puncte de lucru</label>
+          {formData.punct_de_lucru.map((punct, index) => (
+            <div
+              key={index}
+              style={{ display: "flex", marginBottom: "5px", gap: "5px" }}
+            >
+              <input
+                value={punct}
+                onChange={(e) =>
+                  handlePunctDeLucruChange(index, e.target.value)
+                }
+                style={{ flex: 1 }}
+              />
+              <button
+                type="button"
+                onClick={() => removePunctDeLucru(index)}
+                style={{ backgroundColor: "#dc3545", color: "white" }}
+              >
+                ❌
+              </button>
+            </div>
+          ))}
+          <button type="button" onClick={addPunctDeLucru}>
+            ➕ Adaugă punct de lucru
+          </button>
         </div>
 
-        <button className="save-btn" onClick={handleSave}>💾 Salvează</button>
-        <button className="back-btn" onClick={handleBack}>⬅ Înapoi</button>
+        <button className="save-btn" onClick={handleSave}>
+          💾 Salvează
+        </button>
+        <button className="back-btn" onClick={handleBack}>
+          ⬅ Înapoi
+        </button>
       </div>
     );
   }
@@ -234,7 +307,10 @@ export default function Firmacolaboratoare() {
                   <td>{user.prenume}</td>
                   <td>{user.email}</td>
                   <td>
-                    <button className="edit-btn" onClick={() => handleEdit(user)}>
+                    <button
+                      className="edit-btn"
+                      onClick={() => handleEdit(user)}
+                    >
                       ✏️ Editare
                     </button>
                     <button
@@ -245,12 +321,12 @@ export default function Firmacolaboratoare() {
                       🔑 Schimbă parola
                     </button>
                     <button
-                    className="edit-btn"
-                    style={{ backgroundColor: "#dc3545", marginLeft: "5px" }}
-                    onClick={() => handleDelete(user._id)}
-                  >
-                    🗑️ Șterge
-                  </button>
+                      className="edit-btn"
+                      style={{ backgroundColor: "#dc3545", marginLeft: "5px" }}
+                      onClick={() => handleDelete(user._id)}
+                    >
+                      🗑️ Șterge
+                    </button>
                   </td>
                 </tr>
               ))

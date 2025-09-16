@@ -11,6 +11,7 @@ const assignmentRoutes = require('./assignments.routes');
 const procesVerbalPredarePrimireRoutes = require('./procesVerbalPredarePrimire.routes');
 const raportEvenimentRoutes = require('./raportEveniment.routes');
 const sesizariRoutes = require('./sesizari.routes');
+const incidentRoutes = require('./incident.routes');
 
 router.use('/auth', authRoutes);
 router.use('/users', userRoutes);
@@ -22,5 +23,6 @@ router.use('/assignments', assignmentRoutes);
 router.use('/proces-verbal-predare', procesVerbalPredarePrimireRoutes); 
 router.use('/raport-eveniment', raportEvenimentRoutes);
 router.use('/sesizari', sesizariRoutes);
+router.use('/incidente', incidentRoutes);
 
 module.exports = router;

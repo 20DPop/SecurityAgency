@@ -31,6 +31,9 @@
   import DetaliiAngajatB from "./beneficiar/AngajatBDetalii";
   import UrmarireAngajat from './admin/UrmarireAngajat';
   import RaportEveniment from './paznic/RaportEveniment';
+  import Incidente from './admin/Incidente';
+  import IncidenteB from './beneficiar/IncidenteB';
+
 
   function Dashboard({ user }) {
     let content;
@@ -153,6 +156,11 @@
           <Route path="/adauga-angajat" element={<AdaugaAngajat />} />
           <Route path="/adauga-firma" element={<AdaugaFirma />} />
           <Route path="/urmarire/:id" element={<UrmarireAngajat />} />
+          <Route path="/incidente" element={
+            <ProtectedRoute user={currentUser} allowedRoles={['admin', 'administrator']}>
+              <Incidente />
+            </ProtectedRoute>
+          }/>
           <Route path="/alocare-paznici" element={
             <ProtectedRoute user={currentUser} allowedRoles={['admin', 'administrator']}>
               <AlocarePaznici />
@@ -180,6 +188,11 @@
           <Route path="/beneficiar" element={
             <ProtectedRoute user={currentUser} allowedRoles={['beneficiar']}>
               <BeneficiarDashboard />
+            </ProtectedRoute>
+          }/>
+          <Route path="/incidenteB" element={
+            <ProtectedRoute user={currentUser} allowedRoles={['beneficiar']}>
+              <IncidenteB />
             </ProtectedRoute>
           }/>
           <Route path="/prezentaAngajati" element={

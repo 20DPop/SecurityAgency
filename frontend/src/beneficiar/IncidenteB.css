@@ -1,0 +1,68 @@
+.incidente-container {
+  max-width: 900px;
+  margin: 20px auto;
+  padding: 20px;
+  font-family: Arial, sans-serif;
+}
+
+h1 {
+  text-align: center;
+  margin-bottom: 20px;
+  color: #333;
+}
+
+.incidente-list {
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+}
+
+.incident-card {
+  padding: 15px;
+  border-radius: 8px;
+  background-color: #f8d7da;
+  color: #721c24;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+  position: relative;
+}
+
+.incident-card b {
+  margin-right: 5px;
+}
+
+.restabilire-btn, .delete-btn {
+  padding: 5px 10px;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  font-size: 0.9rem;
+  margin-right: 5px;
+}
+
+.restabilire-btn { background-color: #28a745; color: white; }
+.delete-btn { background-color: #dc3545; color: white; }
+
+.error-message { color: red; text-align: center; margin-bottom: 10px; }
+
+/* Responsive */
+@media (max-width: 600px) {
+  .incident-card { font-size: 0.9rem; padding: 10px; }
+  .restabilire-btn, .delete-btn { font-size: 0.8rem; padding: 4px 8px; }
+}
+
+.back-bottom-btn {
+  position: fixed;
+  bottom: 20px;
+  left: 20px;
+  padding: 10px 15px;
+  background-color: #6c757d;
+  color: white;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  z-index: 1000; /* să fie deasupra celorlalte elemente */
+}
+
+.back-bottom-btn:hover {
+  background-color: #5a6268;
+}

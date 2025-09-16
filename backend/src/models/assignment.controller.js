@@ -12,8 +12,11 @@ const assignPaznici = async (req, res) => {
     // folosind $addToSet pentru a preveni duplicatele.
     const beneficiar = await User.findByIdAndUpdate(
       beneficiaryId,
-      { $addToSet: { 'profile.assignedPazniciIds': { $each: pazniciIds } } },
-      { new: true } // Returnează documentul actualizat
+      { 
+        $setOnInsert: { 'profile.assignedPazniciIds': [] }, // ⚡ array gol dacă nu există
+        $addToSet: { 'profile.assignedPazniciIds': { $each: pazniciIds } } 
+      },
+      { new: true, upsert: true }
     );
 
     if (!beneficiar || beneficiar.role !== 'beneficiar') {

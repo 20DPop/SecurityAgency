@@ -1,0 +1,58 @@
+.incidente-container {
+  padding: 20px;
+}
+
+.add-btn, .save-btn {
+  background: #007bff;
+  color: white;
+  border: none;
+  padding: 8px 16px;
+  margin: 10px 0;
+  border-radius: 8px;
+  cursor: pointer;
+}
+
+.add-btn:hover, .save-btn:hover {
+  background: #0056b3;
+}
+
+.incident-form {
+  border: 1px solid #ddd;
+  padding: 15px;
+  margin: 15px 0;
+  border-radius: 10px;
+  background: #f9f9f9;
+}
+
+.form-group {
+  margin-bottom: 10px;
+}
+
+.incidente-list {
+  margin-top: 20px;
+}
+
+.incident-card {
+  background: #ffeaea;
+  border-left: 5px solid #dc3545;
+  padding: 12px;
+  margin: 8px 0;
+  border-radius: 8px;
+  font-weight: bold;
+}
+
+.back-bottom-btn {
+  position: fixed;
+  bottom: 20px;
+  left: 20px;
+  padding: 10px 15px;
+  background-color: #007bff;
+  color: white;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+}
+
+.back-bottom-btn:hover {
+  background-color: #0056b3;
+}

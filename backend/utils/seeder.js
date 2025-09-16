@@ -73,7 +73,7 @@ const importData = async () => {
       creatDeAdminId: adminAgentie._id, 
       profile: { 
           nume_companie: 'Client Test SRL',
-          punct_de_lucru: 'Str. Victoriei 1' 
+          punct_de_lucru: ['Str. Victoriei 1'] 
       }
     });
     
