@@ -8,10 +8,13 @@ const profileSchema = new mongoose.Schema({
   nume_companie: { type: String },
   punct_de_lucru: [{ type: String }],
   nr_legitimatie: { type: String },
-  assignedPazniciIds: [{
-    type: mongoose.Schema.Types.ObjectId,
-    ref: 'User'
-  }],
+  assignedPazniciIds: { 
+    type: [{
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'User'
+    }],
+    default: [] 
+  },
 }, { _id: false }); 
 
 const userSchema = new mongoose.Schema({

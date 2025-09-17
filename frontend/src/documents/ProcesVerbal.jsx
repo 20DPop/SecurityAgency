@@ -40,17 +40,20 @@ export default function ProcesVerbal() {
     setFormData(prev => ({ ...prev, evenimente: updatedEvenimente }));
   };
   
+  // 🔥 AICI ESTE CORECȚIA
   const handleAddRow = () => {
     setFormData(prev => ({
       ...prev,
       evenimente: [
-        ...prev,
+        ...prev.evenimente, // ✅ CORECT: Copiem doar array-ul de evenimente anterior
         { dataOraReceptionarii: '', tipulAlarmei: '', echipajAlarmat: '', oraSosirii: '', cauzeleAlarmei: '', modulDeSolutionare: '', observatii: '' }
       ]
     }));
   };
   
   const handleRemoveRow = (index) => {
+    // Prevenim ștergerea ultimului rând pentru a avea mereu cel puțin unul
+    if (formData.evenimente.length <= 1) return; 
     const updatedEvenimente = formData.evenimente.filter((_, i) => i !== index);
     setFormData(prev => ({ ...prev, evenimente: updatedEvenimente }));
   };
@@ -68,7 +71,7 @@ export default function ProcesVerbal() {
       
       alert('✅ Proces verbal salvat și PDF generat cu succes!');
       navigate('/');
-    } catch (err) { // <-- AICI A FOST CORECTURA
+    } catch (err) {
       setError(err.response?.data?.message || 'A apărut o eroare la salvarea documentului.');
     } finally {
       setLoading(false);
@@ -118,7 +121,9 @@ export default function ProcesVerbal() {
                   <input type="text" name="modulDeSolutionare" value={event.modulDeSolutionare} onChange={(e) => handleEventChange(index, e)} placeholder="Mod de soluționare" required />
                   <input type="text" name="observatii" value={event.observatii} onChange={(e) => handleEventChange(index, e)} placeholder="Observații (opțional)" />
                 </div>
-                <button type="button" className="remove-row-btn" onClick={() => handleRemoveRow(index)}>Șterge</button>
+                {formData.evenimente.length > 1 && (
+                  <button type="button" className="remove-row-btn" onClick={() => handleRemoveRow(index)}>Șterge</button>
+                )}
               </div>
             ))}
             <button type="button" className="add-row-btn" onClick={handleAddRow}>+ Adaugă Rând</button>
