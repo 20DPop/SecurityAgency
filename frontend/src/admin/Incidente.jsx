@@ -61,12 +61,13 @@ export default function Incidente() {
       if (!token) throw new Error("Utilizator neautentificat!");
 
       const firmaObj = firme.find(f => f.profile?.nume_companie === selectedFirma);
+      const userId = firmaObj?._id;
       if (!firmaObj) throw new Error("Firma selectată nu există!");
 
       const payload = {
         titlu: `Incident la ${selectedFirma}`,
         descriere: "Buton panică activat",
-        companieId: firmaObj._id,
+        companieId: userId,
         punctDeLucru: selectedPunct,
       };
 

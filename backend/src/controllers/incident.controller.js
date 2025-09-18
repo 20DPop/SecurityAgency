@@ -16,7 +16,8 @@ const getIncidenteByBeneficiar = async (req, res) => {
     const userId = req.user._id; // utilizatorul logat
     if (!userId) return res.status(400).json({ message: "Userul nu este autentificat." });
 
-    const incidente = await Incident.find({ companieId: userId }).sort({ createdAt: -1 });
+    const incidente = await Incident.find({ companieId: req.user._id });
+
     res.status(200).json(incidente);
   } catch (error) {
     console.error(error);
@@ -27,13 +28,16 @@ const getIncidenteByBeneficiar = async (req, res) => {
 // POST creare incident
 const createIncident = async (req, res) => {
   try {
-    const { titlu, descriere, punctDeLucru } = req.body;
-    const companieId = req.user._id;
+    const { titlu, descriere, punctDeLucru, companieId } = req.body;
+
+    if (!companieId) {
+      return res.status(400).json({ message: "Trebuie specificat companieId pentru incident." });
+    }
 
     const incident = await Incident.create({
       titlu,
       descriere,
-      companieId,
+      companieId,  // ✅ se salvează corect pe firma beneficiarului
       punctDeLucru,
     });
 

@@ -1,6 +1,8 @@
-// Cale: frontend/src/pages/AngajatiInTura.jsx
+// frontend/src/pages/AngajatiInTura.jsx
 import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { jsPDF } from "jspdf";
+import autoTable from "jspdf-autotable";
 import "./AngajatiInTura.css";
 
 export default function AngajatiInTura() {
@@ -9,17 +11,19 @@ export default function AngajatiInTura() {
   const [error, setError] = useState("");
   const [beneficiari, setBeneficiari] = useState([]);
   const [selectedBeneficiar, setSelectedBeneficiar] = useState("");
-  const [view, setView] = useState("prezenta"); // "prezenta" sau "istoric"
+  const [view, setView] = useState("prezenta");
   const [istoricPontaje, setIstoricPontaje] = useState([]);
   const [selectedPaznic, setSelectedPaznic] = useState(null);
 
   const navigate = useNavigate();
 
-  // Fetch angajati activi (prezență)
+  const token = JSON.parse(localStorage.getItem("currentUser"))?.token;
+
+  // Fetch angajati activi
   useEffect(() => {
     const fetchAngajati = async () => {
       try {
-        const token = JSON.parse(localStorage.getItem("currentUser"))?.token;
+
         if (!token) throw new Error("Utilizator neautentificat!");
 
         const res = await fetch("http://localhost:3000/api/pontaj/angajati-activi", {
@@ -32,9 +36,7 @@ export default function AngajatiInTura() {
         setAngajati(data);
 
         const firmeUnice = Array.from(
-          new Set(
-            data.map((p) => p.beneficiaryId?.profile?.nume_companie).filter(Boolean)
-          )
+          new Set(data.map((p) => p.beneficiaryId?.profile?.nume_companie).filter(Boolean))
         );
         setBeneficiari(firmeUnice);
       } catch (err) {
@@ -45,13 +47,13 @@ export default function AngajatiInTura() {
     };
 
     fetchAngajati();
-  }, []);
+  }, [token]);
 
   // Fetch istoric pontaje ultimele 30 de zile
   useEffect(() => {
     const fetchIstoric = async () => {
       try {
-        const token = JSON.parse(localStorage.getItem("currentUser"))?.token;
+
         if (!token) throw new Error("Utilizator neautentificat!");
 
         const res = await fetch("http://localhost:3000/api/pontaj/istoric-30zile", {
@@ -64,9 +66,7 @@ export default function AngajatiInTura() {
         setIstoricPontaje(data);
 
         const firmeUnice = Array.from(
-          new Set(
-            data.map((p) => p.beneficiaryId?.profile?.nume_companie).filter(Boolean)
-          )
+          new Set(data.map((p) => p.beneficiaryId?.profile?.nume_companie).filter(Boolean))
         );
         setBeneficiari(firmeUnice);
       } catch (err) {
@@ -75,27 +75,64 @@ export default function AngajatiInTura() {
     };
 
     if (view === "istoric") fetchIstoric();
-  }, [view]);
+  }, [view, token]);
 
   // Filtrare angajati activi
   const filteredAngajati = selectedBeneficiar
-    ? angajati.filter(
-        (p) => p.beneficiaryId?.profile?.nume_companie === selectedBeneficiar
-      )
+    ? angajati.filter((p) => p.beneficiaryId?.profile?.nume_companie === selectedBeneficiar)
     : angajati;
 
   // Filtrare paznici istoric
   const pazniciUnici = Array.from(
     new Set(
       istoricPontaje
-        .filter(
-          (p) =>
-            !selectedBeneficiar ||
-            p.beneficiaryId?.profile?.nume_companie === selectedBeneficiar
-        )
+        .filter((p) => !selectedBeneficiar || p.beneficiaryId?.profile?.nume_companie === selectedBeneficiar)
         .map((p) => p.paznicId._id)
     )
   );
+
+  // --- GENERARE PDF ---
+  const handleDownloadPDF = () => {
+    if (!selectedPaznic) return;
+
+    const paznicData = istoricPontaje.find(p => p.paznicId._id === selectedPaznic);
+    if (!paznicData) return;
+
+    const doc = new jsPDF();
+
+    // Header
+    doc.setFontSize(16);
+    doc.text("Istoric prezenta angajat", 14, 20);
+
+    // Info angajat
+    doc.setFontSize(12);
+    doc.text(`Nume: ${paznicData.paznicId?.nume}`, 14, 30);
+    doc.text(`Prenume: ${paznicData.paznicId?.prenume}`, 14, 36);
+    doc.text(`Firma: ${paznicData.beneficiaryId?.profile?.nume_companie}`, 14, 42);
+    doc.text(`Data descarcarii: ${new Date().toLocaleDateString()}`, 14, 48);
+
+    // Tabel istoric pontaje
+    const tableData = istoricPontaje
+      .filter(
+        p =>
+          p.paznicId._id === selectedPaznic &&
+          (!selectedBeneficiar || p.beneficiaryId?.profile?.nume_companie === selectedBeneficiar)
+      )
+      .map(p => [
+        new Date(p.createdAt).toLocaleDateString(),
+        new Date(p.ora_intrare).toLocaleTimeString(),
+        p.ora_iesire ? new Date(p.ora_iesire).toLocaleTimeString() : "-",
+        p.beneficiaryId?.profile?.nume_companie
+      ]);
+
+    autoTable(doc, {
+      startY: 55,
+      head: [["Data", "Check-in", "Check-out", "Companie"]],
+      body: tableData,
+    });
+
+    doc.save(`${paznicData.paznicId?.nume}_${paznicData.paznicId?.prenume}_istoric.pdf`);
+  };
 
   if (loading) return <div>Se încarcă...</div>;
   if (error) return <div>Eroare: {error}</div>;
@@ -104,7 +141,7 @@ export default function AngajatiInTura() {
     <div className="angajati-container">
       <h1>Gestionare Angajați</h1>
 
-      {/* Bara de opțiuni (pe același rând) */}
+      {/* Opțiuni vizualizare */}
       <div className="view-options">
         <div style={{ flexGrow: 1, textAlign: 'center' }}>
           <label>
@@ -113,10 +150,7 @@ export default function AngajatiInTura() {
               name="view"
               value="prezenta"
               checked={view === "prezenta"}
-              onChange={() => {
-                setView("prezenta");
-                setSelectedPaznic(null);
-              }}
+              onChange={() => { setView("prezenta"); setSelectedPaznic(null); }}
             />
             Prezență angajați
           </label>
@@ -132,32 +166,27 @@ export default function AngajatiInTura() {
             >
               <option value="">Toate firmele</option>
               {beneficiari.map((firma, idx) => (
-                <option key={idx} value={firma}>
-                  {firma}
-                </option>
+                <option key={idx} value={firma}>{firma}</option>
               ))}
             </select>
           </div>
         )}
-        
-        <div style={{ flexGrow: 1, alignright: 4, textAlign: 'center'  }}>
+
+        <div style={{ flexGrow: 1, textAlign: 'center' }}>
           <label>
             <input
               type="radio"
               name="view"
               value="istoric"
               checked={view === "istoric"}
-              onChange={() => {
-                setView("istoric");
-                setSelectedPaznic(null);
-              }}
+              onChange={() => { setView("istoric"); setSelectedPaznic(null); }}
             />
             Istoric prezență angajați
           </label>
         </div>
       </div>
 
-      {/* Vizualizare Prezență */}
+      {/* Prezență */}
       {view === "prezenta" && !selectedPaznic && (
         <div className="table-responsive">
           <table className="angajati-table">
@@ -204,7 +233,7 @@ export default function AngajatiInTura() {
         </div>
       )}
 
-      {/* Vizualizare Istoric */}
+      {/* Istoric */}
       {view === "istoric" && !selectedPaznic && (
         <div className="table-responsive">
           <table className="angajati-table">
@@ -248,9 +277,12 @@ export default function AngajatiInTura() {
         </div>
       )}
 
-      {/* Detalii pontaje paznic selectat */}
+      {/* Detalii paznic + PDF */}
       {selectedPaznic && (
         <div className="table-responsive">
+          <button onClick={handleDownloadPDF} className="download-btn">
+            ⬇ Descarcă PDF
+          </button>
           <button onClick={() => setSelectedPaznic(null)} className="back-btn">
             ⬅ Înapoi la lista paznicilor
           </button>
@@ -262,25 +294,20 @@ export default function AngajatiInTura() {
                 <th>Check-out</th>
                 <th>Companie</th>
               </tr>
-</thead>
+            </thead>
             <tbody>
               {istoricPontaje
                 .filter(
                   (p) =>
                     p.paznicId._id === selectedPaznic &&
                     (!selectedBeneficiar ||
-                      p.beneficiaryId?.profile?.nume_companie ===
-                        selectedBeneficiar)
+                      p.beneficiaryId?.profile?.nume_companie === selectedBeneficiar)
                 )
                 .map((p) => (
                   <tr key={p._id}>
                     <td>{new Date(p.createdAt).toLocaleDateString()}</td>
-                    <td>{new Date(p.ora_intrare).toLocaleString()}</td>
-                    <td>
-                      {p.ora_iesire
-                        ? new Date(p.ora_iesire).toLocaleString()
-                        : "-"}
-                    </td>
+                    <td>{new Date(p.ora_intrare).toLocaleTimeString()}</td>
+                    <td>{p.ora_iesire ? new Date(p.ora_iesire).toLocaleTimeString() : "-"}</td>
                     <td>{p.beneficiaryId?.profile?.nume_companie}</td>
                   </tr>
                 ))}
@@ -289,7 +316,7 @@ export default function AngajatiInTura() {
         </div>
       )}
 
-      {/* Buton Înapoi standard */}
+      {/* Buton înapoi */}
       {!selectedPaznic && (
         <button className="back-bottom-btn" onClick={() => window.history.back()}>
           ⬅ Înapoi

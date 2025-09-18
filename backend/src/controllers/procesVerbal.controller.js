@@ -55,7 +55,7 @@ const createProcesVerbal = async (req, res) => {
     // --- CALIBRARE PAGINA 2 (Tabelul) (Ajustează aceste valori) --- //
     //------------------------------------------------------------------//
     let startY = height - 125; // Poziția Y de start pentru primul rând al tabelului
-    const rowHeight = 58; // Înălțimea unui rând (distanța verticală)
+    const rowHeight = 65; // Înălțimea unui rând (distanța verticală)
     const columnX = { // Pozițiile X pentru fiecare coloană
       nrCrt: 78,
       dataOra: 110,

@@ -1,4 +1,4 @@
-// Cale: frontend/src/pages/UrmarireAngajat.jsx
+// frontend/src/pages/UrmarireAngajat.jsx
 import React, { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { MapContainer, TileLayer, Marker, Popup } from "react-leaflet";
@@ -21,7 +21,13 @@ export default function UrmarireAngajat() {
         if (!res.ok) throw new Error("Eroare la preluarea locației!");
 
         const data = await res.json();
-        setLocation(data);
+        console.log("Locatie backend:", data); // Debug
+        
+        setLocation({
+          latitude: Number(data.latitude),
+          longitude: Number(data.longitude),
+          
+        });
       } catch (err) {
         console.error(err.message);
       }
@@ -32,7 +38,9 @@ export default function UrmarireAngajat() {
     return () => clearInterval(interval);
   }, [id]);
 
-  if (!location) return <div>Se încarcă locația...</div>;
+  if (!location || isNaN(location.latitude) || isNaN(location.longitude)) {
+    return <div>Se încarcă locația...</div>;
+  }
 
   return (
     <div style={{ height: "100vh", width: "100%", position: "relative" }}>
@@ -56,6 +64,7 @@ export default function UrmarireAngajat() {
       </button>
 
       <h2 style={{ textAlign: "center", marginTop: "10px" }}>Urmărire angajat</h2>
+
       <MapContainer
         center={[location.latitude, location.longitude]}
         zoom={16}
