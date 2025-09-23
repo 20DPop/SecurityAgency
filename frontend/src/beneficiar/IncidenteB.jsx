@@ -6,7 +6,7 @@ import "./IncidenteB.css";
 export default function IncidenteB() {
   const [incidente, setIncidente] = useState([]);
   const [error, setError] = useState("");
-  const navigate = useNavigate(); // ✅ asta lipsea
+  const navigate = useNavigate();
 
   const token = JSON.parse(localStorage.getItem("currentUser"))?.token;
 
@@ -28,32 +28,6 @@ export default function IncidenteB() {
     fetchIncidente();
   }, []);
 
-  // Șterge incident
-  const handleDelete = async (id) => {
-    try {
-      await axios.delete(`http://localhost:3000/api/incidente/${id}`, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-      fetchIncidente();
-    } catch (err) {
-      console.error(err);
-      alert(err.response?.data?.message || "Eroare la ștergere.");
-    }
-  };
-
-  // Restabilire incident
-  const handleRestabilire = async (id) => {
-    try {
-      await axios.post(`http://localhost:3000/api/incidente/${id}/restabilire`, {}, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-      fetchIncidente();
-    } catch (err) {
-      console.error(err);
-      alert(err.response?.data?.message || "Eroare la restabilire.");
-    }
-  };
-
   return (
     <div className="incidente-container">
       <h1>Incidente - Firma mea</h1>
@@ -72,16 +46,8 @@ export default function IncidenteB() {
               <div>
                 <b>{inc.titlu}</b> - {inc.punctDeLucru}
               </div>
-              <div style={{ marginTop: "5px" }}>
-                {!inc.restabilit && (
-                  <button className="restabilire-btn" onClick={() => handleRestabilire(inc._id)}>
-                    Restabilire
-                  </button>
-                )}
-                <button className="delete-btn" onClick={() => handleDelete(inc._id)}>
-                  Șterge
-                </button>
-              </div>
+
+              {/* ✅ Fără butoane pentru beneficiari */}
             </div>
           ))}
         </div>

@@ -1,0 +1,70 @@
+.istoric-container {
+  max-width: 900px;
+  margin: 0 auto;
+  padding: 20px;
+}
+
+.istoric-container h1 {
+  text-align: center;
+  margin-bottom: 20px;
+  font-size: 28px;
+  color: #333;
+}
+
+.error-message {
+  color: #dc3545;
+  text-align: center;
+  margin-bottom: 10px;
+}
+
+.istoric-list {
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+}
+
+.istoric-card {
+  padding: 15px;
+  border-radius: 10px;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+  font-size: 16px;
+  font-weight: 500;
+  transition: transform 0.2s ease-in-out;
+}
+
+.istoric-card:hover {
+  transform: scale(1.02);
+}
+
+.istoric-card b {
+  color: #222;
+}
+
+.istoric-card.verde {
+  background-color: #d4edda; /* verde pentru restabilite */
+  border: 1px solid #c3e6cb;
+}
+
+.istoric-card.rosu {
+  background-color: #f8d7da; /* roșu pentru incidente normale */
+  border: 1px solid #f5c6cb;
+}
+
+.back-bottom-btn {
+  margin-top: 20px;
+  padding: 10px 20px;
+  border: none;
+  border-radius: 8px;
+  background-color: #6c757d;
+  color: white;
+  cursor: pointer;
+  font-size: 16px;
+  display: block;
+  margin-left: auto;
+  margin-right: auto;
+  transition: background-color 0.2s ease-in-out;
+}
+
+.back-bottom-btn:hover {
+  background-color: #5a6268;
+}

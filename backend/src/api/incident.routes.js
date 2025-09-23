@@ -6,7 +6,8 @@ const {
   getIncidente, 
   createIncident, 
   restabilireIncident, 
-  deleteIncident 
+  deleteIncident,
+  getIstoricIncidente 
 } = require("../controllers/incident.controller");
 
 // Rute pentru incidente
@@ -15,5 +16,6 @@ router.get("/", protect, getIncidente);
 router.get("/beneficiar", protect, getIncidenteByBeneficiar);
 router.post("/:id/restabilire", protect, restabilireIncident);
 router.delete("/:id", protect, deleteIncident);
+router.get("/istoric", protect, getIstoricIncidente);
 
 module.exports = router;

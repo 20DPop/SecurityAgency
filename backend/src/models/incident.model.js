@@ -9,6 +9,7 @@ const incidentSchema = new mongoose.Schema({
   companieId: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
   punctDeLucru: { type: String, required: true },
   restabilit: { type: Boolean, default: false },
+  istoric: { type: Boolean, default: false }, // ✅ nou
 }, { timestamps: true });
 
 const Incident = mongoose.model('Incident', incidentSchema);

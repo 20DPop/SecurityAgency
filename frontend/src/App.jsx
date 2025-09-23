@@ -33,6 +33,7 @@
   import RaportEveniment from './paznic/RaportEveniment';
   import Incidente from './admin/Incidente';
   import IncidenteB from './beneficiar/IncidenteB';
+  import IstoricIncidente from './admin/IstoricIncidente';
 
 
   function Dashboard({ user }) {
@@ -156,6 +157,11 @@
           <Route path="/adauga-angajat" element={<AdaugaAngajat />} />
           <Route path="/adauga-firma" element={<AdaugaFirma />} />
           <Route path="/urmarire/:id" element={<UrmarireAngajat />} />
+          <Route path="/istoric-incidente" element={
+            <ProtectedRoute user={currentUser} allowedRoles={['admin', 'administrator']}>
+              <IstoricIncidente />
+            </ProtectedRoute>
+          }/>
           <Route path="/incidente" element={
             <ProtectedRoute user={currentUser} allowedRoles={['admin', 'administrator']}>
               <Incidente />

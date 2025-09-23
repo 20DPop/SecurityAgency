@@ -66,15 +66,31 @@ const restabilireIncident = async (req, res) => {
     const incident = await Incident.findById(req.params.id);
     if (!incident) return res.status(404).json({ message: "Incidentul nu a fost găsit." });
 
+    // Creează incident verde
     const incidentRestabilit = await Incident.create({
       titlu: `Restabilire: ${incident.titlu}`,
       descriere: incident.descriere,
       companieId: incident.companieId,
       punctDeLucru: incident.punctDeLucru,
       restabilit: true,
+      istoric: true,
     });
 
+    // Marchează originalul ca istoric
+    incident.istoric = true;
+    await incident.save();
+
     res.status(201).json(incidentRestabilit);
+  } catch (error) {
+    res.status(500).json({ message: `Eroare server: ${error.message}` });
+  }
+};
+
+// GET incidente din istoric
+const getIstoricIncidente = async (req, res) => {
+  try {
+    const incidente = await Incident.find({ istoric: true });
+    res.status(200).json(incidente);
   } catch (error) {
     res.status(500).json({ message: `Eroare server: ${error.message}` });
   }
@@ -85,5 +101,6 @@ module.exports = {
   createIncident, 
   deleteIncident, 
   restabilireIncident, 
-  getIncidenteByBeneficiar 
+  getIncidenteByBeneficiar ,
+  getIstoricIncidente
 };

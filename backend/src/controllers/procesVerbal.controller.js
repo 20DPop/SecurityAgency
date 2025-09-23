@@ -43,9 +43,9 @@ const createProcesVerbal = async (req, res) => {
     // Y=0 este în JOSUL paginii. O valoare Y mai mare înseamnă mai SUS.
     //------------------------------------------------------------------//
     page1.drawText(new Date().toLocaleDateString('ro-RO'), { x: 300, y: height - 107, font, size: 11 });
-    page1.drawText(`${post.nume_post}, ${post.adresa_post}`, { x: 276, y: height - 196, font, size: 11 });
+    page1.drawText(`${post.nume_post}, ${post.adresa_post}`, { x: 247, y: height - 196, font, size: 11 });
     page1.drawText(reprezentant_beneficiar || 'Nespecificat', { x: 95, y: height - 215, font, size: 11 });
-    page1.drawText(beneficiar.profile.nume_companie, { x: 440, y: height - 216, font, size: 11 });
+    page1.drawText(beneficiar.profile.nume_companie, { x: 90, y: height - 229, font, size: 11 });
     page1.drawText(formatTime(ora_declansare_alarma), { x: 263, y: height - 267, font, size: 11 });
     page1.drawText(formatTime(ora_prezentare_echipaj), { x: 323, y: height - 290, font, size: 11 });
     page1.drawText(formatTime(ora_incheiere_misiune), { x: 230, y: height - 349, font, size: 11 });
@@ -68,19 +68,30 @@ const createProcesVerbal = async (req, res) => {
     };
     
     if (evenimente && evenimente.length > 0) {
-      evenimente.forEach((event, index) => {
-        const currentY = startY - (index * rowHeight);
-        
-        page2.drawText(`${index + 1}.`, { x: columnX.nrCrt, y: currentY, font, size: 9 });
-        page2.drawText(new Date(event.dataOraReceptionarii).toLocaleString('ro-RO'), { x: columnX.dataOra, y: currentY, font, size: 9, maxWidth: 80 });
-        page2.drawText(event.tipulAlarmei, { x: columnX.tipAlarma, y: currentY, font, size: 9, maxWidth: 70 });
-        page2.drawText(event.echipajAlarmat, { x: columnX.echipaj, y: currentY, font, size: 9, maxWidth: 70 });
-        page2.drawText(formatTime(event.oraSosirii), { x: columnX.oraSosirii, y: currentY, font, size: 9, maxWidth: 70 });
-        page2.drawText(event.cauzeleAlarmei, { x: columnX.cauze, y: currentY, font, size: 9, maxWidth: 80 });
-        page2.drawText(event.modulDeSolutionare, { x: columnX.solutionare, y: currentY, font, size: 9, maxWidth: 80 });
-        page2.drawText(event.observatii || '', { x: columnX.observatii, y: currentY, font, size: 9, maxWidth: 80 });
-      });
+  let currentY = startY;
+
+  evenimente.forEach((event, index) => {
+    // --- Calculăm câte rânduri ocupă fiecare coloană ---
+    const linesTipAlarma = Math.ceil(font.widthOfTextAtSize(event.tipulAlarmei, 9) / 70);
+    const linesObservatii = Math.ceil(font.widthOfTextAtSize(event.observatii || '', 9) / 80);
+    const lines = Math.max(linesTipAlarma, linesObservatii, 1);
+
+    // --- Ajustăm currentY pentru rândul curent ---
+    if (index > 0) {
+      currentY -= rowHeight + (lines - 1) * 10; // 10 este spațiul suplimentar pe linie
     }
+
+    page2.drawText(`${index + 1}.`, { x: columnX.nrCrt, y: currentY, font, size: 9 });
+    page2.drawText(new Date(event.dataOraReceptionarii).toLocaleString('ro-RO'), { x: columnX.dataOra, y: currentY, font, size: 9, maxWidth: 80 });
+    page2.drawText(event.tipulAlarmei, { x: columnX.tipAlarma, y: currentY, font, size: 9, maxWidth: 70 });
+    page2.drawText(event.echipajAlarmat, { x: columnX.echipaj, y: currentY, font, size: 9, maxWidth: 70 });
+    page2.drawText(formatTime(event.oraSosirii), { x: columnX.oraSosirii, y: currentY, font, size: 9, maxWidth: 70 });
+    page2.drawText(event.cauzeleAlarmei, { x: columnX.cauze, y: currentY, font, size: 9, maxWidth: 80 });
+    page2.drawText(event.modulDeSolutionare, { x: columnX.solutionare, y: currentY, font, size: 9, maxWidth: 80 });
+    page2.drawText(event.observatii || '', { x: columnX.observatii, y: currentY, font, size: 9, maxWidth: 80 });
+  });
+}
+
 
     // --- Salvarea fișierului ---
     const pdfBytes = await pdfDoc.save();
