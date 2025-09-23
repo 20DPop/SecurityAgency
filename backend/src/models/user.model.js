@@ -7,15 +7,16 @@ const profileSchema = new mongoose.Schema({
   cui: { type: String },
   nume_companie: { type: String },
   punct_de_lucru: [{ type: String }],
-  nr_legitimatie: { type: String },
-  assignedPazniciIds: { 
-    type: [{
+
+  // În loc de un array simplu, facem mapping
+  assignedPaznici: [{
+    punct: { type: String, required: true },
+    paznici: [{
       type: mongoose.Schema.Types.ObjectId,
       ref: 'User'
-    }],
-    default: [] 
-  },
-}, { _id: false }); 
+    }]
+  }]
+}, { _id: false });
 
 const userSchema = new mongoose.Schema({
   email: { type: String, required: true, unique: true, lowercase: true, trim: true },

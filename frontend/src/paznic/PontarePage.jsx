@@ -87,7 +87,16 @@ export default function PontarePage() {
     navigator.geolocation.getCurrentPosition(
       async (position) => {
         try {
+
+          
+
           const { latitude, longitude } = position.coords;
+
+          console.log("Latitudine:", latitude);
+          console.log("Longitudine:", longitude);
+          console.log("Precizie (m):", accuracy);
+
+
           const userInfo = JSON.parse(localStorage.getItem('currentUser'));
           const config = { headers: { Authorization: `Bearer ${userInfo.token}` } };
           const { data } = await axios.post('http://localhost:3000/api/pontaj/check-in', { latitude, longitude }, config);

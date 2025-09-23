@@ -106,3 +106,24 @@
 
 .unassign-btn { background-color: #dc3545; color: white; }
 .unassign-btn:hover { background-color: #c82333; }
+
+.beneficiary-selector,
+.punct-selector {
+  margin-bottom: 2rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.beneficiary-selector label,
+.punct-selector label {
+  font-weight: bold;
+}
+
+.beneficiary-selector select,
+.punct-selector select {
+  padding: 0.75rem;
+  font-size: 1rem;
+  border-radius: 4px;
+  border: 1px solid #ccc;
+}
