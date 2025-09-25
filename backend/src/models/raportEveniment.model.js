@@ -16,6 +16,7 @@ const raportEvenimentSchema = new mongoose.Schema({
   numeFaptuitor: { type: String, required: true },
   descriereFapta: { type: String, required: true },
   cazSesizatLa: { type: String, required: true },
+  expirationDate: { type: Date, default: () => new Date(Date.now() + 60*24*60*60*1000) }, // 60 zile
   
   // Calea către PDF-ul generat
   caleStocarePDF: { type: String, required: true },

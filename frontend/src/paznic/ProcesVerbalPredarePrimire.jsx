@@ -57,7 +57,7 @@ export default function ProcesVerbalPredarePrimire() {
         </div>
 
         <div className="form-group">
-          <label htmlFor="nume_reprezentant_primire">Nume Reprezentant Primire (Colegul)</label>
+          <label htmlFor="nume_reprezentant_primire">Nume Reprezentant Firma Beneficiar</label>
           <input id="nume_reprezentant_primire" type="text" name="nume_reprezentant_primire" value={formData.nume_reprezentant_primire} onChange={handleChange} placeholder="Ex: Ionescu Vasile" required />
         </div>
 

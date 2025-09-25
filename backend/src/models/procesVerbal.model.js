@@ -38,6 +38,7 @@ const procesVerbalSchema = new mongoose.Schema({
 
   // Câmpul care stochează toate rândurile din tabelul de evenimente
   evenimente: [evenimentSchema],
+  expirationDate: { type: Date, default: () => new Date(Date.now() + 60*24*60*60*1000) }, // 60 zile
   
   // Câmpul care stochează calea către fișierul PDF generat
   caleStocarePDF: { type: String, required: true },

@@ -34,6 +34,7 @@
   import Incidente from './admin/Incidente';
   import IncidenteB from './beneficiar/IncidenteB';
   import IstoricIncidente from './admin/IstoricIncidente';
+  import Documente from './admin/Documente';
 
 
   function Dashboard({ user }) {
@@ -162,6 +163,11 @@
               <IstoricIncidente />
             </ProtectedRoute>
           }/>
+          <Route path="/documente" element={
+            <ProtectedRoute user={currentUser} allowedRoles={['admin', 'administrator']}>
+              <Documente />
+            </ProtectedRoute>
+          }/> 
           <Route path="/incidente" element={
             <ProtectedRoute user={currentUser} allowedRoles={['admin', 'administrator']}>
               <Incidente />

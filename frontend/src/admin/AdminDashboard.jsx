@@ -19,7 +19,7 @@ export default function AdminDashboard() {
           <Link to="/angajati-in-tura" className="card link-card">✅<p>Prezență Angajați</p></Link>
           <Link to="/firmacolaboratoare" className="card link-card">🏢<p>Firme colaboratoare</p></Link>
           <Link to="/adauga-firma" className="card link-card">💼<p>Adăugare Firmă</p></Link>
-          
+          <Link to="/documente" className="card link-card">📂<p>Documente</p></Link>
         </div>
       </main>
     </div>

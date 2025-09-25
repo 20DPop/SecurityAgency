@@ -1,0 +1,127 @@
+/* Documente.css */
+
+/* Stil general pentru pagina */
+.admin-dashboard main {
+  padding: 20px;
+  max-width: 1200px;
+  margin: 0 auto;
+  font-family: Arial, sans-serif;
+}
+
+/* Titlu pagină */
+.page-title {
+  font-size: 28px;
+  margin-bottom: 20px;
+}
+
+/* Tabel documente */
+.documente-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-bottom: 40px;
+  table-layout: auto;
+}
+
+/* Header tabel */
+.documente-table th,
+.documente-table td {
+  border: 1px solid #ddd;
+  padding: 12px 15px;
+  text-align: left;
+}
+
+/* Header tabel */
+.documente-table th {
+  background-color: #f4f4f4;
+  font-weight: bold;
+}
+
+/* Randuri tabel */
+.documente-table tr:nth-child(even) {
+  background-color: #f9f9f9;
+}
+
+/* Link PDF */
+.documente-table a {
+  color: #007bff;
+  text-decoration: none;
+  font-weight: 500;
+}
+
+.documente-table a:hover {
+  text-decoration: underline;
+}
+
+/* Buton Înapoi */
+button {
+  background-color: #007bff;
+  color: #fff;
+  border: none;
+  padding: 10px 18px;
+  font-size: 16px;
+  cursor: pointer;
+  border-radius: 5px;
+  transition: background-color 0.2s ease;
+}
+
+button:hover {
+  background-color: #0056b3;
+}
+
+/* Responsive - tabel pe ecrane mici */
+@media screen and (max-width: 768px) {
+  .documente-table th,
+  .documente-table td {
+    padding: 10px 8px;
+    font-size: 14px;
+  }
+
+  .page-title {
+    font-size: 24px;
+  }
+
+  button {
+    padding: 8px 14px;
+    font-size: 14px;
+  }
+}
+
+@media screen and (max-width: 480px) {
+  .documente-table th,
+  .documente-table td {
+    padding: 8px 6px;
+    font-size: 12px;
+  }
+
+  .page-title {
+    font-size: 20px;
+  }
+
+  button {
+    padding: 6px 12px;
+    font-size: 12px;
+  }
+}
+
+/* Bara de cautare centrata */
+.search-container {
+  display: flex;
+  justify-content: center; /* centrăm pe orizontală */
+  margin-bottom: 20px;
+}
+
+.search-input {
+  width: 100%;
+  max-width: 400px;
+  padding: 10px 12px;
+  font-size: 16px;
+  border: 1px solid #ddd;
+  border-radius: 5px;
+  box-sizing: border-box;
+}
+
+.search-input:focus {
+  outline: none;
+  border-color: #007bff;
+  box-shadow: 0 0 3px rgba(0, 123, 255, 0.5);
+}

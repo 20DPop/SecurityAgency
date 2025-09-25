@@ -112,6 +112,15 @@ const getUsersByRole = async (req, res) => {
   }
 };
 
+const getBeneficiari = async (req, res) => {
+  try {
+    const beneficiari = await User.find({ role: 'beneficiar' })
+      .select('nume prenume profile.nume_companie');
+    res.status(200).json(beneficiari);
+  } catch (error) {
+    res.status(500).json({ message: `Eroare server: ${error.message}` });
+  }
+};
 
 
 const createAdminAccount = async (req, res) => {
@@ -164,5 +173,5 @@ const changePassword = async (req, res) => {
 };
 
 
-module.exports = { getUserProfile, createUser, getUsersByRole, createAdminAccount, updateUser, changePassword, deleteUser };
+module.exports = { getUserProfile, createUser, getUsersByRole, createAdminAccount, updateUser, changePassword, deleteUser, getBeneficiari };
 

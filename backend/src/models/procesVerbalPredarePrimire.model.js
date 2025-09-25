@@ -4,10 +4,12 @@ const procesVerbalPredarePrimireSchema = new mongoose.Schema({
   pontajId: { type: mongoose.Schema.Types.ObjectId, ref: 'Pontaj', required: true, unique: true },
   paznicPredareId: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
   data_incheierii: { type: Date, required: true },
-  nume_sef_formatie: { type: String, required: true },
+  // nume_sef_formatie: { type: String, required: true },
   nume_reprezentant_primire: { type: String, required: true },
   obiecte_predate: { type: String, required: true },
   caleStocarePDF: { type: String, required: true },
+  reprezentantBeneficiar: { type: String, required: true },
+  expirationDate: { type: Date, default: () => new Date(Date.now() + 60*24*60*60*1000) } // 60 zile
 }, { timestamps: true });
 
 const ProcesVerbalPredarePrimire = mongoose.model('ProcesVerbalPredarePrimire', procesVerbalPredarePrimireSchema);

@@ -7,7 +7,8 @@ const {
   getUsersByRole, 
   createAdminAccount,
   updateUser,
-  deleteUser
+  deleteUser,
+  getBeneficiari
   // changePassword // Aceasta este exportată, dar nu ai o rută directă pentru ea în fișierul `routes`
 } = require('../controllers/user.controller');
 
@@ -24,15 +25,38 @@ router.delete("/:id", protect, authorize("admin", "administrator"), deleteUser);
 // Ruta pentru a lista utilizatorii după rol (folosită în pagina de Alocări)
 router.get('/list/:role', protect, authorize('admin', 'administrator'), getUsersByRole);
 
-router.get('/beneficiari', protect, authorize('admin', 'administrator'), async (req, res) => {
+// router.get('/beneficiari', protect, authorize('administrator', 'paznic'), getBeneficiari);
+
+// router.get('/beneficiari', protect, authorize('admin', 'administrator'), async (req, res) => {
+//   try {
+//     const beneficiari = await User.find({ role: "beneficiar" }).select('-password');
+//     res.json(beneficiari);
+//   } catch (err) {
+//     console.error("Eroare la obținerea beneficiari:", err);
+//     res.status(500).json({ message: "Eroare la obținerea utilizatorilor" });
+//   }
+// });
+router.get('/beneficiari', protect, async (req, res) => {
   try {
-    const beneficiari = await User.find({ role: "beneficiar" }).select('-password');
-    res.json(beneficiari);
+    if (req.user.role === 'admin' || req.user.role === 'administrator') {
+      // admin vede toți beneficiarii
+      const beneficiari = await User.find({ role: "beneficiar" }).select('-password');
+      return res.json(beneficiari);
+    }
+
+    if (req.user.role === 'paznic') {
+      // paznic -> poate vedea doar beneficiarii la care e alocat
+      // logica ta din getBeneficiari
+      return getBeneficiari(req, res);
+    }
+
+    return res.status(403).json({ message: "Acces interzis" });
   } catch (err) {
     console.error("Eroare la obținerea beneficiari:", err);
     res.status(500).json({ message: "Eroare la obținerea utilizatorilor" });
   }
 });
+
 // --- ADAUGĂ ACEASTĂ RUTĂ NOUĂ PENTRU A OBȚINE DETALIILE UNUI UTILIZATOR DUPĂ ID ---
 router.get('/:id', protect, authorize('admin', 'administrator', 'beneficiar'), async (req, res) => {
   try {
