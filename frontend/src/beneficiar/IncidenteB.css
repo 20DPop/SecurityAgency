@@ -50,6 +50,29 @@ h1 {
   .restabilire-btn, .delete-btn { font-size: 0.8rem; padding: 4px 8px; }
 }
 
+@media (max-width: 400px) {
+  .incidente-container {
+    padding: 8px 2vw;
+  }
+  .incident-card {
+    font-size: 0.8rem;
+    padding: 6px;
+  }
+  .restabilire-btn, .delete-btn {
+    font-size: 0.7rem;
+    padding: 3px 6px;
+  }
+  h1 {
+    font-size: 1.1rem;
+    margin-bottom: 10px;
+  }
+  .back-bottom-btn {
+    padding: 8px 8px;
+    font-size: 13px;
+  }
+}
+
+
 .back-bottom-btn {
   position: fixed;
   bottom: 20px;

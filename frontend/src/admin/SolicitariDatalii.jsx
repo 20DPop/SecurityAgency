@@ -92,7 +92,16 @@ useEffect(() => {
         <p><strong>Descriere:</strong> {sesizare.descriere}</p>
         <p><strong>Firma:</strong> {sesizare.firma}</p>
         <p><strong>Data creare:</strong> {sesizare.data}</p>
-        <p><strong>Data finalizare:</strong> {statusInitial === 'rezolvata' ? sesizare.dataFinalizare : '—'}</p>
+        <p><strong>Data finalizare:</strong> {sesizare.dataFinalizare
+          ? new Date(sesizare.dataFinalizare).toLocaleString('ro-RO', {
+              year: 'numeric',
+              month: '2-digit',
+              day: '2-digit',
+              hour: '2-digit',
+              minute: '2-digit'
+            })
+          : '—'}
+        </p>
 
         <div className="pasi-rezolvare">
           <label htmlFor="pasi"><strong>Pași de rezolvare:</strong></label>

@@ -22,7 +22,7 @@ const checkIn = async (req, res) => {
 
     const beneficiarAlocat = await User.findOne({ 
         role: 'beneficiar', 
-        'profile.assignedPazniciIds': paznicId 
+        'profile.assignedPaznici.paznici': paznicId 
     });
 
     if (!beneficiarAlocat) {
@@ -163,12 +163,14 @@ const getLatestLocation = async (req, res) => {
 const getIstoricPontaje = async (req, res) => {
   try {
     const acum = new Date();
-    const acum30zile = new Date();
-    acum30zile.setDate(acum.getDate() - 30);
+    const acum60zile = new Date();
+    acum60zile.setDate(acum.getDate() - 60);
+
+    await Pontaj.deleteMany({ ora_intrare: { $lt: acum60zile } });
 
     // Preluăm toate pontajele între acum30zile și acum
     const pontaje = await Pontaj.find({
-      ora_intrare: { $gte: acum30zile }
+      ora_intrare: { $gte: acum60zile }
     })
       .populate("paznicId", "nume prenume email telefon")
       .populate("beneficiaryId", "profile.nume_companie")
@@ -185,7 +187,9 @@ const getIstoricBeneficiar = async (req, res) => {
   try {
     const beneficiaryId = req.user._id;
     const startDate = new Date();
-    startDate.setDate(startDate.getDate() - 30);
+    startDate.setDate(startDate.getDate() - 60);
+
+    await Pontaj.deleteMany({ beneficiaryId, ora_intrare: { $lt: startDate } });
 
     const pontaje = await Pontaj.find({
       beneficiaryId,

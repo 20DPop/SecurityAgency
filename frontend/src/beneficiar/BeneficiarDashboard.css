@@ -56,3 +56,49 @@
   text-decoration: none; /* asigură că nu apare sublinierea la hover */
   color: inherit;
 }
+
+/* Responsive design pentru dashboard */
+@media (max-width: 1200px) {
+  .cards-container {
+    grid-template-columns: repeat(2, 1fr);
+  }
+  .page-title {
+    font-size: 28px;
+    margin: 20px;
+  }
+}
+
+@media (max-width: 700px) {
+  .cards-container {
+    grid-template-columns: 1fr;
+    gap: 15px;
+    padding: 0 10px 20px 10px;
+  }
+  .page-title {
+    font-size: 22px;
+    margin: 10px;
+  }
+  .card {
+    padding: 18px 8px;
+    font-size: 15px;
+  }
+  .beneficiar-header {
+    font-size: 16px;
+    padding: 10px 10px;
+  }
+}
+
+@media (max-width: 400px) {
+  .page-title {
+    font-size: 16px;
+    margin: 5px;
+  }
+  .card {
+    padding: 10px 2px;
+    font-size: 13px;
+  }
+  .beneficiar-header {
+    font-size: 13px;
+    padding: 6px 4px;
+  }
+}

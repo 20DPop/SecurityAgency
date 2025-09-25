@@ -87,3 +87,55 @@
   background-color: #aaa;
   cursor: not-allowed;
 }
+
+/* Responsive design pentru AdaugaAngajat */
+@media (max-width: 700px) {
+  .form-page-container {
+    padding: 8px 2vw;
+  }
+  .form-card {
+    padding: 1.2rem;
+    max-width: 98vw;
+  }
+  .form-card h2 {
+    font-size: 1.1rem;
+    margin-bottom: 1rem;
+  }
+  .form-group label {
+    font-size: 0.95rem;
+  }
+  .form-input {
+    font-size: 0.95rem;
+    padding: 0.5rem;
+  }
+  .form-actions {
+    flex-direction: column-reverse;
+    gap: 0.7rem;
+    margin-top: 1rem;
+  }
+  .form-button {
+    width: 100%;
+    font-size: 0.95rem;
+    padding: 0.5rem 0.7rem;
+  }
+}
+
+@media (max-width: 400px) {
+  .form-card {
+    padding: 0.5rem;
+  }
+  .form-card h2 {
+    font-size: 1rem;
+  }
+  .form-group label {
+    font-size: 0.9rem;
+  }
+  .form-input {
+    font-size: 0.9rem;
+    padding: 0.3rem;
+  }
+  .form-button {
+    font-size: 0.9rem;
+    padding: 0.3rem 0.5rem;
+  }
+}

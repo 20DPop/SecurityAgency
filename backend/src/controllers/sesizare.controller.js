@@ -1,7 +1,7 @@
 // Cale: backend/src/controllers/sesizare.controller.js
 const Sesizare = require('../models/sesizare.model');
 const User = require('../models/user.model'); // Asigură-te că User model este importat
-const { sendEmail } = require('../services/email.service'); // Importăm noul serviciu de email
+const { sendEmail } = require('../services/email.service'); // Importăm serviciul de email
 
 // --- Funcția de creare sesizare (rămâne neschimbată) ---
 exports.createSesizare = async (req, res) => {
@@ -49,7 +49,7 @@ exports.getAllSesizari = async (req, res) => {
     const sesizari = await Sesizare.find()
       .populate({
         path: 'createdByBeneficiaryId',
-        select: 'profile email nume' // Selectăm datele necesare
+        select: 'profile email nume'
       })
       .populate('assignedAdminId', 'email nume prenume')
       .lean();
@@ -60,18 +60,36 @@ exports.getAllSesizari = async (req, res) => {
   }
 };
 
-// --- Funcția de actualizare status (MODIFICATĂ PENTRU NOTIFICĂRI) ---
+exports.deleteSesizare = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const sesizare = await Sesizare.findByIdAndDelete(id);
+    if (!sesizare) return res.status(404).json({ message: "Sesizare negăsită." });
+    res.json({ message: "Sesizare ștearsă cu succes!" });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: "Eroare la ștergerea sesizării." });
+  }
+};
+
+// --- Funcția de actualizare status (MODIFICATĂ PENTRU NOTIFICĂRI ȘI DATA FINALIZARE) ---
 exports.updateStatus = async (req, res) => {
   try {
     const { id } = req.params;
     const { status } = req.body;
 
-    // Pas 1: Găsim și actualizăm sesizarea.
-    // Folosim .populate() pentru a prelua direct datele beneficiarului (email, nume).
+    // Dacă status devine 'rezolvata', setăm dataFinalizare și expireAt
+    const update = { status };
+    if (status === 'rezolvata') {
+      const now = new Date();
+      update.dataFinalizare = now;
+      update.expireAt = new Date(now.getTime() + 24*60*60*1000); // 24h mai târziu
+    }
+
     const sesizare = await Sesizare.findByIdAndUpdate(
       id,
-      { status },
-      { new: true } // Returnează documentul după actualizare
+      update,
+      { new: true }
     ).populate('createdByBeneficiaryId', 'email nume');
 
     if (!sesizare) {
@@ -79,24 +97,16 @@ exports.updateStatus = async (req, res) => {
     }
 
     // --- START LOGICĂ NOTIFICARE EMAIL ---
-    // Verificăm dacă am reușit să obținem datele beneficiarului și dacă acesta are o adresă de email.
     if (sesizare.createdByBeneficiaryId && sesizare.createdByBeneficiaryId.email) {
       const beneficiar = sesizare.createdByBeneficiaryId;
-      
-      // Obținem șablonul de email corespunzător noului status.
       const emailContent = getEmailTemplateForStatusChange(sesizare.titlu, status);
 
-      // Dacă avem un șablon valid (nu trimitem email pentru orice status), trimitem emailul.
       if (emailContent) {
-        // Trimiterea email-ului se face "în fundal", fără a aștepta răspunsul (non-blocking).
-        // Astfel, răspunsul API-ului nu este întârziat.
         sendEmail({
           to: beneficiar.email,
           subject: emailContent.subject,
-          html: emailContent.html(beneficiar.nume), // Personalizăm email-ul cu numele beneficiarului.
+          html: emailContent.html(beneficiar.nume),
         }).catch(err => {
-          // E important să prindem eroarea aici pentru ca API-ul să nu crape dacă email-ul nu se poate trimite.
-          // Doar o înregistrăm în consolă pentru debugging.
           console.error(`EROARE NOTIFICARE: Nu s-a putut trimite email-ul pentru sesizarea ${sesizare._id}:`, err);
         });
       }
@@ -129,51 +139,42 @@ exports.updatePasi = async (req, res) => {
 };
 
 // --- FUNCȚIE AJUTĂTOARE PENTRU A GENERA ȘABLOANELE DE EMAIL ---
-/**
- * Generează subiectul și conținutul HTML pentru email-ul de notificare.
- * @param {string} titluSesizare - Titlul sesizării pentru a-l include în email.
- * @param {string} newStatus - Noul status al sesizării ('inCurs' sau 'rezolvata').
- * @returns {object|null} - Un obiect cu 'subject' și 'html' sau null dacă nu trebuie trimis email.
- */
 const getEmailTemplateForStatusChange = (titluSesizare, newStatus) => {
-    let subject = '';
-    let bodyText = '';
+  let subject = '';
+  let bodyText = '';
 
-    // Definim mesajele pentru fiecare status care trebuie să trimită notificare.
-    switch(newStatus) {
-      case 'preluată':
-            subject = `Am înregistrat sesizarea "${titluSesizare}"`;
-            bodyText = `Vă confirmăm că am primit și înregistrat solicitarea dumneavoastră. Un operator o va analiza în cel mai scurt timp.`;
-            break;
-        case 'inCurs':
-            subject = `Sesizarea "${titluSesizare}" a fost preluată`;
-            bodyText = `Unul dintre operatorii noștri a preluat solicitarea și lucrează la rezolvarea ei. Veți fi notificat din nou când statusul se va schimba.`;
-            break;
-        case 'rezolvata':
-            subject = `Sesizarea "${titluSesizare}" a fost rezolvată`;
-            bodyText = `Problema pe care ați raportat-o a fost soluționată cu succes. Vă mulțumim pentru sesizare!`;
-            break;
-        
-        default:
-            return null; 
-    }
+  switch(newStatus) {
+    case 'preluată':
+      subject = `Am înregistrat sesizarea "${titluSesizare}"`;
+      bodyText = `Vă confirmăm că am primit și înregistrat solicitarea dumneavoastră. Un operator o va analiza în cel mai scurt timp.`;
+      break;
+    case 'inCurs':
+      subject = `Sesizarea "${titluSesizare}" a fost preluată`;
+      bodyText = `Unul dintre operatorii noștri a preluat solicitarea și lucrează la rezolvarea ei. Veți fi notificat din nou când statusul se va schimba.`;
+      break;
+    case 'rezolvata':
+      subject = `Sesizarea "${titluSesizare}" a fost rezolvată`;
+      bodyText = `Problema pe care ați raportat-o a fost soluționată cu succes. Vă mulțumim pentru sesizare!`;
+      break;
+    default:
+      return null; 
+  }
 
-  
-    return {
-        subject: `[Notificare Aplicație Pază] ${subject}`,
-        html: (numeBeneficiar) => `
-            <div style="font-family: Arial, sans-serif; max-width: 600px; margin: auto; border: 1px solid #ddd; padding: 20px;">
-                <h2 style="color: #333;">Actualizare Status Sesizare</h2>
-                <p>Salut, <strong>${numeBeneficiar || 'client'}</strong>,</p>
-                <p>Dorim să vă informăm că statusul sesizării dumneavoastră, "<strong>${titluSesizare}</strong>", a fost actualizat.</p>
-                <p style="background-color: #f2f2f2; padding: 15px; border-radius: 5px;">
-                    <strong>Noul Status:</strong> <span style="font-weight: bold; color: #007bff;">${newStatus.replace(/^\w/, c => c.toUpperCase())}</span>
-                    <br><br>
-                    <strong>Detalii:</strong> ${bodyText}
-                </p>
-                <p>Vă mulțumim,</p>
-                <p><em>Echipa de Suport</em></p>
-            </div>
-        `
-    };
-}
+  return {
+    subject: `[Notificare Aplicație Pază] ${subject}`,
+    html: (numeBeneficiar) => `
+      <div style="font-family: Arial, sans-serif; max-width: 600px; margin: auto; border: 1px solid #ddd; padding: 20px;">
+        <h2 style="color: #333;">Actualizare Status Sesizare</h2>
+        <p>Salut, <strong>${numeBeneficiar || 'client'}</strong>,</p>
+        <p>Dorim să vă informăm că statusul sesizării dumneavoastră, "<strong>${titluSesizare}</strong>", a fost actualizat.</p>
+        <p style="background-color: #f2f2f2; padding: 15px; border-radius: 5px;">
+          <strong>Noul Status:</strong> <span style="font-weight: bold; color: #007bff;">${newStatus.replace(/^\w/, c => c.toUpperCase())}</span>
+          <br><br>
+          <strong>Detalii:</strong> ${bodyText}
+        </p>
+        <p>Vă mulțumim,</p>
+        <p><em>Echipa de Suport</em></p>
+      </div>
+    `
+  };
+};

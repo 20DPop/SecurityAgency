@@ -68,3 +68,41 @@
 .back-bottom-btn:hover {
   background-color: #5a6268;
 }
+
+/* Responsive design pentru IstoricIncidente admin */
+@media (max-width: 700px) {
+  .istoric-container {
+    padding: 8px 2vw;
+    max-width: 98vw;
+  }
+  .istoric-container h1 {
+    font-size: 1.1rem;
+    margin-bottom: 12px;
+  }
+  .istoric-card {
+    font-size: 0.95rem;
+    padding: 10px;
+  }
+  .back-bottom-btn {
+    font-size: 0.95rem;
+    padding: 8px 10px;
+  }
+}
+
+@media (max-width: 400px) {
+  .istoric-container {
+    padding: 4px 1vw;
+  }
+  .istoric-container h1 {
+    font-size: 1rem;
+  }
+  .istoric-card {
+    font-size: 0.9rem;
+    padding: 6px;
+  }
+  .back-bottom-btn {
+    font-size: 0.9rem;
+    padding: 6px 6px;
+  }
+}
+

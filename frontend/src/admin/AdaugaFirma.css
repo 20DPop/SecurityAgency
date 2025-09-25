@@ -87,3 +87,23 @@
     flex: 1 1 100%; /* butoane pe rând pe ecran mic */
   }
 }
+
+@media (max-width: 400px) {
+  .form-card {
+    padding: 0.5rem;
+    min-height: 95vh;
+  }
+  .form-input {
+    font-size: 0.95rem;
+    padding: 0.5rem;
+  }
+  .form-card h2 {
+    font-size: 1.1rem;
+    margin-bottom: 1rem;
+  }
+  .form-button {
+    font-size: 0.9rem;
+    padding: 0.4rem 0.5rem;
+  }
+}
+

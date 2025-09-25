@@ -66,3 +66,55 @@
   text-decoration: none; /* asigură că nu apare sublinierea la hover */
   color: inherit;
 }
+
+/* Responsive design pentru dashboard paznic */
+@media (max-width: 1200px) {
+  .cards-container {
+    flex-wrap: wrap;
+    gap: 18px;
+    padding: 0 10px 20px 10px;
+  }
+  .page-title {
+    font-size: 28px;
+    margin: 20px;
+  }
+}
+
+@media (max-width: 700px) {
+  .cards-container {
+    flex-direction: column;
+    align-items: center;
+    gap: 15px;
+    padding: 0 5px 15px 5px;
+  }
+  .page-title {
+    font-size: 22px;
+    margin: 10px;
+  }
+  .card {
+    width: 90vw;
+    max-width: 350px;
+    padding: 18px 8px;
+    font-size: 15px;
+  }
+  .paznic-header {
+    font-size: 16px;
+    padding: 10px 10px;
+  }
+}
+
+@media (max-width: 400px) {
+  .page-title {
+    font-size: 16px;
+    margin: 5px;
+  }
+  .card {
+    padding: 10px 2px;
+    font-size: 13px;
+  }
+  .paznic-header {
+    font-size: 13px;
+    padding: 6px 4px;
+  }
+}
+

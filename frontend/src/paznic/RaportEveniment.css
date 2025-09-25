@@ -41,3 +41,58 @@
 .form-actions .submit-btn { background-color: #007bff; color: white; }
 
 .error-message { color: #dc3545; text-align: center; margin-top: 1rem; }
+
+/* Responsive design pentru RaportEveniment */
+@media (max-width: 900px) {
+    .form-card {
+        max-width: 98vw;
+        padding: 1.2rem;
+    }
+    .form-grid-2-cols, .form-grid-3-cols {
+        grid-template-columns: 1fr;
+        gap: 1rem;
+    }
+}
+
+@media (max-width: 600px) {
+    .form-page-container {
+        padding: 8px 2vw;
+    }
+    .form-card h2 {
+        font-size: 1.1rem;
+        margin-bottom: 1rem;
+    }
+    .form-group input, .form-group textarea {
+        font-size: 0.95rem;
+        padding: 0.5rem;
+    }
+    .form-actions {
+        flex-direction: column-reverse;
+        gap: 0.7rem;
+        margin-top: 1rem;
+    }
+    .form-actions .back-btn,
+    .form-actions .submit-btn {
+        width: 100%;
+        font-size: 0.95rem;
+        padding: 0.5rem 0.7rem;
+    }
+}
+
+@media (max-width: 400px) {
+    .form-card {
+        padding: 0.5rem;
+    }
+    .form-card h2 {
+        font-size: 1rem;
+    }
+    .form-group input, .form-group textarea {
+        font-size: 0.9rem;
+        padding: 0.3rem;
+    }
+    .form-actions .back-btn,
+    .form-actions .submit-btn {
+        font-size: 0.9rem;
+        padding: 0.3rem 0.5rem;
+    }
+}

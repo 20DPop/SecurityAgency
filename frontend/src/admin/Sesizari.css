@@ -75,3 +75,58 @@ text-align: center;
 .detalii-btn:hover {
 background-color: #0b5ed7;
 }
+
+/* Responsive design pentru Sesizari admin */
+@media (max-width: 900px) {
+  .sesizari-grid {
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+  }
+}
+
+@media (max-width: 600px) {
+  .sesizari-container {
+    padding: 8px 2vw;
+  }
+  .sesizari-grid {
+    grid-template-columns: 1fr;
+    gap: 8px;
+  }
+  .sesizari-column {
+    padding: 8px;
+  }
+  .search-section input {
+    width: 98vw;
+    font-size: 0.95rem;
+    padding: 6px;
+  }
+  th, td {
+    padding: 6px;
+    font-size: 12px;
+  }
+  .detalii-btn {
+    font-size: 12px;
+    padding: 4px 7px;
+  }
+}
+
+@media (max-width: 400px) {
+  .sesizari-container {
+    padding: 4px 1vw;
+  }
+  .sesizari-column {
+    padding: 4px;
+  }
+  .search-section input {
+    font-size: 0.9rem;
+    padding: 4px;
+  }
+  th, td {
+    font-size: 10px;
+    padding: 4px;
+  }
+  .detalii-btn {
+    font-size: 10px;
+    padding: 3px 5px;
+  }
+}

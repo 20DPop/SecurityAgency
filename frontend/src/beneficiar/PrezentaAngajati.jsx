@@ -41,14 +41,14 @@ export default function PrezentaAngajati() {
     fetchAngajati();
   }, [currentUser]);
 
-  // Istoric pontaje ultimele 30 de zile
+  // Istoric pontaje ultimele 60 de zile
   useEffect(() => {
     const fetchIstoric = async () => {
       try {
         const token = currentUser?.token;
         if (!token) throw new Error("Utilizator neautentificat!");
 
-        const res = await fetch("http://localhost:3000/api/pontaj/istoric-30zile-beneficiar", {
+        const res = await fetch("http://localhost:3000/api/pontaj/istoric-60zile-beneficiar", {
           headers: { Authorization: `Bearer ${token}` }
         });
 
@@ -188,7 +188,7 @@ export default function PrezentaAngajati() {
               }) : (
                 <tr>
                   <td colSpan="3" style={{ textAlign: "center" }}>
-                    Nicio pontare în ultimele 30 de zile.
+                    Nicio pontare în ultimele 60 de zile.
                   </td>
                 </tr>
               )}

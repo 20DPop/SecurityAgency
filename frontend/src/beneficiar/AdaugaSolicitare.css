@@ -30,6 +30,43 @@
   resize: vertical;
 }
 
+/* Responsivitate pentru tablete și telefoane */
+@media (max-width: 900px) {
+  .adauga-solicitare-container {
+    max-width: 95%;
+    padding: 30px 10px;
+  }
+}
+
+@media (max-width: 600px) {
+  .adauga-solicitare-container {
+    max-width: 100%;
+    padding: 15px 2vw;
+  }
+  .adauga-solicitare-form input,
+  .adauga-solicitare-form textarea {
+    font-size: 0.95rem;
+    padding: 10px;
+  }
+  .form-buttons {
+    flex-direction: column;
+    gap: 10px;
+  }
+  .form-buttons button {
+    font-size: 0.95rem;
+    padding: 10px 0;
+  }
+}
+
+@media (max-width: 400px) {
+  .adauga-solicitare-container {
+    padding: 8px 1vw;
+  }
+  .adauga-solicitare-form textarea {
+    min-height: 80px;
+  }
+}
+
 .form-buttons {
   display: flex;
   justify-content: space-between;

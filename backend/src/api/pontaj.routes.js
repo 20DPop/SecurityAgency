@@ -31,10 +31,10 @@ router.post("/update-location", protect, authorize("paznic"), updateLocation);
 router.get("/locatie/:paznicId", protect, authorize("admin", "administrator", "beneficiar"), getLatestLocation);
 
 // Ruta pentru istoric 30 zile
-router.get("/istoric-30zile", protect, authorize("admin", "administrator"), getIstoricPontaje);
+router.get("/istoric-60zile", protect, authorize("admin", "administrator"), getIstoricPontaje);
 
 router.get(
-  "/istoric-30zile-beneficiar",
+  "/istoric-60zile-beneficiar",
   protect,
   authorize("beneficiar"),
   getIstoricBeneficiar

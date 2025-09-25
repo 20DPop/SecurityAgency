@@ -127,3 +127,60 @@
   border-radius: 4px;
   border: 1px solid #ccc;
 }
+
+/* Responsive design pentru AlocarePaznici */
+@media (max-width: 900px) {
+  .assignment-page {
+    padding: 1rem;
+    max-width: 98vw;
+  }
+  .assignment-columns {
+    grid-template-columns: 1fr;
+    gap: 1.2rem;
+  }
+  .column {
+    padding: 1rem;
+  }
+}
+
+@media (max-width: 600px) {
+  .assignment-header {
+    flex-direction: column;
+    gap: 0.7rem;
+    padding-bottom: 0.5rem;
+  }
+  .assignment-header h1 {
+    font-size: 1.1rem;
+  }
+  .back-btn-assignment {
+    font-size: 0.95rem;
+    padding: 0.4rem 0.7rem;
+  }
+  .column h2 {
+    font-size: 1rem;
+  }
+  .assign-btn, .unassign-btn {
+    font-size: 0.95rem;
+    padding: 0.3rem 0.5rem;
+  }
+}
+
+@media (max-width: 400px) {
+  .assignment-page {
+    padding: 0.3rem;
+  }
+  .column {
+    padding: 0.3rem;
+  }
+  .assignment-header h1 {
+    font-size: 1rem;
+  }
+  .back-btn-assignment {
+    font-size: 0.9rem;
+    padding: 0.2rem 0.3rem;
+  }
+  .assign-btn, .unassign-btn {
+    font-size: 0.9rem;
+    padding: 0.2rem 0.3rem;
+  }
+}

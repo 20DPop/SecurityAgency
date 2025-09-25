@@ -144,6 +144,50 @@
   text-align: right;
 }
 
+@media (max-width: 700px) {
+  .angajati-container {
+    padding: 8px 2vw;
+  }
+  .angajati-table {
+    min-width: 320px;
+    font-size: 13px;
+  }
+  .angajati-table th, .angajati-table td {
+    padding: 6px;
+  }
+  .back-button-container button {
+    font-size: 12px;
+    padding: 8px 10px;
+  }
+  .angajati-container h1 {
+    font-size: 1.2rem;
+    margin-bottom: 10px;
+  }
+  .view-options {
+    flex-direction: column;
+    gap: 10px;
+    align-items: flex-start;
+  }
+  .view-options .filter-container {
+    gap: 10px;
+    margin-left: 0;
+  }
+}
+
+@media (max-width: 400px) {
+  .angajati-table {
+    font-size: 11px;
+  }
+  .angajati-container h1 {
+    font-size: 1rem;
+  }
+  .back-button-container button {
+    font-size: 11px;
+    padding: 6px 6px;
+  }
+}
+
+
 /* Am eliminat stilul vechi pentru label-ul de istoric */
 /*
 .view-options label:last-of-type {

@@ -188,3 +188,44 @@
     width: 100%;
   }
 }
+
+@media (max-width: 500px) {
+  .pv-container {
+    padding: 4px 1vw;
+  }
+  .pv-container h1 {
+    font-size: 1.2rem;
+    margin-bottom: 0.3rem;
+  }
+  .pv-subtitle {
+    font-size: 0.95rem;
+    margin-bottom: 1rem;
+  }
+  .pv-form fieldset {
+    padding: 0.5rem;
+  }
+  .form-group input, .event-grid input {
+    font-size: 0.95rem;
+    padding: 0.35rem;
+  }
+  .add-row-btn, .remove-row-btn {
+    font-size: 0.85rem;
+    padding: 0.3rem 0.6rem;
+  }
+  .form-actions {
+    margin-top: 1rem;
+  }
+}
+
+@media (max-width: 350px) {
+  .pv-container h1 {
+    font-size: 1rem;
+  }
+  .pv-subtitle {
+    font-size: 0.85rem;
+  }
+  .form-group input, .event-grid input {
+    font-size: 0.85rem;
+  }
+}
+

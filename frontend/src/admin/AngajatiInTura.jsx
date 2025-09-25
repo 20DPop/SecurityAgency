@@ -56,7 +56,7 @@ export default function AngajatiInTura() {
 
         if (!token) throw new Error("Utilizator neautentificat!");
 
-        const res = await fetch("http://localhost:3000/api/pontaj/istoric-30zile", {
+        const res = await fetch("http://localhost:3000/api/pontaj/istoric-60zile", {
           headers: { Authorization: `Bearer ${token}` },
         });
 
@@ -268,7 +268,7 @@ export default function AngajatiInTura() {
               ) : (
                 <tr>
                   <td colSpan="4" style={{ textAlign: "center" }}>
-                    Nicio pontare în ultimele 30 de zile.
+                    Nicio pontare în ultimele 60 de zile.
                   </td>
                 </tr>
               )}

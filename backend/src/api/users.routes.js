@@ -70,20 +70,17 @@ router.get('/:id', protect, authorize('admin', 'administrator', 'beneficiar'), a
     // Un beneficiar poate vedea detalii doar despre paznicii care îi sunt alocați
     // SAU despre propriul profil (dacă ID-ul este al lui).
     if (req.user.role === 'beneficiar') {
-        // Caută beneficiarul logat pentru a-i vedea paznicii alocați
-        const beneficiarLogat = await User.findById(req.user.id);
+      const beneficiarLogat = await User.findById(req.user.id);
 
-        // Verifică dacă utilizatorul cerut (cel cu ID-ul din URL) este unul dintre paznicii alocați
-        const isAssignedPaznic = beneficiarLogat.profile.assignedPazniciIds &&
-                                 beneficiarLogat.profile.assignedPazniciIds.includes(req.params.id);
-        
-        // Verifică dacă utilizatorul cerut este propriul beneficiar logat
-        const isOwnProfile = req.user.id === req.params.id;
+      const pazniciAlocati = (beneficiarLogat.profile.assignedPaznici || [])
+        .flatMap(punct => punct.paznici.map(id => id.toString()));
 
-        // Dacă nu este nici paznic alocat, nici propriul profil, atunci refuză accesul
-        if (!isAssignedPaznic && !isOwnProfile) {
-            return res.status(403).json({ message: 'Acces interzis. Nu ai permisiunea de a vizualiza detaliile acestui angajat.' });
-        }
+      const isAssignedPaznic = pazniciAlocati.includes(req.params.id);
+      const isOwnProfile = req.user.id === req.params.id;
+
+      if (!isAssignedPaznic && !isOwnProfile) {
+        return res.status(403).json({ message: 'Acces interzis. Nu ai permisiunea de a vizualiza detaliile acestui angajat.' });
+      }
     }
     
     res.status(200).json(user);
@@ -131,23 +128,30 @@ router.put('/:id/password', protect, authorize('admin','administrator'), async (
 });
 
 router.get('/beneficiar/angajati', protect, authorize('beneficiar'), async (req, res) => {
-  // const User = require('../models/user.model'); // Nu mai este necesar aici dacă ai declarat-o sus
 
   try {
     const beneficiarId = req.user.id;
 
-    const beneficiar = await User.findById(beneficiarId).populate('profile.assignedPazniciIds', '-password');
+    const beneficiar = await User.findById(beneficiarId);
 
     if (!beneficiar) {
       return res.status(404).json({ message: 'Beneficiarul nu a fost găsit.' });
     }
 
-    res.status(200).json(beneficiar.profile.assignedPazniciIds || []);
+    // Extragem toate ObjectId-urile paznicilor din toate punctele de lucru
+    const pazniciIds = (beneficiar.profile.assignedPaznici || [])
+      .flatMap(punct => punct.paznici);
+
+    // Populate pentru a aduce datele paznicilor
+    const paznici = await User.find({ _id: { $in: pazniciIds } }).select('-password');
+
+    res.status(200).json(paznici);
   } catch (error) {
     console.error("Eroare la obținerea angajaților beneficiarului:", error);
     res.status(500).json({ message: "Eroare server." });
   }
 });
+
 
 
 

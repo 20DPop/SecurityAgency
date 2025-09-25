@@ -1,5 +1,5 @@
 .admin-dashboard {
-  background-color: #adbbdd; /* fundal crem */
+  background-color: #adbbdd;
   min-height: 100vh;
   font-family: Arial, sans-serif;
   color: #0d1b2a;
@@ -16,18 +16,20 @@
 .page-title {
   font-size: 36px;
   font-weight: bold;
-  /* margin: 0; */
   margin-top: 0 !important;
 }
 
 .cards-container {
   display: grid;
-  grid-template-columns: repeat(4, 1fr); /* exact 4 coloane */
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
   gap: 20px;
+  justify-items: center;
   padding: 0 30px 30px 30px;
-  max-width: 1400px; /* limitează containerul */
-  margin: 0 auto; /* centru container */
+  max-width: 1400px;
+  width: 100%;
+  margin: 0 auto;
 }
+
 
 .card {
   background-color: white;
@@ -51,25 +53,11 @@
 }
 
 .link-card {
-  text-decoration: none; /* scoate sublinierea */
-  color: inherit; /* folosește culoarea textului din card */
-}
-
-.link-card:hover {
-  text-decoration: none; /* asigură că nu apare sublinierea la hover */
+  text-decoration: none;
   color: inherit;
 }
 
-/* Tablete */
-@media (max-width: 1024px) {
-  .cards-container {
-    grid-template-columns: repeat(2, 1fr); /* 2 carduri pe rând */
-  }
-}
-
-/* Telefoane */
-@media (max-width: 600px) {
-  .cards-container {
-    grid-template-columns: 1fr; /* 1 card pe rând */
-  }
+.link-card:hover {
+  text-decoration: none;
+  color: inherit;
 }

@@ -12,7 +12,8 @@ router.get("/", sesizareController.getAllSesizari);
 // GET - listare sesizari beneficiar
 router.get("/:beneficiaryId", protect, sesizareController.getSesizariByBeneficiar);
 
-
+// DELETE - ștergere sesizare
+router.delete("/:id", sesizareController.deleteSesizare);
 
 // PATCH - actualizare status
 router.patch("/:id/status", sesizareController.updateStatus);

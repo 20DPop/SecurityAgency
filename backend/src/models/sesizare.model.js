@@ -8,7 +8,10 @@ const sesizareSchema = new mongoose.Schema({
   assignedAdminId: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
   pasiRezolvare: { type: String },
   dataFinalizare: { type: Date },
+  expireAt: { type: Date, default: null }
 }, { timestamps: true });
+
+sesizareSchema.index({ expireAt: 1 }, { expireAfterSeconds: 0 });
 
 const Sesizare = mongoose.model('Sesizare', sesizareSchema);
 module.exports = Sesizare;

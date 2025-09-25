@@ -87,3 +87,57 @@
 .back-btn:hover {
   background-color: #5a6268;
 }
+
+/* Responsive design pentru SolicitariDetalii admin */
+@media (max-width: 700px) {
+  .detalii-container {
+    padding: 8px 2vw;
+    max-width: 98vw;
+  }
+  .detalii-card {
+    padding: 15px;
+  }
+  .detalii-card p {
+    font-size: 14px;
+  }
+  .pasi-rezolvare label {
+    font-size: 14px;
+  }
+  .pasi-rezolvare textarea {
+    font-size: 13px;
+    padding: 7px;
+  }
+  .butoane-container {
+    flex-direction: column;
+    gap: 10px;
+    align-items: stretch;
+  }
+  .save-btn, .back-btn {
+    width: 100%;
+    font-size: 14px;
+    padding: 8px 0;
+  }
+}
+
+@media (max-width: 400px) {
+  .detalii-container {
+    padding: 4px 1vw;
+  }
+  .detalii-card {
+    padding: 6px;
+  }
+  .detalii-card p {
+    font-size: 12px;
+  }
+  .pasi-rezolvare label {
+    font-size: 12px;
+  }
+  .pasi-rezolvare textarea {
+    font-size: 11px;
+    padding: 4px;
+  }
+  .save-btn, .back-btn {
+    font-size: 12px;
+    padding: 6px 0;
+  }
+}

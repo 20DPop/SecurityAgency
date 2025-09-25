@@ -186,3 +186,68 @@
     background-color: #007bff;
     color: white;
 }
+
+/* Responsive design pentru PontarePage */
+@media (max-width: 700px) {
+  .pontare-container {
+    padding: 18px 6px;
+    max-width: 98vw;
+  }
+  .pontare-container h2 {
+    font-size: 1.1rem;
+    margin-bottom: 18px;
+  }
+  .buttons {
+    gap: 10px;
+  }
+  .start-btn, .end-btn, .status-btn, .back-btn {
+    font-size: 15px;
+    padding: 10px;
+  }
+  .pontaj-info {
+    font-size: 14px;
+    padding: 8px;
+  }
+  .modal-content {
+    padding: 1rem;
+    max-width: 98vw;
+  }
+  .modal-form-group input,
+  .modal-form-group textarea {
+    font-size: 0.95rem;
+    padding: 0.5rem;
+  }
+  .modal-actions button {
+    font-size: 0.95rem;
+    padding: 0.5rem 1rem;
+  }
+}
+
+@media (max-width: 400px) {
+  .pontare-container {
+    padding: 6px 2vw;
+  }
+  .pontare-container h2 {
+    font-size: 1rem;
+  }
+  .start-btn, .end-btn, .status-btn, .back-btn {
+    font-size: 13px;
+    padding: 7px;
+  }
+  .pontaj-info {
+    font-size: 12px;
+    padding: 4px;
+  }
+  .modal-content {
+    padding: 0.5rem;
+  }
+  .modal-form-group input,
+  .modal-form-group textarea {
+    font-size: 0.9rem;
+    padding: 0.3rem;
+  }
+  .modal-actions button {
+    font-size: 0.9rem;
+    padding: 0.3rem 0.5rem;
+  }
+}

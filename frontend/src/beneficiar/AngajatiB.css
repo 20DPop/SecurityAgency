@@ -101,3 +101,31 @@
     padding: 15px;
   }
 }
+
+@media (max-width: 500px) {
+  .angajatiB-container,
+  .angajatB-detalii {
+    padding: 8px 2vw;
+  }
+  .angajatiB-table th, .angajatiB-table td {
+    padding: 6px;
+    font-size: 12px;
+  }
+  .detalii-box {
+    padding: 8px 4px;
+    max-width: 98vw;
+    font-size: 14px;
+  }
+  .back-btn {
+    padding: 8px 8px;
+    font-size: 14px;
+  }
+}
+
+@media (max-width: 350px) {
+  .detalii-box {
+    padding: 4px 1vw;
+    font-size: 12px;
+  }
+}
+

@@ -153,7 +153,14 @@ export default function Solicitari() {
       setSolicitari(prev => ({
         ...prev,
         [from]: prev[from].filter(s => s._id !== id && s.id !== id),
-        [to]: [...prev[to], { ...item, status: newStatus }]
+        [to]: [
+          ...prev[to],
+          { 
+            ...item, 
+            status: newStatus, 
+            dataFinalizare: newStatus === 'rezolvata' ? new Date().toISOString().slice(0,10) : item.dataFinalizare
+          }
+        ]
       }));
 
       alert("Statusul a fost actualizat cu succes!"); // mesaj de succes
@@ -217,28 +224,45 @@ for (const key in solicitari) {
                     <td>
                       <div className="actiuni-container">
                         <div className="butoane-mutare">
-                          {index > 0 && (
-                            <button
-                              onClick={() =>
-                                mutaSesizare(s._id || s.id, col.key, coloane[index - 1].key)
-                              }
-                            >
-                              ⬅
-                            </button>
-                          )}
+                          {/* {index > 0 && (
+                            <button onClick={() => mutaSesizare(s._id || s.id, col.key, coloane[index - 1].key)}>⬅</button>
+                          )} */}
                           {index < coloane.length - 1 && (
-                            <button
-                              onClick={() =>
-                                mutaSesizare(s._id || s.id, col.key, coloane[index + 1].key)
-                              }
+                            <button 
+                              className="btn-mic mutare"
+                              onClick={() => mutaSesizare(s._id || s.id, col.key, coloane[index + 1].key)}
                             >
                               ➡
                             </button>
                           )}
                         </div>
-                        <Link to={`/solicitari/${s._id || s.id}`} className="detalii-btn">
-                          Detalii
-                        </Link>
+
+                        <Link to={`/solicitari/${s._id || s.id}`} className="detalii-btn">Detalii</Link>
+
+                        {col.key === 'rezolvata' && (
+                          <button
+                            className="sterge-btn"
+                            onClick={async () => {
+                              const confirm = window.confirm("Sigur vrei să ștergi această solicitare?");
+                              if (!confirm) return;
+
+                              const id = s._id || s.id;
+                              try {
+                                await axios.delete(`http://localhost:3000/api/sesizari/${id}`);
+                                setSolicitari(prev => ({
+                                  ...prev,
+                                  [col.key]: prev[col.key].filter(item => item._id !== id && item.id !== id)
+                                }));
+                                alert("Solicitarea a fost ștearsă!");
+                              } catch (error) {
+                                console.error(error);
+                                alert("Nu s-a putut șterge solicitarea.");
+                              }
+                            }}
+                          >
+                            Șterge
+                          </button>
+                        )}
                       </div>
                     </td>
                   </tr>
