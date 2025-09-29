@@ -5,7 +5,15 @@ const path = require('path');
 
 exports.createProcesVerbalPredarePrimire = async (req, res) => {
   try {
-    const { pontajId, data_incheierii, nume_reprezentant_primire, obiecte_predate, reprezentantBeneficiar } = req.body;
+    const { 
+        pontajId, 
+        data_incheierii, 
+        nume_reprezentant_primire, 
+        obiecte_predate, 
+        reprezentantBeneficiar,
+        // Preluăm și semnătura
+        signatureDataURL
+    } = req.body;
     const paznicLogat = req.user;
 
     const existingPV = await ProcesVerbalPredarePrimire.findOne({ pontajId });
@@ -13,7 +21,7 @@ exports.createProcesVerbalPredarePrimire = async (req, res) => {
       return res.status(400).json({ message: 'Procesul verbal pentru această tură a fost deja creat.' });
     }
 
-    // PASUL 1: Încarcă șablonul din `src/templates`
+    // Încarcă șablonul
     const templatePath = path.join(__dirname, '..', 'templates', 'PV_predare_primire_template.pdf');
     const templateBytes = await fs.readFile(templatePath);
     const pdfDoc = await PDFDocument.load(templateBytes);
@@ -23,20 +31,31 @@ exports.createProcesVerbalPredarePrimire = async (req, res) => {
     const font = await pdfDoc.embedFont(StandardFonts.Helvetica);
     const formatDate = (dateString) => new Date(dateString).toLocaleDateString('ro-RO');
 
-    // --- SECȚIUNEA DE CALIBRARE (Ajustează valorile X și Y pentru aliniere perfectă) ---
+    // --- Completarea textului ---
     page.drawText(formatDate(data_incheierii), { x: 200, y: height - 256, font, size: 13 });
-    // page.drawText(nume_sef_formatie, { x: 150, y: height - 270, font, size: 11 });
     page.drawText(nume_reprezentant_primire, { x: 380, y: height - 273, font, size: 13 });
     page.drawText(obiecte_predate, { x: 90, y: height - 334, font, size: 13, lineHeight: 14, maxWidth: 450 });
-    // page.drawText(nume_sef_formatie, { x: 130, y: 165, font, size: 11 });
     page.drawText(nume_reprezentant_primire, { x: 270, y: 215, font, size: 13 });
     page.drawText(reprezentantBeneficiar, { x: 170, y: height - 290, font, size: 13 });
-    // --- SFÂRȘIT SECȚIUNE CALIBRARE ---
+
+    // --- Adăugarea semnăturii ---
+    if (signatureDataURL) {
+        const signatureImageBytes = Buffer.from(signatureDataURL.split(',')[1], 'base64');
+        const signatureImage = await pdfDoc.embedPng(signatureImageBytes);
+        const sigDims = signatureImage.scale(0.35); // Ajustează scalarea
+  
+        // !!! Calibrează X și Y pentru a se potrivi în câmpul "Am predat"
+        page.drawImage(signatureImage, {
+          x: 100, // Poziția de la stânga
+          y: 155, // Poziția de la bază
+          width: sigDims.width,
+          height: sigDims.height,
+        });
+    }
 
     const pdfBytes = await pdfDoc.save();
     const fileName = `PV_Predare_${paznicLogat.nume.replace(/\s/g, '_')}_${Date.now()}.pdf`;
     
-    // PASUL 2: Salvează fișierul final în `uploads/procese-predare-primire`
     const dirPath = path.join(__dirname, '..', '..', 'uploads', 'procese-predare-primire');
     await fs.mkdir(dirPath, { recursive: true });
     const filePath = path.join(dirPath, fileName);
@@ -47,7 +66,6 @@ exports.createProcesVerbalPredarePrimire = async (req, res) => {
       pontajId,
       paznicPredareId: paznicLogat._id,
       data_incheierii,
-      // nume_sef_formatie,
       nume_reprezentant_primire,
       obiecte_predate,
       reprezentantBeneficiar,

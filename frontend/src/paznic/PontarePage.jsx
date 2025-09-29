@@ -2,17 +2,24 @@ import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
 import "./PontarePage.css";
+// MODIFICARE: Importăm componenta de semnătură
+import SignaturePadWrapper from '../components/SignaturePad';
 
+// --- START COMPONENTA MODAL ---
+// Aceasta este componenta pentru fereastra pop-up
 const ProcesVerbalModal = ({ pontajId, onSubmit, onCancel, loading }) => {
   const [formData, setFormData] = useState({
     data_incheierii: new Date().toISOString().slice(0, 16),
-    // nume_sef_formatie: "",
     nume_reprezentant_primire: "",
     obiecte_predate: "",
-    reprezentantBeneficiar: "", // noul câmp
+    reprezentantBeneficiar: "",
+    // Adăugăm câmpul pentru semnătură în starea formularului
+    signatureDataURL: '',
   });
 
   const [beneficiari, setBeneficiari] = useState([]);
+  // Adăugăm starea pentru a ști dacă s-a semnat
+  const [signatureSaved, setSignatureSaved] = useState(false);
 
   // Încarcă lista beneficiarilor din backend
   useEffect(() => {
@@ -32,9 +39,21 @@ const ProcesVerbalModal = ({ pontajId, onSubmit, onCancel, loading }) => {
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
+  
+  // Funcție nouă pentru salvarea semnăturii
+  const handleSaveSignature = (signature) => {
+    setFormData(prev => ({ ...prev, signatureDataURL: signature }));
+    setSignatureSaved(true);
+    alert('Semnătura a fost salvată. Puteți încheia tura.');
+  };
 
   const handleSubmit = (e) => {
     e.preventDefault();
+    // Validăm dacă s-a semnat
+    if (!formData.signatureDataURL) {
+      alert("EROARE: Trebuie să semnați procesul verbal înainte de a încheia tura!");
+      return;
+    }
     onSubmit({ ...formData, pontajId });
   };
 
@@ -43,82 +62,82 @@ const ProcesVerbalModal = ({ pontajId, onSubmit, onCancel, loading }) => {
       <div className="modal-content">
         <form onSubmit={handleSubmit}>
           <h2>Proces Verbal de Predare-Primire</h2>
+          
+          <fieldset disabled={signatureSaved}>
+            <div className="modal-form-group">
+              <label htmlFor="data_incheierii">Data și Ora Încheierii</label>
+              <input
+                id="data_incheierii"
+                type="datetime-local"
+                name="data_incheierii"
+                value={formData.data_incheierii}
+                onChange={handleChange}
+                required
+              />
+            </div>
 
-          <div className="modal-form-group">
-            <label htmlFor="data_incheierii">Data și Ora Încheierii</label>
-            <input
-              id="data_incheierii"
-              type="datetime-local"
-              name="data_incheierii"
-              value={formData.data_incheierii}
-              onChange={handleChange}
-              required
-            />
-          </div>
+            <div className="modal-form-group">
+              <label htmlFor="nume_reprezentant_primire">Nume Reprezentant Firmă Beneficiar</label>
+              <input
+                id="nume_reprezentant_primire"
+                type="text"
+                name="nume_reprezentant_primire"
+                value={formData.nume_reprezentant_primire}
+                onChange={handleChange}
+                placeholder="Ex: Ionescu Vasile"
+                required
+              />
+            </div>
 
-          {/* <div className="modal-form-group">
-            <label htmlFor="nume_sef_formatie">Nume Reprezentant Predare (Dvs.)</label>
-            <input
-              id="nume_sef_formatie"
-              type="text"
-              name="nume_sef_formatie"
-              value={formData.nume_sef_formatie}
-              onChange={handleChange}
-              placeholder="Ex: Popescu Ion"
-              required
-            />
-          </div> */}
+            <div className="modal-form-group">
+              <label htmlFor="reprezentantBeneficiar">Firmă Beneficiar</label>
+              <select
+                id="reprezentantBeneficiar"
+                name="reprezentantBeneficiar"
+                value={formData.reprezentantBeneficiar}
+                onChange={handleChange}
+                required
+              >
+                <option value="">-- Selectează --</option>
+                {beneficiari.map((b) => (
+                  <option key={b._id} value={b.profile?.nume_companie}>
+                    {b.profile?.nume_companie} - {b.nume} {b.prenume}
+                  </option>
+                ))}
+              </select>
+            </div>
 
-          <div className="modal-form-group">
-            <label htmlFor="nume_reprezentant_primire">Nume Reprezentant Firmă Beneficiar</label>
-            <input
-              id="nume_reprezentant_primire"
-              type="text"
-              name="nume_reprezentant_primire"
-              value={formData.nume_reprezentant_primire}
-              onChange={handleChange}
-              placeholder="Ex: Ionescu Vasile"
-              required
-            />
-          </div>
-
-          {/* Noul dropdown pentru Beneficiar */}
-          <div className="modal-form-group">
-            <label htmlFor="reprezentantBeneficiar">Firmă Beneficiar</label>
-            <select
-              id="reprezentantBeneficiar"
-              name="reprezentantBeneficiar"
-              value={formData.reprezentantBeneficiar}
-              onChange={handleChange}
-              required
-            >
-              <option value="">-- Selectează --</option>
-              {beneficiari.map((b) => (
-                <option key={b._id} value={b.profile?.nume_companie}>
-                  {b.profile?.nume_companie} - {b.nume} {b.prenume}
-                </option>
-              ))}
-            </select>
-          </div>
-
-          <div className="modal-form-group">
-            <label htmlFor="obiecte_predate">Obiecte / Sarcini Predate</label>
-            <textarea
-              id="obiecte_predate"
-              name="obiecte_predate"
-              value={formData.obiecte_predate}
-              onChange={handleChange}
-              rows="5"
-              placeholder="Descrieți pe scurt ce se predă..."
-              required
-            ></textarea>
-          </div>
+            <div className="modal-form-group">
+              <label htmlFor="obiecte_predate">Obiecte / Sarcini Predate</label>
+              <textarea
+                id="obiecte_predate"
+                name="obiecte_predate"
+                value={formData.obiecte_predate}
+                onChange={handleChange}
+                rows="5"
+                placeholder="Descrieți pe scurt ce se predă..."
+                required
+              ></textarea>
+            </div>
+          </fieldset>
+          
+          <fieldset>
+            <legend>Semnătură Predare</legend>
+            {!signatureSaved ? (
+                <SignaturePadWrapper  onSave={handleSaveSignature} />
+            ) : (
+                <div style={{textAlign: 'center'}}>
+                    <p style={{color: 'green', fontWeight: 'bold'}}>✓ Semnat</p>
+                    <img src={formData.signatureDataURL} alt="Semnatura" style={{border: '1px solid #ccc', borderRadius: '5px', maxWidth: '200px'}} />
+                </div>
+            )}
+          </fieldset>
 
           <div className="modal-actions">
             <button type="button" className="cancel-btn" onClick={onCancel} disabled={loading}>
               Anulează
             </button>
-            <button type="submit" className="submit-pv-btn" disabled={loading}>
+            <button type="submit" className="submit-pv-btn" disabled={loading || !signatureSaved}>
               {loading ? "Se procesează..." : "Salvează și Încheie Tura"}
             </button>
           </div>
@@ -127,8 +146,11 @@ const ProcesVerbalModal = ({ pontajId, onSubmit, onCancel, loading }) => {
     </div>
   );
 };
+// --- FINAL COMPONENTA MODAL ---
 
-// Componenta Principală PontarePage (nemodificată)
+
+// --- START COMPONENTA PRINCIPALĂ PONTAREPAGE ---
+// Aici este codul pe care l-am omis anterior
 export default function PontarePage() {
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
@@ -191,9 +213,11 @@ export default function PontarePage() {
       const userInfo = JSON.parse(localStorage.getItem("currentUser"));
       const config = { headers: { Authorization: `Bearer ${userInfo.token}` } };
 
+      // Pas 1: Creează procesul verbal (care acum conține și semnătura)
       await axios.post("http://localhost:3000/api/proces-verbal-predare/create", procesVerbalData, config);
       setMessage("Proces verbal salvat. Se încheie tura...");
 
+      // Pas 2: Fă check-out
       const { data: checkoutData } = await axios.post("http://localhost:3000/api/pontaj/check-out", {}, config);
 
       setActivePontaj(null);

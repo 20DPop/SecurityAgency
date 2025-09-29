@@ -11,7 +11,9 @@ exports.createRaportEveniment = async (req, res) => {
     const {
       numarRaport, dataRaport, functiePaznic, numarPost,
       dataConstatare, oraConstatare, numeFaptuitor,
-      descriereFapta, cazSesizatLa
+      descriereFapta, cazSesizatLa,
+      // Preluăm și semnătura
+      signatureDataURL
     } = req.body;
 
     const beneficiar = await User.findOne({ 'profile.assignedPazniciIds': paznicLogat._id });
@@ -30,7 +32,7 @@ exports.createRaportEveniment = async (req, res) => {
     const font = await pdfDoc.embedFont(StandardFonts.Helvetica);
     const formatDate = (dateString) => new Date(dateString).toLocaleDateString('ro-RO');
 
-    // --- SECȚIUNEA DE CALIBRARE (Ajustează aceste valori) ---
+    // --- Completarea textului (rămâne la fel) ---
     page.drawText(numarRaport || '', { x: 285, y: height - 102, font, size: 11 });
     page.drawText(formatDate(dataRaport), { x: 335, y: height - 102, font, size: 11 });
     page.drawText(`${paznicLogat.nume} ${paznicLogat.prenume}`, { x: 260, y: height - 120, font, size: 11 });
@@ -42,8 +44,23 @@ exports.createRaportEveniment = async (req, res) => {
     page.drawText(numeFaptuitor, { x: 418, y: height - 203, font, size: 11 });
     page.drawText(descriereFapta, { x: 220, y: height - 253, font, size: 11, lineHeight: 15, maxWidth: 450 });
     page.drawText(cazSesizatLa, { x: 190, y: height - 540, font, size: 11 });
-    page.drawText(`${paznicLogat.nume} ${paznicLogat.prenume}`, { x: 75, y: height - 605, font, size: 11 });
-    // --- SFÂRȘIT SECȚIUNE CALIBRARE ---
+    // NU MAI COMPLETĂM NUMELE AICI, VOM PUNE SEMNĂTURA
+    // page.drawText(`${paznicLogat.nume} ${paznicLogat.prenume}`, { x: 75, y: height - 605, font, size: 11 });
+    
+    // --- Adăugarea semnăturii ---
+    if (signatureDataURL) {
+      const signatureImageBytes = Buffer.from(signatureDataURL.split(',')[1], 'base64');
+      const signatureImage = await pdfDoc.embedPng(signatureImageBytes);
+      const sigDims = signatureImage.scale(0.3); // Ajustează scalarea
+
+      // !!! Calibrează X și Y pentru a se potrivi în câmpul "Semnatura"
+      page.drawImage(signatureImage, {
+        x: 75, // Poziția de la stânga
+        y: 160, // Poziția de la bază (Y=0 e jos)
+        width: sigDims.width,
+        height: sigDims.height,
+      });
+    }
 
     const pdfBytes = await pdfDoc.save();
     const fileName = `RaportEveniment_${paznicLogat.nume.replace(/\s/g, '_')}_${Date.now()}.pdf`;
@@ -61,7 +78,7 @@ exports.createRaportEveniment = async (req, res) => {
       functiePaznic,
       societate: beneficiar.profile.nume_companie,
       numarPost, dataConstatare, oraConstatare,
-      numeFaptuitor: numeFaptuitor, // Corectat numele câmpului
+      numeFaptuitor: numeFaptuitor,
       descriereFapta, cazSesizatLa,
       caleStocarePDF: caleStocareRelativa,
     });
