@@ -1,10 +1,7 @@
-// Cale: frontend/src/documente/ProcesVerbal.jsx
-
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import './ProcesVerbal.css';
-// MODIFICARE 1: Importăm noua componentă de semnătură
 import SignaturePadWrapper from '../components/SignaturePad';
 
 export default function ProcesVerbal() {
@@ -26,16 +23,18 @@ export default function ProcesVerbal() {
         observatii: '' 
       }
     ],
-    // MODIFICARE 2: Adăugăm un câmp nou în stare pentru a stoca imaginea semnăturii
-    signatureDataURL: '',
+    agentSignatureDataURL: '', // Semnătura agentului
+    beneficiarySignatureDataURL: '', // Semnătura beneficiarului
   });
   
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
-  // MODIFICARE 3: Adăugăm o stare pentru a ști dacă s-a semnat, pentru a bloca formularul
-  const [signatureSaved, setSignatureSaved] = useState(false);
+  // Stare pentru a gestiona ambele semnături
+  const [signaturesSaved, setSignaturesSaved] = useState({
+    agent: false,
+    beneficiary: false
+  });
 
-  // --- Funcțiile de bază rămân neschimbate ---
   const handleChange = (e) => {
     setFormData(prev => ({ ...prev, [e.target.name]: e.target.value }));
   };
@@ -63,20 +62,23 @@ export default function ProcesVerbal() {
     setFormData(prev => ({ ...prev, evenimente: updatedEvenimente }));
   };
 
-  // MODIFICARE 4: Funcție nouă pentru a prelua și salva semnătura
-  const handleSaveSignature = (signature) => {
-    setFormData(prev => ({ ...prev, signatureDataURL: signature }));
-    setSignatureSaved(true); // Marcăm că s-a semnat
-    alert('Semnătura a fost salvată. Acum puteți genera PDF-ul.');
+  const handleSaveAgentSignature = (signature) => {
+    setFormData(prev => ({ ...prev, agentSignatureDataURL: signature }));
+    setSignaturesSaved(prev => ({ ...prev, agent: true }));
+    alert('Semnătura agentului a fost salvată.');
   };
 
-  // MODIFICARE 5: Actualizăm funcția de submit
+  const handleSaveBeneficiarySignature = (signature) => {
+    setFormData(prev => ({ ...prev, beneficiarySignatureDataURL: signature }));
+    setSignaturesSaved(prev => ({ ...prev, beneficiary: true }));
+    alert('Semnătura beneficiarului a fost salvată.');
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    // Verificăm dacă documentul a fost semnat
-    if (!formData.signatureDataURL) {
-      setError('EROARE: Documentul trebuie semnat înainte de a fi salvat.');
+    if (!formData.agentSignatureDataURL || !formData.beneficiarySignatureDataURL) {
+      setError('EROARE: Atât agentul, cât și beneficiarul trebuie să semneze documentul.');
       return;
     }
     
@@ -86,10 +88,7 @@ export default function ProcesVerbal() {
     try {
       const userInfo = JSON.parse(localStorage.getItem('currentUser'));
       const config = { headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${userInfo.token}` } };
-      
-      // Trimitem toate datele, inclusiv semnătura
       await axios.post(`http://localhost:3000/api/proces-verbal/create`, formData, config);
-      
       alert('✅ Proces verbal salvat și PDF generat cu succes!');
       navigate('/');
     } catch (err) {
@@ -99,36 +98,37 @@ export default function ProcesVerbal() {
     }
   };
 
+  const areAllSignaturesSaved = signaturesSaved.agent && signaturesSaved.beneficiary;
+
   return (
     <div className="pv-container">
       <h1>Completare Proces Verbal de Intervenție</h1>
       <p className="pv-subtitle">Documentul va fi generat automat pe baza datelor introduse.</p>
       
       <form onSubmit={handleSubmit} className="pv-form">
-        {/* MODIFICARE 6: Dezactivăm formularele după ce s-a semnat */}
-        <fieldset disabled={signatureSaved}>
+        <fieldset disabled={areAllSignaturesSaved}>
             <legend>Detalii Principale Intervenție</legend>
             <div className="form-grid">
-                <div className="form-group">
-                    <label htmlFor="ora_declansare_alarma">Alarma declanșată la ora</label>
-                    <input id="ora_declansare_alarma" type="datetime-local" name="ora_declansare_alarma" value={formData.ora_declansare_alarma} onChange={handleChange} required />
+               <div className="form-group">
+                  <label htmlFor="ora_declansare_alarma">Alarma declanșată la ora</label>
+                  <input id="ora_declansare_alarma" type="datetime-local" name="ora_declansare_alarma" value={formData.ora_declansare_alarma} onChange={handleChange} required />
                 </div>
                 <div className="form-group">
-                    <label htmlFor="ora_prezentare_echipaj">Echipaj prezent la ora</label>
-                    <input id="ora_prezentare_echipaj" type="datetime-local" name="ora_prezentare_echipaj" value={formData.ora_prezentare_echipaj} onChange={handleChange} required />
+                  <label htmlFor="ora_prezentare_echipaj">Echipaj prezent la ora</label>
+                  <input id="ora_prezentare_echipaj" type="datetime-local" name="ora_prezentare_echipaj" value={formData.ora_prezentare_echipaj} onChange={handleChange} required />
                 </div>
                 <div className="form-group">
-                    <label htmlFor="ora_incheiere_misiune">Misiune încheiată la ora</label>
-                    <input id="ora_incheiere_misiune" type="datetime-local" name="ora_incheiere_misiune" value={formData.ora_incheiere_misiune} onChange={handleChange} required />
+                  <label htmlFor="ora_incheiere_misiune">Misiune încheiată la ora</label>
+                  <input id="ora_incheiere_misiune" type="datetime-local" name="ora_incheiere_misiune" value={formData.ora_incheiere_misiune} onChange={handleChange} required />
                 </div>
                 <div className="form-group">
-                    <label htmlFor="reprezentant_beneficiar">Nume Reprezentant Beneficiar (Opțional)</label>
-                    <input id="reprezentant_beneficiar" type="text" name="reprezentant_beneficiar" value={formData.reprezentant_beneficiar} onChange={handleChange} placeholder="Ex: Popescu Ion" />
+                  <label htmlFor="reprezentant_beneficiar">Nume Reprezentant Beneficiar (Opțional)</label>
+                  <input id="reprezentant_beneficiar" type="text" name="reprezentant_beneficiar" value={formData.reprezentant_beneficiar} onChange={handleChange} placeholder="Ex: Popescu Ion" />
                 </div>
             </div>
         </fieldset>
-        
-        <fieldset disabled={signatureSaved}>
+
+        <fieldset disabled={areAllSignaturesSaved}>
             <legend>Tabel Evenimente Detaliate</legend>
             <p className="fieldset-description">Completați un rând pentru fiecare eveniment important petrecut în timpul intervenției.</p>
             {formData.evenimente.map((event, index) => (
@@ -150,26 +150,38 @@ export default function ProcesVerbal() {
             ))}
             <button type="button" className="add-row-btn" onClick={handleAddRow}>+ Adaugă Rând</button>
         </fieldset>
+        
+        <div className="signatures-grid">
+            <fieldset>
+                <legend>Semnătură Agent Intervenție</legend>
+                {!signaturesSaved.agent ? (
+                    <SignaturePadWrapper onSave={handleSaveAgentSignature} />
+                ) : (
+                    <div className="signature-display">
+                        <p className="signature-saved-text">✓ Semnat</p>
+                        <img src={formData.agentSignatureDataURL} alt="Semnatura Agent" className="signature-image" />
+                    </div>
+                )}
+            </fieldset>
 
-        {/* MODIFICARE 7: Adăugăm secțiunea de semnătură */}
-        <fieldset>
-            <legend>Semnătură Agent Intervenție</legend>
-            {!signatureSaved ? (
-                <SignaturePadWrapper  onSave={handleSaveSignature} />
-            ) : (
-                <div>
-                    <p style={{color: 'green', fontWeight: 'bold'}}>✓ Semnat</p>
-                    <img src={formData.signatureDataURL} alt="Semnatura" style={{border: '1px solid #ccc', borderRadius: '5px', maxWidth: '250px'}} />
-                </div>
-            )}
-        </fieldset>
+            <fieldset>
+                <legend>Semnătură Beneficiar</legend>
+                {!signaturesSaved.beneficiary ? (
+                    <SignaturePadWrapper onSave={handleSaveBeneficiarySignature} />
+                ) : (
+                    <div className="signature-display">
+                        <p className="signature-saved-text">✓ Semnat</p>
+                        <img src={formData.beneficiarySignatureDataURL} alt="Semnatura Beneficiar" className="signature-image" />
+                    </div>
+                )}
+            </fieldset>
+        </div>
         
         {error && <p className="error-message">{error}</p>}
 
         <div className="form-actions">
             <button type="button" className="back-btn" onClick={() => navigate(-1)}>Anulează</button>
-            {/* MODIFICARE 8: Dezactivăm butonul de submit dacă nu s-a semnat */}
-            <button type="submit" className="submit-btn" disabled={loading || !signatureSaved}>
+            <button type="submit" className="submit-btn" disabled={loading || !areAllSignaturesSaved}>
               {loading ? 'Se salvează...' : 'Salvează și Generează PDF'}
             </button>
         </div>

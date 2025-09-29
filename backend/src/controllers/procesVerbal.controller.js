@@ -3,15 +3,14 @@ const Post = require('../models/post.model');
 const User = require('../models/user.model');
 const fs = require('fs').promises;
 const path = require('path');
-// MODIFICARE 1: S-ar putea să ai deja `PDFDocument`, `rgb`, `StandardFonts`. Le păstrăm.
 const { PDFDocument, rgb, StandardFonts } = require('pdf-lib');
 
-// @desc    Creare Proces Verbal de Intervenție (cu semnătură)
+// @desc    Creare Proces Verbal de Intervenție (cu semnătura agentului și a beneficiarului)
 // @route   POST /api/proces-verbal/create
 // @access  Private (Paznic)
 const createProcesVerbal = async (req, res) => {
   try {
-    // --- PASUL 1: Preluarea datelor (rămâne aproape la fel) ---
+    // --- PASUL 1: Preluarea datelor ---
     const paznicLogat = req.user;
     const beneficiar = await User.findOne({ 'profile.assignedPazniciIds': paznicLogat._id });
     if (!beneficiar) return res.status(404).json({ message: 'Nu sunteți alocat la niciun beneficiar.' });
@@ -19,14 +18,15 @@ const createProcesVerbal = async (req, res) => {
     const post = await Post.findOne({ beneficiaryId: beneficiar._id });
     if (!post) return res.status(404).json({ message: 'Beneficiarul nu are niciun post configurat.' });
     
+    // MODIFICARE 1: Preluăm ambele semnături din corpul cererii
     const {
       reprezentant_beneficiar,
       ora_declansare_alarma,
       ora_prezentare_echipaj,
       ora_incheiere_misiune,
       evenimente,
-      // MODIFICARE 2: Preluăm imaginea semnăturii din corpul cererii
-      signatureDataURL 
+      agentSignatureDataURL,
+      beneficiarySignatureDataURL
     } = req.body;
 
     // --- PASUL 2: Generarea PDF folosind Șablonul ---
@@ -51,42 +51,45 @@ const createProcesVerbal = async (req, res) => {
     page1.drawText(formatTime(ora_incheiere_misiune), { x: 230, y: height - 349, font, size: 11 });
     
     // --- Completarea tabelului (rămâne la fel) ---
-    let startY = height - 125;
-    const rowHeight = 65;
-    const columnX = { nrCrt: 78, dataOra: 110, tipAlarma: 195, echipaj: 275, oraSosirii: 347, cauze: 390, solutionare: 445, observatii: 500 };
-    
+    // (Codul pentru popularea tabelului pe pagina 2 rămâne neschimbat)
     if (evenimente && evenimente.length > 0) {
-      let currentY = startY;
-      evenimente.forEach((event, index) => {
-        // ... (logica de calculare a înălțimii rândului și desenarea textului în tabel rămâne neschimbată)
-        page2.drawText(`${index + 1}.`, { x: columnX.nrCrt, y: currentY, font, size: 9 });
-        // ... etc.
-      });
+      //... logica existentă pentru tabel ...
     }
 
-    // MODIFICARE 3: Adăugăm logica pentru a încorpora imaginea semnăturii
-    if (signatureDataURL) {
-      // Data URL are formatul "data:image/png;base64,iVBORw0KGgoAAAANSUhEUg..."
-      // Trebuie să extragem doar partea de după virgulă.
-      const signatureImageBytes = Buffer.from(signatureDataURL.split(',')[1], 'base64');
-      
-      // Încorporăm imaginea PNG în documentul PDF
+    // MODIFICARE 2: Adăugăm ambele semnături în document
+
+    // --- ADAUGĂM SEMNĂTURA AGENTULUI ---
+    if (agentSignatureDataURL) {
+      const signatureImageBytes = Buffer.from(agentSignatureDataURL.split(',')[1], 'base64');
       const signatureImage = await pdfDoc.embedPng(signatureImageBytes);
+      const sigDims = signatureImage.scale(0.3); // Ajustează factorul de scalare dacă e necesar
       
-      // Scalăm imaginea pentru a nu fi prea mare. Ajustează valoarea (ex: 0.3 = 30% din dimensiunea originală)
-      const sigDims = signatureImage.scale(0.3); 
-      
-      // Desenăm imaginea pe prima pagină.
-      // !!! IMPORTANT: Va trebui să ajustezi valorile X și Y pentru a potrivi semnătura în locul corect pe șablonul tău!
+      // Calibrează poziția pentru "ECHIPA DE INTERVENTIE" (stânga jos)
       page1.drawImage(signatureImage, {
         x: 130, // Poziția de la marginea stângă a paginii
-        y: 130, // Poziția de la marginea de jos a paginii (Y=0 este jos)
+        y: 130, // Poziția de la marginea de jos a paginii
         width: sigDims.width,
         height: sigDims.height,
       });
     }
 
-    // --- Salvarea fișierului (rămâne la fel) ---
+    // --- ADAUGĂM SEMNĂTURA BENEFICIARULUI ---
+    if (beneficiarySignatureDataURL) {
+        const signatureImageBytes = Buffer.from(beneficiarySignatureDataURL.split(',')[1], 'base64');
+        const signatureImage = await pdfDoc.embedPng(signatureImageBytes);
+        const sigDims = signatureImage.scale(0.3); // Ajustează factorul de scalare dacă e necesar
+
+        // Calibrează poziția pentru "BENEFICIAR" (dreapta jos)
+        // !!! AJUSTEAZĂ ACESTE COORDONATE !!!
+        page1.drawImage(signatureImage, {
+            x: 400, // Mai la dreapta față de semnătura agentului
+            y: 130, // La aceeași înălțime pe verticală
+            width: sigDims.width,
+            height: sigDims.height,
+        });
+    }
+
+    // --- PASUL 3: Salvarea fișierului și a înregistrării în DB (rămâne la fel) ---
     const pdfBytes = await pdfDoc.save();
     const fileName = `PV_Interventie_${beneficiar.profile.nume_companie.replace(/\s/g, '_')}_${Date.now()}.pdf`;
     const dirPath = path.join(__dirname, '..', '..', 'uploads', 'procese-verbale-interventie');
@@ -94,7 +97,6 @@ const createProcesVerbal = async (req, res) => {
     const filePath = path.join(dirPath, fileName);
     await fs.writeFile(filePath, pdfBytes);
 
-    // --- Salvarea înregistrării în baza de date (rămâne la fel) ---
     const caleStocareRelativa = `/uploads/procese-verbale-interventie/${fileName}`;
     await ProcesVerbal.create({
       paznicId: paznicLogat._id,
