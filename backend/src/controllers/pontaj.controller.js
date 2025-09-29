@@ -33,7 +33,7 @@ const checkIn = async (req, res) => {
       paznicId,
       beneficiaryId: beneficiarAlocat._id,
       ora_intrare: new Date(),
-      locationHistory: [{ latitude, longitude }]
+      locationHistory: [{ latitude: Number(latitude), longitude: Number(longitude) }]
     });
 
     res.status(201).json({ 
@@ -134,7 +134,12 @@ const updateLocation = async (req, res) => {
       return res.status(404).json({ message: "Nu există tura activă pentru acest paznic." });
     }
 
-    pontaj.locationHistory.push({ latitude, longitude, timestamp: new Date() });
+    pontaj.locationHistory.push({
+      latitude: Number(latitude),
+      longitude: Number(longitude),
+      timestamp: new Date()
+    });
+
     await pontaj.save();
 
     res.status(200).json({ message: "Locația a fost actualizată." });

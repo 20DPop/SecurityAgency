@@ -9,6 +9,7 @@ const procesVerbalPredarePrimireSchema = new mongoose.Schema({
   obiecte_predate: { type: String, required: true },
   caleStocarePDF: { type: String, required: true },
   reprezentantBeneficiar: { type: String, required: true },
+  reprezentantVigilent: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
   expirationDate: { type: Date, default: () => new Date(Date.now() + 60*24*60*60*1000) } // 60 zile
 }, { timestamps: true });
 

@@ -1,4 +1,6 @@
 const ProcesVerbalPredarePrimire = require('../models/procesVerbalPredarePrimire.model');
+const User = require('../models/user.model'); 
+const mongoose = require('mongoose');
 const { PDFDocument, rgb, StandardFonts } = require('pdf-lib');
 const fs = require('fs').promises;
 const path = require('path');
@@ -11,6 +13,7 @@ exports.createProcesVerbalPredarePrimire = async (req, res) => {
         nume_reprezentant_primire, 
         obiecte_predate, 
         reprezentantBeneficiar,
+        reprezentantVigilent,
         // Preluăm și semnătura
         signatureDataURL
     } = req.body;
@@ -31,12 +34,24 @@ exports.createProcesVerbalPredarePrimire = async (req, res) => {
     const font = await pdfDoc.embedFont(StandardFonts.Helvetica);
     const formatDate = (dateString) => new Date(dateString).toLocaleDateString('ro-RO');
 
+    let numeVigilent = reprezentantVigilent;
+    if (mongoose.Types.ObjectId.isValid(reprezentantVigilent)) {
+      const userVigilent = await User.findById(reprezentantVigilent);
+      if (userVigilent) {
+        numeVigilent = `${userVigilent.nume} ${userVigilent.prenume}`;
+      } else {
+        numeVigilent = "Necunoscut"; // fallback dacă ID-ul nu există
+      }
+    }
+
     // --- Completarea textului ---
     page.drawText(formatDate(data_incheierii), { x: 200, y: height - 256, font, size: 13 });
+    page.drawText(numeVigilent, { x: 327, y: height - 256, font, size: 13 });
     page.drawText(nume_reprezentant_primire, { x: 380, y: height - 273, font, size: 13 });
     page.drawText(obiecte_predate, { x: 90, y: height - 334, font, size: 13, lineHeight: 14, maxWidth: 450 });
     page.drawText(nume_reprezentant_primire, { x: 270, y: 215, font, size: 13 });
     page.drawText(reprezentantBeneficiar, { x: 170, y: height - 290, font, size: 13 });
+    page.drawText(numeVigilent, { x: 85, y: height - 628, font, size: 13 });
 
     // --- Adăugarea semnăturii ---
     if (signatureDataURL) {
@@ -69,6 +84,7 @@ exports.createProcesVerbalPredarePrimire = async (req, res) => {
       nume_reprezentant_primire,
       obiecte_predate,
       reprezentantBeneficiar,
+      reprezentantVigilent,
       caleStocarePDF: caleStocareRelativa,
     });
 

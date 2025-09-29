@@ -13,6 +13,7 @@ const ProcesVerbalModal = ({ pontajId, onSubmit, onCancel, loading }) => {
     nume_reprezentant_primire: "",
     obiecte_predate: "",
     reprezentantBeneficiar: "",
+    reprezentantVigilent: "",
     // Adăugăm câmpul pentru semnătură în starea formularului
     signatureDataURL: '',
   });
@@ -34,6 +35,22 @@ const ProcesVerbalModal = ({ pontajId, onSubmit, onCancel, loading }) => {
       }
     };
     fetchBeneficiari();
+  }, []);
+
+  const [paznici, setPaznici] = useState([]);
+
+  useEffect(() => {
+    const fetchPaznici = async () => {
+      try {
+        const userInfo = JSON.parse(localStorage.getItem("currentUser"));
+        const config = { headers: { Authorization: `Bearer ${userInfo.token}` } };
+        const { data } = await axios.get("http://localhost:3000/api/users/paznici", config);
+        setPaznici(data);
+      } catch (err) {
+        console.error("Eroare la încărcarea paznicilor:", err);
+      }
+    };
+    fetchPaznici();
   }, []);
 
   const handleChange = (e) => {
@@ -74,6 +91,23 @@ const ProcesVerbalModal = ({ pontajId, onSubmit, onCancel, loading }) => {
                 onChange={handleChange}
                 required
               />
+            </div>
+            <div className="modal-form-group">
+              <label htmlFor="reprezentantVigilent">Reprezentant Vigilent</label>
+              <select
+                id="reprezentantVigilent"
+                name="reprezentantVigilent"
+                value={formData.reprezentantVigilent}
+                onChange={handleChange}
+                required
+              >
+                <option value="">-- Selectează un angajat --</option>
+                {paznici.map((p) => (
+                  <option key={p._id} value={p._id}>
+                    {p.nume} {p.prenume}
+                  </option>
+                ))}
+              </select>
             </div>
 
             <div className="modal-form-group">
@@ -180,6 +214,12 @@ export default function PontarePage() {
     setMessage("");
     navigator.geolocation.getCurrentPosition(
       async (position) => {
+      //   console.log(
+      //   "GPS Paznic → Lat:", position.coords.latitude,
+      //   "Lng:", position.coords.longitude,
+      //   "Accuracy (m):", position.coords.accuracy
+      // );
+
         try {
           const { latitude, longitude } = position.coords;
           const userInfo = JSON.parse(localStorage.getItem("currentUser"));

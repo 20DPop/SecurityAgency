@@ -1,10 +1,12 @@
 .pontare-page {
   display: flex;
   justify-content: center;
-  align-items: center;
-  height: calc(100vh - 70px);
+  align-items: flex-start;  /* 🔹 aliniază sus */
+  min-height: calc(100vh - 70px);  /* 🔹 permite creștere */
   background: linear-gradient(135deg, #dbeafe, #f0f4f8);
   font-family: Arial, sans-serif;
+  overflow-y: auto;         /* 🔹 scroll pe pagină dacă e nevoie */
+  padding: 20px 0;          /* spațiu sus/jos */
 }
 
 .pontare-container {
@@ -125,6 +127,8 @@
   border-radius: 8px;
   width: 90%;
   max-width: 600px;
+  max-height: 90vh;        /* 🔹 important */
+  overflow-y: auto;        /* 🔹 adaugă scroll doar în interiorul modalului */
   box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
   animation: fadeIn 0.3s ease-out;
 }
