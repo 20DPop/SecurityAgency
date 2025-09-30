@@ -51,6 +51,46 @@ const createProcesVerbal = async (req, res) => {
     page1.drawText(formatTime(ora_incheiere_misiune), { x: 230, y: height - 349, font, size: 11 });
     
     // --- Completarea tabelului (rămâne la fel) ---
+    //------------------------------------------------------------------//
+    // --- CALIBRARE PAGINA 2 (Tabelul) (Ajustează aceste valori) --- //
+    //------------------------------------------------------------------//
+    let startY = height - 125; // Poziția Y de start pentru primul rând al tabelului
+    const rowHeight = 65; // Înălțimea unui rând (distanța verticală)
+    const columnX = { // Pozițiile X pentru fiecare coloană
+      nrCrt: 78,
+      dataOra: 110,
+      tipAlarma: 195,
+      echipaj: 275,
+      oraSosirii: 347,
+      cauze: 390,
+      solutionare: 445,
+      observatii: 500
+    };
+    
+    if (evenimente && evenimente.length > 0) {
+  let currentY = startY;
+
+  evenimente.forEach((event, index) => {
+    // --- Calculăm câte rânduri ocupă fiecare coloană ---
+    const linesTipAlarma = Math.ceil(font.widthOfTextAtSize(event.tipulAlarmei, 9) / 70);
+    const linesObservatii = Math.ceil(font.widthOfTextAtSize(event.observatii || '', 9) / 80);
+    const lines = Math.max(linesTipAlarma, linesObservatii, 1);
+
+    // --- Ajustăm currentY pentru rândul curent ---
+    if (index > 0) {
+      currentY -= rowHeight + (lines - 1) * 10; // 10 este spațiul suplimentar pe linie
+    }
+
+    page2.drawText(`${index + 1}.`, { x: columnX.nrCrt, y: currentY, font, size: 9 });
+    page2.drawText(new Date(event.dataOraReceptionarii).toLocaleString('ro-RO'), { x: columnX.dataOra, y: currentY, font, size: 9, maxWidth: 80 });
+    page2.drawText(event.tipulAlarmei, { x: columnX.tipAlarma, y: currentY, font, size: 9, maxWidth: 70 });
+    page2.drawText(event.echipajAlarmat, { x: columnX.echipaj, y: currentY, font, size: 9, maxWidth: 70 });
+    page2.drawText(formatTime(event.oraSosirii), { x: columnX.oraSosirii, y: currentY, font, size: 9, maxWidth: 70 });
+    page2.drawText(event.cauzeleAlarmei, { x: columnX.cauze, y: currentY, font, size: 9, maxWidth: 80 });
+    page2.drawText(event.modulDeSolutionare, { x: columnX.solutionare, y: currentY, font, size: 9, maxWidth: 80 });
+    page2.drawText(event.observatii || '', { x: columnX.observatii, y: currentY, font, size: 9, maxWidth: 80 });
+  });
+}
     // (Codul pentru popularea tabelului pe pagina 2 rămâne neschimbat)
     if (evenimente && evenimente.length > 0) {
       //... logica existentă pentru tabel ...
@@ -66,8 +106,8 @@ const createProcesVerbal = async (req, res) => {
       
       // Calibrează poziția pentru "ECHIPA DE INTERVENTIE" (stânga jos)
       page1.drawImage(signatureImage, {
-        x: 130, // Poziția de la marginea stângă a paginii
-        y: 130, // Poziția de la marginea de jos a paginii
+        x: 100, // Poziția de la marginea stângă a paginii
+        y: 220, // Poziția de la marginea de jos a paginii
         width: sigDims.width,
         height: sigDims.height,
       });
@@ -82,8 +122,8 @@ const createProcesVerbal = async (req, res) => {
         // Calibrează poziția pentru "BENEFICIAR" (dreapta jos)
         // !!! AJUSTEAZĂ ACESTE COORDONATE !!!
         page1.drawImage(signatureImage, {
-            x: 400, // Mai la dreapta față de semnătura agentului
-            y: 130, // La aceeași înălțime pe verticală
+            x: 375, // Mai la dreapta față de semnătura agentului
+            y: 220, // La aceeași înălțime pe verticală
             width: sigDims.width,
             height: sigDims.height,
         });
