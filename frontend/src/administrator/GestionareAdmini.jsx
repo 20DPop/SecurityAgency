@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
-import axios from "axios";
 import { useNavigate } from "react-router-dom";
-import "../admin/Angajati.css"; // Refolosim stilurile
+import apiClient from '../apiClient'; // <-- MODIFICARE: Importăm apiClient
+import "../admin/Angajati.css";
 
 export default function GestionareAdmini() {
   const [admini, setAdmini] = useState([]);
@@ -9,15 +9,12 @@ export default function GestionareAdmini() {
   const [error, setError] = useState("");
   const navigate = useNavigate();
 
-  // Preluare admini
   useEffect(() => {
     const fetchAdmini = async () => {
+      setLoading(true);
       try {
-        const userInfo = JSON.parse(localStorage.getItem("currentUser"));
-        if (!userInfo || !userInfo.token) throw new Error("Utilizator neautentificat!");
-        
-        const config = { headers: { Authorization: `Bearer ${userInfo.token}` } };
-        const { data } = await axios.get("http://localhost:3000/api/users/list/admin", config);
+        // <-- MODIFICARE: Folosim apiClient
+        const { data } = await apiClient.get("/users/list/admin");
         setAdmini(data);
       } catch (err) {
         setError(err.response?.data?.message || "Eroare la preluarea listei de admini.");
@@ -28,26 +25,21 @@ export default function GestionareAdmini() {
     fetchAdmini();
   }, []);
 
-  // Funcția de ștergere
   const handleDelete = async (userId) => {
     if (!window.confirm("Sunteți sigur că doriți să ștergeți acest cont de admin? Acțiunea este ireversibilă.")) return;
 
     try {
-      const userInfo = JSON.parse(localStorage.getItem("currentUser"));
-      const config = { headers: { Authorization: `Bearer ${userInfo.token}` } };
-      await axios.delete(`http://localhost:3000/api/users/${userId}`, config);
-
+      // <-- MODIFICARE: Folosim apiClient
+      await apiClient.delete(`/users/${userId}`);
       alert("Cont de admin șters cu succes!");
-      // Actualizăm lista locală pentru a reflecta ștergerea
       setAdmini(prev => prev.filter(user => user._id !== userId));
     } catch (err) {
       alert(`❌ Eroare: ${err.response?.data?.message || "Nu s-a putut șterge contul."}`);
-      setError(err.response?.data?.message || "Eroare la ștergerea contului.");
     }
   };
 
-  if (loading) return <div className="loading">Se încarcă...</div>;
-  if (error) return <div className="loading error-message">{error}</div>;
+  if (loading) return <div className="loading" style={{textAlign: 'center', padding: '50px'}}>Se încarcă...</div>;
+  if (error) return <div className="loading error-message" style={{textAlign: 'center', padding: '50px', color: 'red'}}>{error}</div>;
 
   return (
     <div className="angajati-container">
@@ -81,7 +73,7 @@ export default function GestionareAdmini() {
                 </tr>
               ))
             ) : (
-              <tr><td colSpan="4">Nu există alte conturi de admin.</td></tr>
+              <tr><td colSpan="4" style={{textAlign: 'center'}}>Nu există alte conturi de admin create.</td></tr>
             )}
           </tbody>
         </table>

@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import axios from 'axios'; 
-import "../admin/AdaugaAngajat.css"; // Calea corectă către CSS-ul refolosit
+import apiClient from '../apiClient'; // <-- MODIFICARE: Importăm apiClient
+import "../admin/AdaugaAngajat.css"; 
 import PasswordInput from '../components/PasswordInput';
 
 export default function AdaugaAdmin() {
@@ -39,18 +39,6 @@ export default function AdaugaAdmin() {
     setLoading(true);
 
     try {
-        const userInfo = JSON.parse(localStorage.getItem('currentUser'));
-        if (!userInfo || !userInfo.token) {
-            throw new Error("Utilizator neautentificat!");
-        }
-
-        const config = {
-            headers: {
-                'Content-Type': 'application/json',
-                Authorization: `Bearer ${userInfo.token}`,
-            },
-        };
-
         const payload = {
           nume: formData.nume,
           prenume: formData.prenume,
@@ -62,13 +50,14 @@ export default function AdaugaAdmin() {
           }
         };
 
-        await axios.post('http://localhost:3000/api/users/create-admin', payload, config);
+        // <-- MODIFICARE: Folosim apiClient
+        await apiClient.post('/users/create-admin', payload);
 
         alert("✅ Cont de Admin adăugat cu succes!");
         navigate(-1);
 
     } catch (err) {
-        setError(err.response?.data?.message || 'A apărut o eroare.');
+        setError(err.response?.data?.message || 'A apărut o eroare la crearea contului.');
     } finally {
         setLoading(false);
     }
@@ -121,7 +110,7 @@ export default function AdaugaAdmin() {
             <input id="telefon" type="tel" name="telefon" value={formData.telefon} onChange={handleChange} className="form-input"/>
           </div>
 
-          {error && <p className="error-message">{error}</p>}
+          {error && <p className="error-message" style={{color: 'red'}}>{error}</p>}
 
           <div className="form-actions">
             <button type="button" className="form-button back-btn" onClick={() => navigate(-1)} disabled={loading}>

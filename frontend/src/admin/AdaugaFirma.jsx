@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import axios from 'axios'; 
+import apiClient from '../apiClient'; // Importăm instanța centralizată
 import "./AdaugaFirma.css";
 import PasswordInput from '../components/PasswordInput';
 
@@ -26,16 +26,15 @@ export default function AdaugaFirma() {
   useEffect(() => {
     const fetchCompanii = async () => {
       try {
-        const userInfo = JSON.parse(localStorage.getItem('currentUser'));
-        if (!userInfo || !userInfo.token) return;
-        const config = { headers: { Authorization: `Bearer ${userInfo.token}` } };
-        const { data } = await axios.get("http://localhost:3000/api/users/beneficiari", config);
+        const { data } = await apiClient.get("/users/beneficiari");
         setCompanii(data);
       } catch (err) {
         console.error("Eroare la încărcarea companiilor:", err);
       }
     };
-    if (adaugPunct) fetchCompanii();
+    if (adaugPunct) {
+      fetchCompanii();
+    }
   }, [adaugPunct]);
 
   const handleChange = (e) => {
@@ -48,17 +47,11 @@ export default function AdaugaFirma() {
     setError('');
 
     try {
-      const userInfo = JSON.parse(localStorage.getItem('currentUser'));
-      if (!userInfo || !userInfo.token) throw new Error("Utilizator neautentificat!");
-      const config = { headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${userInfo.token}` } };
-
       if (adaugPunct) {
-        // Logica pentru a adăuga un punct de lucru la o firmă existentă
-        if (!selectedCompanie) throw new Error("Trebuie să selectezi o companie.");
-        await axios.put(`http://localhost:3000/api/users/${selectedCompanie}`, { profile: { punct_de_lucru: formData.punct_de_lucru } }, config);
+        if (!selectedCompanie) throw new Error("Trebuie să selectați o companie.");
+        await apiClient.put(`/users/${selectedCompanie}`, { profile: { punct_de_lucru: formData.punct_de_lucru } });
         alert("✅ Punct de lucru adăugat cu succes!");
       } else {
-        // Logica pentru a crea o firmă nouă
         if (formData.password !== formData.passwordConfirm) throw new Error("Parolele nu se potrivesc!");
         if (formData.password.length < 6) throw new Error('Parola trebuie să conțină cel puțin 6 caractere.');
         
@@ -74,7 +67,7 @@ export default function AdaugaFirma() {
             punct_de_lucru: formData.punct_de_lucru ? [formData.punct_de_lucru] : [],
           }
         };
-        await axios.post('http://localhost:3000/api/users/create', payload, config);
+        await apiClient.post('/users/create', payload);
         alert("✅ Firmă (Beneficiar) adăugată cu succes!");
       }
       navigate(-1);
@@ -145,7 +138,7 @@ export default function AdaugaFirma() {
             </>
           )}
 
-          {error && <p className="error-message">{error}</p>}
+          {error && <p className="error-message" style={{color: 'red'}}>{error}</p>}
 
           <div className="form-actions">
             <button type="button" className="form-button back-btn" onClick={() => navigate(-1)} disabled={loading}>

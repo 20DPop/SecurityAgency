@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
+import apiClient from '../apiClient'; // <-- MODIFICARE 1: Importăm apiClient
 import './AlocarePaznici.css';
 
 export default function AlocarePaznici() {
@@ -15,37 +15,27 @@ export default function AlocarePaznici() {
 
   const navigate = useNavigate();
 
-  const getAuthConfig = useCallback(() => {
-    const userInfo = JSON.parse(localStorage.getItem('currentUser'));
-    if (!userInfo || !userInfo.token) {
-      throw new Error("Utilizator neautentificat!");
-    }
-    return {
-      headers: {
-        'Content-Type': 'application/json',
-        Authorization: `Bearer ${userInfo.token}`,
-      },
-    };
-  }, []);
+  // <-- MODIFICARE 2: Funcția getAuthConfig nu mai este necesară, poate fi ștearsă.
+  // apiClient se ocupă automat de token.
 
   // Fetch inițial + reîncărcare date
   const fetchAllData = useCallback(async () => {
     setLoading(true);
     setError('');
     try {
-      const config = getAuthConfig();
+      // <-- MODIFICARE 3: Folosim apiClient, fără a mai trimite 'config'
       const [beneficiariRes, pazniciRes] = await Promise.all([
-        axios.get('http://localhost:3000/api/users/list/beneficiar', config),
-        axios.get('http://localhost:3000/api/users/list/paznic', config)
+        apiClient.get('/users/list/beneficiar'),
+        apiClient.get('/users/list/paznic')
       ]);
       setBeneficiari(beneficiariRes.data);
       setPaznici(pazniciRes.data);
 
       // Dacă există beneficiar și punct selectat → aducem paznicii alocați
       if (selectedBeneficiarId && selectedPunct) {
-        const { data: assignedData } = await axios.get(
-          `http://localhost:3000/api/assignments/${selectedBeneficiarId}/paznici?punct=${encodeURIComponent(selectedPunct)}`,
-          config
+        // <-- MODIFICARE 4: Folosim apiClient
+        const { data: assignedData } = await apiClient.get(
+          `/assignments/${selectedBeneficiarId}/paznici?punct=${encodeURIComponent(selectedPunct)}`
         );
         setAssignedPaznici(assignedData);
       } else {
@@ -57,7 +47,7 @@ export default function AlocarePaznici() {
     } finally {
       setLoading(false);
     }
-  }, [getAuthConfig, selectedBeneficiarId, selectedPunct]);
+  }, [selectedBeneficiarId, selectedPunct]); // Am scos getAuthConfig din dependențe
 
   useEffect(() => {
     fetchAllData();
@@ -86,9 +76,9 @@ export default function AlocarePaznici() {
     setLoading(true);
     setError('');
     try {
-      const config = getAuthConfig();
       const payload = { beneficiaryId: selectedBeneficiarId, punct: selectedPunct, pazniciIds: [paznicId] };
-      await axios.post('http://localhost:3000/api/assignments/assign', payload, config);
+      // <-- MODIFICARE 5: Folosim apiClient
+      await apiClient.post('/assignments/assign', payload);
       await fetchAllData();
     } catch (err) {
       console.error("Error assigning paznic:", err.response?.data?.message || err.message);
@@ -107,9 +97,9 @@ export default function AlocarePaznici() {
     setLoading(true);
     setError('');
     try {
-      const config = getAuthConfig();
       const payload = { beneficiaryId: selectedBeneficiarId, punct: selectedPunct, pazniciIds: [paznicId] };
-      await axios.post('http://localhost:3000/api/assignments/unassign', payload, config);
+      // <-- MODIFICARE 6: Folosim apiClient
+      await apiClient.post('/assignments/unassign', payload);
       await fetchAllData();
     } catch (err) {
       console.error("Error unassigning paznic:", err.response?.data?.message || err.message);
@@ -130,7 +120,7 @@ export default function AlocarePaznici() {
         <button onClick={() => navigate(-1)} className="back-btn-assignment">⬅ Înapoi</button>
       </div>
 
-      {error && <p className="error-message">{error}</p>}
+      {error && <p className="error-message" style={{color: 'red', textAlign: 'center'}}>{error}</p>}
 
       {/* Selectare beneficiar */}
       <div className="beneficiary-selector">
@@ -158,7 +148,7 @@ export default function AlocarePaznici() {
         </div>
       )}
 
-      {loading && <p>Se încarcă...</p>}
+      {loading && <p style={{textAlign: 'center'}}>Se încarcă...</p>}
 
       {/* Listele de paznici doar dacă avem firmă + punct selectat */}
       {selectedBeneficiarId && selectedPunct && !loading && (

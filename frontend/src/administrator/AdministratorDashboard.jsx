@@ -1,6 +1,5 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
-// Refolosim stilurile existente care sunt deja importate și funcționale
 import '../admin/AdminDashboard.css'; 
 
 export default function AdministratorDashboard() {
@@ -8,12 +7,11 @@ export default function AdministratorDashboard() {
     <div className="admin-dashboard">
       <main>
         <h1 className="page-title">Panou de Control (Administrator)</h1>
-        <p style={{ margin: '0 30px 30px', textAlign: 'center', maxWidth: '800px', margin: '0 auto 30px' }}>
+        <p style={{ textAlign: 'center', maxWidth: '800px', margin: '0 auto 30px' }}>
           Acesta este panoul de control principal. De aici poți crea noi conturi de Admin pentru agenție sau poți naviga pentru a vizualiza aplicația din perspectiva celorlalte roluri.
         </p>
         <div className="cards-container">
           
-          {/* --- Card Nou Adăugat pentru Crearea de Admini --- */}
           <Link 
             to="/administrator/adauga-admin" 
             className="card link-card" 
@@ -23,7 +21,14 @@ export default function AdministratorDashboard() {
             <p style={{color: '#b71c1c', fontWeight: 'bold'}}>Adaugă Cont Admin</p>
           </Link>
           
-          {/* --- Carduri existente pentru Vizualizare --- */}
+          <Link 
+           to="/administrator/gestionare-admini" 
+            className="card link-card"
+          >
+             <span style={{fontSize: '2rem'}}>🗑️</span>
+            <p>Gestionează Conturi Admin</p>
+          </Link>
+          
           <Link 
             to="/admin/dashboard" 
             className="card link-card" 
@@ -32,15 +37,7 @@ export default function AdministratorDashboard() {
             <span style={{fontSize: '2rem'}}>👁️</span>
             <p>Vezi ca Admin (Agenție)</p>
           </Link>
-          <Link 
-           to="/administrator/gestionare-admini" 
-          className="card link-card"
-            >
-             <span style={{fontSize: '2rem'}}>🗑️</span>
-            <p>Gestionează Conturi Admin</p>
-              </Link>
 
-          
           <Link 
             to="/beneficiar/dashboard" 
             className="card link-card" 

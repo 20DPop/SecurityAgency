@@ -1,11 +1,12 @@
 import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
-import axios from 'axios';
+import { useNavigate, useParams } from 'react-router-dom';
+import apiClient from '../apiClient'; // <-- MODIFICARE: Importăm apiClient
 import './ProcesVerbal.css';
 import SignaturePadWrapper from '../components/SignaturePad';
 
 export default function ProcesVerbal() {
   const navigate = useNavigate();
+  const { pontajId } = useParams(); // Preluăm ID-ul pontajului din URL, dacă e necesar
   
   const [formData, setFormData] = useState({
     reprezentant_beneficiar: '',
@@ -14,22 +15,16 @@ export default function ProcesVerbal() {
     ora_incheiere_misiune: '',
     evenimente: [
       { 
-        dataOraReceptionarii: '', 
-        tipulAlarmei: '', 
-        echipajAlarmat: '', 
-        oraSosirii: '', 
-        cauzeleAlarmei: '', 
-        modulDeSolutionare: '', 
-        observatii: '' 
+        dataOraReceptionarii: '', tipulAlarmei: '', echipajAlarmat: '', 
+        oraSosirii: '', cauzeleAlarmei: '', modulDeSolutionare: '', observatii: '' 
       }
     ],
-    agentSignatureDataURL: '', // Semnătura agentului
-    beneficiarySignatureDataURL: '', // Semnătura beneficiarului
+    agentSignatureDataURL: '',
+    beneficiarySignatureDataURL: '',
   });
   
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
-  // Stare pentru a gestiona ambele semnături
   const [signaturesSaved, setSignaturesSaved] = useState({
     agent: false,
     beneficiary: false
@@ -76,21 +71,21 @@ export default function ProcesVerbal() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    setError('');
 
-    if (!formData.agentSignatureDataURL || !formData.beneficiarySignatureDataURL) {
+    if (!signaturesSaved.agent || !signaturesSaved.beneficiary) {
       setError('EROARE: Atât agentul, cât și beneficiarul trebuie să semneze documentul.');
       return;
     }
     
     setLoading(true);
-    setError('');
 
     try {
-      const userInfo = JSON.parse(localStorage.getItem('currentUser'));
-      const config = { headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${userInfo.token}` } };
-      await axios.post(`http://localhost:3000/api/proces-verbal/create`, formData, config);
+      // <-- MODIFICARE: Folosim apiClient, care se ocupă de token și URL
+      await apiClient.post(`/proces-verbal/create`, formData);
+      
       alert('✅ Proces verbal salvat și PDF generat cu succes!');
-      navigate('/');
+      navigate('/'); // Redirecționăm la dashboard-ul paznicului
     } catch (err) {
       setError(err.response?.data?.message || 'A apărut o eroare la salvarea documentului.');
     } finally {
@@ -122,7 +117,7 @@ export default function ProcesVerbal() {
                   <input id="ora_incheiere_misiune" type="datetime-local" name="ora_incheiere_misiune" value={formData.ora_incheiere_misiune} onChange={handleChange} required />
                 </div>
                 <div className="form-group">
-                  <label htmlFor="reprezentant_beneficiar">Nume Reprezentant Beneficiar (Opțional)</label>
+                  <label htmlFor="reprezentant_beneficiar">Nume Reprezentant Beneficiar</label>
                   <input id="reprezentant_beneficiar" type="text" name="reprezentant_beneficiar" value={formData.reprezentant_beneficiar} onChange={handleChange} placeholder="Ex: Popescu Ion" />
                 </div>
             </div>
@@ -130,15 +125,15 @@ export default function ProcesVerbal() {
 
         <fieldset disabled={areAllSignaturesSaved}>
             <legend>Tabel Evenimente Detaliate</legend>
-            <p className="fieldset-description">Completați un rând pentru fiecare eveniment important petrecut în timpul intervenției.</p>
+            <p className="fieldset-description">Completați un rând pentru fiecare eveniment important.</p>
             {formData.evenimente.map((event, index) => (
               <div key={index} className="event-row">
                 <span className="event-row-number">{index + 1}.</span>
                 <div className="event-grid">
-                  <input type="datetime-local" name="dataOraReceptionarii" value={event.dataOraReceptionarii} onChange={(e) => handleEventChange(index, e)} placeholder="Data/Ora Rec." required title="Data și Ora Recepționării"/>
+                  <input type="datetime-local" name="dataOraReceptionarii" value={event.dataOraReceptionarii} onChange={(e) => handleEventChange(index, e)} required title="Data și Ora Recepționării"/>
                   <input type="text" name="tipulAlarmei" value={event.tipulAlarmei} onChange={(e) => handleEventChange(index, e)} placeholder="Tipul alarmei" required />
                   <input type="text" name="echipajAlarmat" value={event.echipajAlarmat} onChange={(e) => handleEventChange(index, e)} placeholder="Echipaj alarmat" required />
-                  <input type="datetime-local" name="oraSosirii" value={event.oraSosirii} onChange={(e) => handleEventChange(index, e)} placeholder="Ora sosirii" required title="Ora Sosirii"/>
+                  <input type="datetime-local" name="oraSosirii" value={event.oraSosirii} onChange={(e) => handleEventChange(index, e)} required title="Ora Sosirii"/>
                   <input type="text" name="cauzeleAlarmei" value={event.cauzeleAlarmei} onChange={(e) => handleEventChange(index, e)} placeholder="Cauzele alarmei" required />
                   <input type="text" name="modulDeSolutionare" value={event.modulDeSolutionare} onChange={(e) => handleEventChange(index, e)} placeholder="Mod de soluționare" required />
                   <input type="text" name="observatii" value={event.observatii} onChange={(e) => handleEventChange(index, e)} placeholder="Observații (opțional)" />
@@ -180,7 +175,7 @@ export default function ProcesVerbal() {
         {error && <p className="error-message">{error}</p>}
 
         <div className="form-actions">
-            <button type="button" className="back-btn" onClick={() => navigate(-1)}>Anulează</button>
+            <button type="button" className="back-btn" onClick={() => navigate(-1)} disabled={loading}>Anulează</button>
             <button type="submit" className="submit-btn" disabled={loading || !areAllSignaturesSaved}>
               {loading ? 'Se salvează...' : 'Salvează și Generează PDF'}
             </button>

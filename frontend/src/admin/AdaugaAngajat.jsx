@@ -1,71 +1,44 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import axios from 'axios'; 
-
-// Importăm stilurile pentru formular
+import apiClient from '../apiClient'; // Importăm instanța centralizată
 import "./AdaugaAngajat.css"; 
-// Importăm componenta reutilizabilă pentru câmpul de parolă
 import PasswordInput from '../components/PasswordInput';
 
 export default function AdaugaAngajat() {
-  // Starea pentru a ține datele din formular
   const [formData, setFormData] = useState({
     nume: "",
     prenume: "",
     email: "",
     password: "",
-    passwordConfirm: "", // Câmp pentru confirmarea parolei
+    passwordConfirm: "",
     telefon: "",
     nr_legitimatie: "" 
   });
 
-  // Stări pentru a gestiona interfața (încărcare și erori)
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
-  
-  // Hook pentru a naviga între pagini
   const navigate = useNavigate();
 
-  // Funcție generică pentru a actualiza starea formularului la orice modificare
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
-  // Funcția principală care se execută la trimiterea formularului
   const handleSubmit = async (e) => {
-    e.preventDefault(); // Previne reîncărcarea paginii
-    setError(''); // Resetează mesajele de eroare anterioare
+    e.preventDefault();
+    setError('');
 
-    // --- Validări în frontend înainte de a trimite datele ---
     if (formData.password !== formData.passwordConfirm) {
         setError('Parolele introduse nu se potrivesc!');
-        return; // Oprește trimiterea formularului
+        return;
     }
-    
     if (formData.password.length < 6) {
         setError('Parola trebuie să conțină cel puțin 6 caractere.');
-        return; // Oprește trimiterea formularului
+        return;
     }
 
-    setLoading(true); // Se afișează starea de încărcare (ex: "Se salvează...")
+    setLoading(true);
 
     try {
-        // Preluăm informațiile utilizatorului logat din localStorage
-        const userInfo = JSON.parse(localStorage.getItem('currentUser'));
-        if (!userInfo || !userInfo.token) {
-            throw new Error("Utilizator neautentificat! Vă rugăm să vă relogați.");
-        }
-
-        // Configurăm headerele pentru cererea API, incluzând token-ul de autorizare
-        const config = {
-            headers: {
-                'Content-Type': 'application/json',
-                Authorization: `Bearer ${userInfo.token}`,
-            },
-        };
-
-        // Pregătim datele care vor fi trimise la server
-        // Nu includem 'passwordConfirm', deoarece serverul nu are nevoie de el
         const payload = {
             nume: formData.nume,
             prenume: formData.prenume,
@@ -78,18 +51,15 @@ export default function AdaugaAngajat() {
             }
         };
 
-        // Facem cererea POST către backend pentru a crea noul utilizator
-        await axios.post('http://localhost:3000/api/users/create', payload, config);
+        // Folosim apiClient, care adaugă automat token-ul și URL-ul de bază
+        await apiClient.post('/users/create', payload);
 
-        // Dacă totul a mers bine, afișăm un mesaj de succes și navigăm înapoi
         alert("✅ Angajat (Paznic) adăugat cu succes!");
         navigate(-1); 
 
     } catch (err) {
-        // Dacă apare o eroare, o afișăm utilizatorului
         setError(err.response?.data?.message || 'A apărut o eroare. Vă rugăm să încercați din nou.');
     } finally {
-        // Oprim starea de încărcare, indiferent dacă a fost succes sau eroare
         setLoading(false);
     }
   };
@@ -112,7 +82,6 @@ export default function AdaugaAngajat() {
             <input id="email" type="email" name="email" value={formData.email} onChange={handleChange} required className="form-input"/>
           </div>
           
-          {/* Folosim componenta reutilizabilă pentru parolă */}
           <PasswordInput
             label="Parolă:"
             id="password"
@@ -122,8 +91,6 @@ export default function AdaugaAngajat() {
             required
             className="form-input"
           />
-
-          {/* Folosim componenta reutilizabilă pentru confirmarea parolei */}
           <PasswordInput
             label="Confirmă Parola:"
             id="passwordConfirm"
@@ -143,8 +110,7 @@ export default function AdaugaAngajat() {
             <input id="nr_legitimatie" type="text" name="nr_legitimatie" value={formData.nr_legitimatie} onChange={handleChange} className="form-input"/>
           </div>
 
-          {/* Afișăm mesajul de eroare dacă există unul */}
-          {error && <p className="error-message">{error}</p>}
+          {error && <p className="error-message" style={{color: 'red'}}>{error}</p>}
 
           <div className="form-actions">
             <button type="button" className="form-button back-btn" onClick={() => navigate(-1)} disabled={loading}>
