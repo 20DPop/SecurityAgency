@@ -1,98 +1,3 @@
-// import React, { useState } from "react";
-// import { Link } from "react-router-dom";
-// import "./Solicitari.css";
-
-// export default function Solicitari({ solicitari, setSolicitari }) {
-//   const [termenCautare, setTermenCautare] = useState("");
-
-//   const mutaSesizare = (id, from, to) => {
-//     const item = solicitari[from].find(s => s.id === id);
-//     setSolicitari(prev => ({
-//       ...prev,
-//       [from]: prev[from].filter(s => s.id !== id),
-//       [to]: [...prev[to], item]
-//     }));
-//   };
-
-//   const coloane = [
-//     { key: "preluată", label: "Prelucrată" },
-//     { key: "inCurs", label: "În curs de rezolvare" },
-//     { key: "rezolvata", label: "Rezolvată" }
-//   ];
-
-//   const solicitariFiltrate = {};
-//   for (const key in solicitari) {
-//     solicitariFiltrate[key] = solicitari[key].filter(s =>
-//       s.firma.toLowerCase().includes(termenCautare.toLowerCase())
-//     );
-//   }
-
-//   return (
-//     <div className="solicitari-container">
-//       {/* Buton Înapoi */}
-//       <div style={{ marginBottom: "15px" }}>
-//         <Link to="/" className="back-btn">
-//           ⬅ Înapoi
-//         </Link>
-//       </div>
-
-//       <h1>Solicitări</h1>
-//       <div className="search-section">
-//         <input
-//           type="text"
-//           placeholder="Caută după firmă..."
-//           value={termenCautare}
-//           onChange={(e) => setTermenCautare(e.target.value)}
-//         />
-//       </div>
-//       <div className="solicitari-grid">
-//         {coloane.map((col, index) => (
-//           <div className="solicitari-column" key={col.key}>
-//             <h2>{col.label}</h2>
-//             <table>
-//               <thead>
-//                 <tr>
-//                   <th>Titlu</th>
-//                   <th>Data</th>
-//                   <th>Firma</th>
-//                   <th>Acțiuni</th>
-//                 </tr>
-//               </thead>
-//               <tbody>
-//                 {solicitariFiltrate[col.key].map(s => (
-//                   <tr key={s.id}>
-//                     <td>{s.titlu}</td>
-//                     <td>{s.data}</td>
-//                     <td>{s.firma}</td>
-//                     <td>
-//                       <div className="actiuni-container">
-//                         <div className="butoane-mutare">
-//                           {index > 0 && (
-//                             <button onClick={() => mutaSesizare(s.id, col.key, coloane[index - 1].key)}>
-//                               ⬅
-//                             </button>
-//                           )}
-//                           {index < coloane.length - 1 && (
-//                             <button onClick={() => mutaSesizare(s.id, col.key, coloane[index + 1].key)}>
-//                               ➡
-//                             </button>
-//                           )}
-//                         </div>
-//                         <Link to={`/solicitari/${s.id}`} className="detalii-btn">
-//                           Detalii
-//                         </Link>
-//                       </div>
-//                     </td>
-//                   </tr>
-//                 ))}
-//               </tbody>
-//             </table>
-//           </div>
-//         ))}
-//       </div>
-//     </div>
-//   );
-// }
 // frontend/src/admin/Solicitari.jsx
 import React, { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
@@ -100,6 +5,10 @@ import axios from "axios";
 import "./Solicitari.css";
 
 export default function Solicitari() {
+  // --- STATE MANAGEMENT ---
+  // Am adăugat stări pentru 'loading' și 'error' pentru o experiență mai bună
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
   const [solicitari, setSolicitari] = useState({
     preluată: [],
     inCurs: [],
@@ -107,69 +16,125 @@ export default function Solicitari() {
   });
   const [termenCautare, setTermenCautare] = useState("");
 
-  // Preia toate sesizările de la backend
+  // --- DATA FETCHING ---
+  // Am rescris `useEffect` folosind async/await pentru claritate și am adăugat
+  // trimiterea token-ului de autentificare, care lipsea.
   useEffect(() => {
-    axios.get("http://localhost:3000/api/sesizari")
-    .then(res => {
-      console.log(res.data); // verifică structura
-      const toate = res.data.map(s => ({
-        id: s._id,
-        titlu: s.titlu,
-        descriere: s.descriere,
-        firma: s.createdByBeneficiaryId?.profile?.nume_companie || "—", // aici luăm nume_firma
-        status: s.status,
-        pasi: s.pasiRezolvare || "",
-        data: s.createdAt ? s.createdAt.slice(0,10) : "—",
-        dataFinalizare: s.dataFinalizare
-      }));
+    const fetchSolicitari = async () => {
+      try {
+        const userInfo = JSON.parse(localStorage.getItem("currentUser"));
+        
+        // **CORECTURĂ CRITICĂ**: Verificăm dacă utilizatorul este logat înainte de a face cererea.
+        if (!userInfo || !userInfo.token) {
+          setError("Acces neautorizat. Vă rugăm să vă autentificați.");
+          setLoading(false);
+          return;
+        }
 
+        // **CORECTURĂ CRITICĂ**: Adăugăm token-ul de autorizare în headerele cererii.
+        const config = {
+          headers: {
+            Authorization: `Bearer ${userInfo.token}`,
+          },
+        };
 
-    const grouped = {
-      preluată: toate.filter(s => s.status === "preluată"),
-      inCurs: toate.filter(s => s.status === "inCurs"),
-      rezolvata: toate.filter(s => s.status === "rezolvata")
+        const { data } = await axios.get("http://localhost:3000/api/sesizari", config);
+
+        // Procesăm datele primite de la backend
+        const toate = data.map(s => ({
+          id: s._id,
+          titlu: s.titlu,
+          descriere: s.descriere,
+          firma: s.createdByBeneficiaryId?.profile?.nume_companie || "—",
+          status: s.status,
+          pasi: s.pasiRezolvare || "",
+          data: s.createdAt ? new Date(s.createdAt).toLocaleDateString('ro-RO') : "—",
+          dataFinalizare: s.dataFinalizare
+        }));
+
+        // Grupăm solicitările pe coloane în funcție de status
+        const grouped = {
+          preluată: toate.filter(s => s.status === "preluată"),
+          inCurs: toate.filter(s => s.status === "inCurs"),
+          rezolvata: toate.filter(s => s.status === "rezolvata")
+        };
+
+        setSolicitari(grouped);
+
+      } catch (err) {
+        console.error("Eroare la preluarea solicitărilor:", err);
+        setError(err.response?.data?.message || "Nu s-au putut încărca datele de pe server.");
+      } finally {
+        setLoading(false);
+      }
     };
 
-    setSolicitari(grouped);
-  });
-  }, []);
+    fetchSolicitari();
+  }, []); // Se execută o singură dată la încărcarea componentei
 
-  // Funcție pentru mutarea unei sesizări între coloane
+  // --- LOGICĂ ACȚIUNI ---
+  // Funcție pentru mutarea unei sesizări între coloane (schimbarea statusului)
   const mutaSesizare = async (id, from, to) => {
-    // mesaj de confirmare
-    const confirm = window.confirm("Ești sigur că vrei să schimbi statusul sesizării?");
-    if (!confirm) return; // dacă apasă Nu, ieșim
+    if (!window.confirm("Sunteți sigur că doriți să schimbați statusul acestei solicitări?")) return;
 
-    const item = solicitari[from].find(s => s._id === id || s.id === id);
-    if (!item) return;
-
-    const newStatus = to; // cheia coloanei devine noul status
+    const newStatus = to; // Noul status este cheia coloanei destinație
 
     try {
-      // 1. Trimite update la backend
-      await axios.patch(`http://localhost:3000/api/sesizari/${id}/status`, { status: newStatus });
+        const userInfo = JSON.parse(localStorage.getItem("currentUser"));
+        if (!userInfo || !userInfo.token) throw new Error("Utilizator neautentificat!");
 
-      // 2. Actualizează starea locală
-      setSolicitari(prev => ({
-        ...prev,
-        [from]: prev[from].filter(s => s._id !== id && s.id !== id),
-        [to]: [
-          ...prev[to],
-          { 
-            ...item, 
-            status: newStatus, 
-            dataFinalizare: newStatus === 'rezolvata' ? new Date().toISOString().slice(0,10) : item.dataFinalizare
-          }
-        ]
-      }));
+        const config = { headers: { Authorization: `Bearer ${userInfo.token}` } };
+        
+        // **CORECTURĂ CRITICĂ**: Trimitem token-ul la cererea de actualizare
+        await axios.patch(`http://localhost:3000/api/sesizari/${id}/status`, { status: newStatus }, config);
 
-      alert("Statusul a fost actualizat cu succes!"); // mesaj de succes
-    } catch (error) {
-      console.error("Eroare la actualizarea statusului:", error);
-      alert("Nu s-a putut actualiza statusul în baza de date!");
+        // Actualizăm starea locală DOAR după ce backend-ul a confirmat succesul
+        setSolicitari(prev => {
+            const itemToMove = prev[from].find(s => s.id === id);
+            if (!itemToMove) return prev;
+
+            return {
+                ...prev,
+                [from]: prev[from].filter(s => s.id !== id),
+                [to]: [...prev[to], { ...itemToMove, status: newStatus }]
+            };
+        });
+        alert("Statusul a fost actualizat cu succes!");
+
+    } catch (err) {
+      console.error("Eroare la actualizarea statusului:", err);
+      alert("Eroare: Nu s-a putut actualiza statusul. Încercați din nou.");
     }
   };
 
+  // Funcție pentru ștergerea unei solicitări
+  const handleDelete = async (id, statusColoana) => {
+    if (!window.confirm("Sunteți sigur că doriți să ștergeți definitiv această solicitare?")) return;
+    
+    try {
+        const userInfo = JSON.parse(localStorage.getItem("currentUser"));
+        if (!userInfo || !userInfo.token) throw new Error("Utilizator neautentificat!");
+
+        const config = { headers: { Authorization: `Bearer ${userInfo.token}` } };
+        
+        // **CORECTURĂ CRITICĂ**: Trimitem token-ul la cererea de ștergere
+        await axios.delete(`http://localhost:3000/api/sesizari/${id}`, config);
+        
+        // Actualizăm starea locală pentru a reflecta ștergerea
+        setSolicitari(prev => ({
+          ...prev,
+          [statusColoana]: prev[statusColoana].filter(item => item.id !== id)
+        }));
+        alert("Solicitarea a fost ștearsă cu succes!");
+
+    } catch (error) {
+        console.error("Eroare la ștergerea solicitării:", error);
+        alert("Eroare: Nu s-a putut șterge solicitarea.");
+    }
+  };
+
+
+  // --- LOGICĂ RENDER ---
   const coloane = [
     { key: "preluată", label: "Preluată" },
     { key: "inCurs", label: "În curs de rezolvare" },
@@ -178,11 +143,15 @@ export default function Solicitari() {
 
   // Filtrare după firmă
   const solicitariFiltrate = {};
-for (const key in solicitari) {
-  solicitariFiltrate[key] = solicitari[key].filter(s =>
-    s.firma && s.firma.toLowerCase().includes(termenCautare.toLowerCase())
-  );
-}
+  for (const key in solicitari) {
+    solicitariFiltrate[key] = solicitari[key].filter(s =>
+      s.firma && s.firma.toLowerCase().includes(termenCautare.toLowerCase())
+    );
+  }
+
+  // Afișăm mesaje de încărcare sau eroare
+  if (loading) return <div style={{ textAlign: 'center', padding: '50px', fontSize: '1.2rem' }}>Se încarcă solicitările...</div>;
+  if (error) return <div style={{ color: 'red', textAlign: 'center', padding: '50px', fontSize: '1.2rem' }}>Eroare: {error}</div>;
 
   return (
     <div className="solicitari-container">
@@ -216,57 +185,46 @@ for (const key in solicitari) {
                 </tr>
               </thead>
               <tbody>
-                {solicitariFiltrate[col.key].map(s => (
-                  <tr key={s._id || s.id}>
-                    <td>{s.titlu}</td>
-                    <td>{s.data || s.createdAt?.slice(0,10)}</td>
-                    <td>{s.firma}</td>
-                    <td>
-                      <div className="actiuni-container">
-                        <div className="butoane-mutare">
-                          {/* {index > 0 && (
-                            <button onClick={() => mutaSesizare(s._id || s.id, col.key, coloane[index - 1].key)}>⬅</button>
-                          )} */}
+                {solicitariFiltrate[col.key].length > 0 ? (
+                  solicitariFiltrate[col.key].map(s => (
+                    <tr key={s.id}>
+                      <td>{s.titlu}</td>
+                      <td>{s.data}</td>
+                      <td>{s.firma}</td>
+                      <td>
+                        <div className="actiuni-container">
+                          {/* Butonul de mutare este vizibil doar dacă nu e ultima coloană */}
                           {index < coloane.length - 1 && (
                             <button 
                               className="btn-mic mutare"
-                              onClick={() => mutaSesizare(s._id || s.id, col.key, coloane[index + 1].key)}
+                              title={`Mută la "${coloane[index + 1].label}"`}
+                              onClick={() => mutaSesizare(s.id, col.key, coloane[index + 1].key)}
                             >
                               ➡
                             </button>
                           )}
+
+                          <Link to={`/solicitari/${s.id}`} className="detalii-btn">Detalii</Link>
+
+                          {/* Butonul de ștergere este vizibil doar în coloana "Rezolvată" */}
+                          {col.key === 'rezolvata' && (
+                            <button
+                              className="sterge-btn"
+                              title="Șterge definitiv"
+                              onClick={() => handleDelete(s.id, col.key)}
+                            >
+                              Șterge
+                            </button>
+                          )}
                         </div>
-
-                        <Link to={`/solicitari/${s._id || s.id}`} className="detalii-btn">Detalii</Link>
-
-                        {col.key === 'rezolvata' && (
-                          <button
-                            className="sterge-btn"
-                            onClick={async () => {
-                              const confirm = window.confirm("Sigur vrei să ștergi această solicitare?");
-                              if (!confirm) return;
-
-                              const id = s._id || s.id;
-                              try {
-                                await axios.delete(`http://localhost:3000/api/sesizari/${id}`);
-                                setSolicitari(prev => ({
-                                  ...prev,
-                                  [col.key]: prev[col.key].filter(item => item._id !== id && item.id !== id)
-                                }));
-                                alert("Solicitarea a fost ștearsă!");
-                              } catch (error) {
-                                console.error(error);
-                                alert("Nu s-a putut șterge solicitarea.");
-                              }
-                            }}
-                          >
-                            Șterge
-                          </button>
-                        )}
-                      </div>
-                    </td>
+                      </td>
+                    </tr>
+                  ))
+                ) : (
+                  <tr>
+                    <td colSpan="4">Nicio solicitare aici.</td>
                   </tr>
-                ))}
+                )}
               </tbody>
             </table>
           </div>

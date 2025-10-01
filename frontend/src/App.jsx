@@ -35,7 +35,8 @@
   import IncidenteB from './beneficiar/IncidenteB';
   import IstoricIncidente from './admin/IstoricIncidente';
   import Documente from './admin/Documente';
-
+  import AdaugaAdmin  from './administrator/AdaugaAdmin';
+  import GestionareAdmini from './administrator/GestionareAdmini';
 
   function Dashboard({ user }) {
     let content;
@@ -136,18 +137,31 @@
               <ProcesVerbal />
             </ProtectedRoute>
           }/>
-          {/* --- RUTĂ NOUĂ ADĂUGATĂ AICI --- */}
-        <Route path="/proces-verbal-predare/:pontajId" element={
-          <ProtectedRoute user={currentUser} allowedRoles={['paznic', 'administrator']}>
-            <ProcesVerbalPredarePrimire />
-          </ProtectedRoute>
-        }/>
+          <Route path="/proces-verbal-predare/:pontajId" element={
+            <ProtectedRoute user={currentUser} allowedRoles={['paznic', 'administrator']}>
+              <ProcesVerbalPredarePrimire />
+            </ProtectedRoute>
+          }/>
 
+          {/* <<<--- ÎNCEPUT MODIFICARE ---<<< */}
           {/* --- DASHBOARD-URI --- */}
-          <Route path="/admin/dashboard" element={currentUser?.role === 'administrator' ? <AdminDashboard /> : <p>Acces interzis.</p>} />
-          <Route path="/beneficiar/dashboard" element={currentUser?.role === 'administrator' ? <BeneficiarDashboard /> : <p>Acces interzis.</p>} />
-          <Route path="/paznic/dashboard" element={currentUser?.role === 'administrator' ? <PaznicDashboard /> : <p>Acces interzis.</p>} />
-
+          <Route path="/admin/dashboard" element={
+            <ProtectedRoute user={currentUser} allowedRoles={['admin', 'administrator']}>
+              <AdminDashboard />
+            </ProtectedRoute>
+          }/>
+          <Route path="/beneficiar/dashboard" element={
+            <ProtectedRoute user={currentUser} allowedRoles={['beneficiar', 'administrator']}>
+              <BeneficiarDashboard />
+            </ProtectedRoute>
+          }/>
+          <Route path="/paznic/dashboard" element={
+            <ProtectedRoute user={currentUser} allowedRoles={['paznic', 'administrator']}>
+              <PaznicDashboard />
+            </ProtectedRoute>
+          }/>
+          {/* <<<--- SFÂRȘIT MODIFICARE ---<<< */}
+          
           {/* --- SESIZĂRI & SOLICITĂRI (Admin) --- */}
           <Route path="/sesizari" element={<Sesizari sesizari={sesizari} setSesizari={setSesizari} />} />
           <Route path="/sesizare/:id" element={<SesizareDetalii sesizari={sesizari} setSesizari={setSesizari} />} />
@@ -191,11 +205,18 @@
           }/>
 
           <Route path="/raport-eveniment" element={
-          <ProtectedRoute user={currentUser} allowedRoles={['paznic', 'administrator']}>
-            <RaportEveniment />
-          </ProtectedRoute>
-        }/>
+            <ProtectedRoute user={currentUser} allowedRoles={['paznic', 'administrator']}>
+              <RaportEveniment />
+            </ProtectedRoute>
+          }/>
 
+          {/* --- RUTA ADAUGARE ADMIN/AGENTIE PAZA --- */}
+          <Route path="/administrator/adauga-admin" element={
+            <ProtectedRoute user={currentUser} allowedRoles={['administrator']}>
+              <AdaugaAdmin />
+            </ProtectedRoute>
+          }/>
+        
           {/* --- RUTE BENEFICIAR --- */}
           <Route path="/beneficiar" element={
             <ProtectedRoute user={currentUser} allowedRoles={['beneficiar']}>
@@ -241,6 +262,11 @@
           <Route path="/angajatiB/:id" element={
             <ProtectedRoute user={currentUser} allowedRoles={['beneficiar']}>
               <DetaliiAngajatB />
+            </ProtectedRoute>
+          }/>
+          <Route path="/administrator/gestionare-admini" element={
+            <ProtectedRoute user={currentUser} allowedRoles={['administrator']}>
+              <GestionareAdmini />
             </ProtectedRoute>
           }/>
         </Routes>

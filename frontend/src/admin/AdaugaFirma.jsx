@@ -2,25 +2,25 @@ import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import axios from 'axios'; 
 import "./AdaugaFirma.css";
+import PasswordInput from '../components/PasswordInput';
 
 export default function AdaugaFirma() {
   const [formData, setFormData] = useState({
     nume: "", 
     prenume: "", 
     email: "",
-    password: "", 
+    password: "",
+    passwordConfirm: "",
     telefon: "",
     nume_companie: "",
     punct_de_lucru: ""
   });
 
-  const [adaugPunct, setAdaugPunct] = useState(false); // 🔥 checkbox state
-  const [companii, setCompanii] = useState([]); // lista firmelor existente
+  const [adaugPunct, setAdaugPunct] = useState(false);
+  const [companii, setCompanii] = useState([]);
   const [selectedCompanie, setSelectedCompanie] = useState("");
-
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
-  
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -28,7 +28,6 @@ export default function AdaugaFirma() {
       try {
         const userInfo = JSON.parse(localStorage.getItem('currentUser'));
         if (!userInfo || !userInfo.token) return;
-
         const config = { headers: { Authorization: `Bearer ${userInfo.token}` } };
         const { data } = await axios.get("http://localhost:3000/api/users/beneficiari", config);
         setCompanii(data);
@@ -36,7 +35,6 @@ export default function AdaugaFirma() {
         console.error("Eroare la încărcarea companiilor:", err);
       }
     };
-
     if (adaugPunct) fetchCompanii();
   }, [adaugPunct]);
 
@@ -45,78 +43,63 @@ export default function AdaugaFirma() {
   };
 
   const handleSubmit = async (e) => {
-  e.preventDefault();
-  setLoading(true);
-  setError('');
+    e.preventDefault();
+    setLoading(true);
+    setError('');
 
-  try {
-    const userInfo = JSON.parse(localStorage.getItem('currentUser'));
-    if (!userInfo || !userInfo.token) throw new Error("Utilizator neautentificat!");
+    try {
+      const userInfo = JSON.parse(localStorage.getItem('currentUser'));
+      if (!userInfo || !userInfo.token) throw new Error("Utilizator neautentificat!");
+      const config = { headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${userInfo.token}` } };
 
-    const config = {
-      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${userInfo.token}` },
-    };
-
-    if (adaugPunct) {
-      // Adaugă punct de lucru la firma EXISTENTĂ
-      if (!selectedCompanie) throw new Error("Trebuie să selectezi o companie.");
-
-      await axios.put(
-        `http://localhost:3000/api/users/${selectedCompanie}`,
-        { profile: { punct_de_lucru: formData.punct_de_lucru } }, // trimite stringul direct
-        config
-      );
-
-      alert("✅ Punct de lucru adăugat cu succes!");
-    } else {
-      // Adaugă firmă NOUĂ
-      const payload = {
-        nume: formData.nume,
-        prenume: formData.prenume,
-        email: formData.email,
-        password: formData.password,
-        telefon: formData.telefon,
-        role: 'beneficiar',
-        profile: {
-          nume_companie: formData.nume_companie,
-          punct_de_lucru: formData.punct_de_lucru ? [formData.punct_de_lucru] : [],
-          assignedPazniciIds: []
-        }
-      };
-
-      await axios.post('http://localhost:3000/api/users/create', payload, config);
-      alert("✅ Firmă (Beneficiar) adăugată cu succes!");
+      if (adaugPunct) {
+        // Logica pentru a adăuga un punct de lucru la o firmă existentă
+        if (!selectedCompanie) throw new Error("Trebuie să selectezi o companie.");
+        await axios.put(`http://localhost:3000/api/users/${selectedCompanie}`, { profile: { punct_de_lucru: formData.punct_de_lucru } }, config);
+        alert("✅ Punct de lucru adăugat cu succes!");
+      } else {
+        // Logica pentru a crea o firmă nouă
+        if (formData.password !== formData.passwordConfirm) throw new Error("Parolele nu se potrivesc!");
+        if (formData.password.length < 6) throw new Error('Parola trebuie să conțină cel puțin 6 caractere.');
+        
+        const payload = {
+          nume: formData.nume,
+          prenume: formData.prenume,
+          email: formData.email,
+          password: formData.password,
+          telefon: formData.telefon,
+          role: 'beneficiar',
+          profile: {
+            nume_companie: formData.nume_companie,
+            punct_de_lucru: formData.punct_de_lucru ? [formData.punct_de_lucru] : [],
+          }
+        };
+        await axios.post('http://localhost:3000/api/users/create', payload, config);
+        alert("✅ Firmă (Beneficiar) adăugată cu succes!");
+      }
+      navigate(-1);
+    } catch (err) {
+      setError(err.response?.data?.message || err.message || 'A apărut o eroare.');
+    } finally {
+      setLoading(false);
     }
-
-    navigate(-1);
-
-  } catch (err) {
-    setError(err.response?.data?.message || 'A apărut o eroare. Vă rugăm să încercați din nou.');
-  } finally {
-    setLoading(false);
-  }
-};
-
+  };
 
   return (
     <div className="form-page-container">
       <div className="form-card">
-        <h2>
-          Adaugă Firmă
-          <label style={{ marginLeft: "20px", fontSize: "14px" }}>
-            <input
-              type="checkbox"
-              checked={adaugPunct}
-              onChange={() => setAdaugPunct(!adaugPunct)}
-            />{" "}
-            Adaugă punct de lucru
+        <h2>Adaugă Firmă Beneficiar</h2>
+        <div className="form-group" style={{ textAlign: 'center' }}>
+          <label>
+            <input type="checkbox" checked={adaugPunct} onChange={() => setAdaugPunct(!adaugPunct)} />
+            Doresc să adaug un punct de lucru la o firmă existentă
           </label>
-        </h2>
-
+        </div>
+        <hr />
+        
         <form onSubmit={handleSubmit}>
           {!adaugPunct ? (
             <>
-              {/* FORMULAR ADAUGARE FIRMA NOUA */}
               <div className="form-group">
                 <label htmlFor="nume">Nume contact:</label>
                 <input id="nume" type="text" name="nume" value={formData.nume} onChange={handleChange} required className="form-input"/>
@@ -129,10 +112,10 @@ export default function AdaugaFirma() {
                 <label htmlFor="email">Email:</label>
                 <input id="email" type="email" name="email" value={formData.email} onChange={handleChange} required className="form-input"/>
               </div>
-              <div className="form-group">
-                <label htmlFor="password">Parolă:</label>
-                <input id="password" type="password" name="password" value={formData.password} onChange={handleChange} required className="form-input"/>
-              </div>
+              
+              <PasswordInput label="Parolă:" id="password" name="password" value={formData.password} onChange={handleChange} required className="form-input" />
+              <PasswordInput label="Confirmă Parola:" id="passwordConfirm" name="passwordConfirm" value={formData.passwordConfirm} onChange={handleChange} required className="form-input" />
+
               <div className="form-group">
                 <label htmlFor="telefon">Telefon:</label>
                 <input id="telefon" type="tel" name="telefon" value={formData.telefon} onChange={handleChange} className="form-input"/>
@@ -142,32 +125,21 @@ export default function AdaugaFirma() {
                 <input id="nume_companie" type="text" name="nume_companie" value={formData.nume_companie} onChange={handleChange} required className="form-input"/>
               </div>
               <div className="form-group">
-                <label htmlFor="punct_de_lucru">Punct de lucru:</label>
+                <label htmlFor="punct_de_lucru">Punct de lucru inițial (opțional):</label>
                 <input id="punct_de_lucru" type="text" name="punct_de_lucru" value={formData.punct_de_lucru} onChange={handleChange} className="form-input"/>
               </div>
             </>
           ) : (
             <>
-              {/* FORMULAR ADAUGARE PUNCT DE LUCRU */}
               <div className="form-group">
-                <label htmlFor="companieSelect">Selectează compania:</label>
-                <select
-                  id="companieSelect"
-                  value={selectedCompanie}
-                  onChange={(e) => setSelectedCompanie(e.target.value)}
-                  required
-                  className="form-input"
-                >
+                <label htmlFor="companieSelect">Selectează compania existentă:</label>
+                <select id="companieSelect" value={selectedCompanie} onChange={(e) => setSelectedCompanie(e.target.value)} required className="form-input">
                   <option value="">-- Alege compania --</option>
-                  {companii.map((c) => (
-                    <option key={c._id} value={c._id}>
-                      {c.profile?.nume_companie}
-                    </option>
-                  ))}
+                  {companii.map((c) => (<option key={c._id} value={c._id}>{c.profile?.nume_companie}</option>))}
                 </select>
               </div>
               <div className="form-group">
-                <label htmlFor="punct_de_lucru">Punct de lucru nou:</label>
+                <label htmlFor="punct_de_lucru">Adaugă punct de lucru nou:</label>
                 <input id="punct_de_lucru" type="text" name="punct_de_lucru" value={formData.punct_de_lucru} onChange={handleChange} required className="form-input"/>
               </div>
             </>

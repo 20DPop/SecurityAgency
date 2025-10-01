@@ -1,38 +1,64 @@
-
 import React from 'react';
 import { Link } from 'react-router-dom';
-// Poți crea un CSS nou sau poți refolosi stilurile de la AdminDashboard
+// Refolosim stilurile existente care sunt deja importate și funcționale
 import '../admin/AdminDashboard.css'; 
-import '../beneficiar/BeneficiarDashboard.css'
-import'../paznic/PaznicDashboard.css'
-
 
 export default function AdministratorDashboard() {
   return (
     <div className="admin-dashboard">
       <main>
-        <h1 className="page-title">Panou Developer (Administrator)</h1>
-        <p style={{ margin: '0 30px 30px' }}>
-          De aici poți naviga pentru a vizualiza aplicația din perspectiva fiecărui rol.
+        <h1 className="page-title">Panou de Control (Administrator)</h1>
+        <p style={{ margin: '0 30px 30px', textAlign: 'center', maxWidth: '800px', margin: '0 auto 30px' }}>
+          Acesta este panoul de control principal. De aici poți crea noi conturi de Admin pentru agenție sau poți naviga pentru a vizualiza aplicația din perspectiva celorlalte roluri.
         </p>
         <div className="cards-container">
-          {/* Link către Dashboard-ul de Admin (Agenție) */}
-          <Link to="/admin/dashboard" className="card link-card" style={{ backgroundColor: '#d1c4e9' }}>
-            👁️
-            <p>Vezi ca Admin (Agenția de Pază)</p>
+          
+          {/* --- Card Nou Adăugat pentru Crearea de Admini --- */}
+          <Link 
+            to="/administrator/adauga-admin" 
+            className="card link-card" 
+            style={{ backgroundColor: '#ffcdd2', border: '2px solid #b71c1c' }}
+          >
+            <span style={{fontSize: '2rem'}}>➕</span>
+            <p style={{color: '#b71c1c', fontWeight: 'bold'}}>Adaugă Cont Admin</p>
           </Link>
           
-          {/* Link către Dashboard-ul de Beneficiar */}
-          <Link to="/beneficiar/dashboard" className="card link-card" style={{ backgroundColor: '#e0f7fa' }}>
-            👁️
+          {/* --- Carduri existente pentru Vizualizare --- */}
+          <Link 
+            to="/admin/dashboard" 
+            className="card link-card" 
+            style={{ backgroundColor: '#d1c4e9' }}
+          >
+            <span style={{fontSize: '2rem'}}>👁️</span>
+            <p>Vezi ca Admin (Agenție)</p>
+          </Link>
+          <Link 
+           to="/administrator/gestionare-admini" 
+          className="card link-card"
+            >
+             <span style={{fontSize: '2rem'}}>🗑️</span>
+            <p>Gestionează Conturi Admin</p>
+              </Link>
+
+          
+          <Link 
+            to="/beneficiar/dashboard" 
+            className="card link-card" 
+            style={{ backgroundColor: '#e0f7fa' }}
+          >
+            <span style={{fontSize: '2rem'}}>👁️</span>
             <p>Vezi ca Beneficiar</p>
           </Link>
 
-          {/* Link către Dashboard-ul de Paznic */}
-          <Link to="/paznic/dashboard" className="card link-card" style={{ backgroundColor: '#fff9c4' }}>
-            👁️
+          <Link 
+            to="/paznic/dashboard" 
+            className="card link-card" 
+            style={{ backgroundColor: '#fff9c4' }}
+          >
+            <span style={{fontSize: '2rem'}}>👁️</span>
             <p>Vezi ca Paznic</p>
           </Link>
+
         </div>
       </main>
     </div>
