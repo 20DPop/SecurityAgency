@@ -1,58 +1,46 @@
-// Cale: backend/app.js
+// backend/app.js
 
 const express = require('express');
-const cors = require('cors');
 const path = require('path');
-
-// --- CONFIGURARE CORS ---
-const allowedOrigins = [
-  // Domeniul frontend-ului pe Railway
-  'https://vigilent-security.up.railway.app',
-  
-  // Pentru testare locală
-  'http://localhost:5173'
-];
-
-const corsOptions = {
-  origin: (origin, callback) => {
-    // Permite cereri fără "origin" (Postman, aplicații mobile)
-    if (!origin || allowedOrigins.includes(origin)) {
-      callback(null, true);
-    } else {
-      callback(new Error('Blocat de politica CORS'));
-    }
-  },
-  methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'], // ✅ am adăugat OPTIONS
-  allowedHeaders: ['Content-Type', 'Authorization'],
-  optionsSuccessStatus: 200 // pentru browsere mai vechi
-};
 
 const app = express();
 
-// Aplicați configurarea CORS pentru toate rutele
-app.use(cors(corsOptions));
+// --- CORS global manual ---
+const allowedOrigins = [
+  'https://vigilent-security.up.railway.app',
+  'http://localhost:5173'
+];
 
-// ✅ Răspunde corect la cererile OPTIONS (preflight)
-app.options('*', cors(corsOptions));
-// --- SFÂRȘIT CONFIGURARE CORS ---
+app.use((req, res, next) => {
+  const origin = req.headers.origin;
+  if (allowedOrigins.includes(origin)) {
+    res.setHeader('Access-Control-Allow-Origin', origin);
+  }
 
-// Middleware pentru JSON
+  res.setHeader('Access-Control-Allow-Methods', 'GET,POST,PUT,PATCH,DELETE,OPTIONS');
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type,Authorization');
+
+  if (req.method === 'OPTIONS') {
+    return res.sendStatus(200); // preflight răspuns instant
+  }
+
+  next();
+});
+// --- SFÂRȘIT CORS ---
+
+// Middleware JSON
 app.use(express.json());
 
-// Servește fișierele statice din folderul 'uploads'
+// Servește fișiere statice
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
-// Importăm rutele principale ale API-ului
+// Importă rutele principale
 const apiRoutes = require('./src/api');
+app.use('/api', apiRoutes);
 
 // Rută de test
 app.get('/', (req, res) => {
-  res.status(200).json({ 
-    message: 'Salut! API-ul pentru aplicație funcționează și acceptă cereri.' 
-  });
+  res.status(200).json({ message: 'Salut! API-ul funcționează și acceptă cereri.' });
 });
-
-// Prefix pentru toate rutele API
-app.use('/api', apiRoutes);
 
 module.exports = app;
