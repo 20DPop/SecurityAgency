@@ -1,39 +1,46 @@
-// const express = require('express')
-// const cors = require('cors')
+// backend/app.js
 
-// const app = express()
-// app.use(cors())
-// app.use(express.json())
-// const apiRoutes = require('./src/api');
+const express = require('express');
+const path = require('path');
 
-// app.get('/',(req,res)=>{
-//     res.status(200).json({message: `Salut! API-ul pentru aplciatie functioneaza`})
+const app = express();
 
-// })
+// --- CORS global manual ---
+const allowedOrigins = [
+  'https://vigilent-security.up.railway.app',
+  'http://localhost:5173'
+];
 
-// app.use('/api', apiRoutes);
+app.use((req, res, next) => {
+  const origin = req.headers.origin;
+  if (allowedOrigins.includes(origin)) {
+    res.setHeader('Access-Control-Allow-Origin', origin);
+  }
 
-// module.exports = app;
-const express = require('express')
-const cors = require('cors')
-const path = require('path') // adaugă path
+  res.setHeader('Access-Control-Allow-Methods', 'GET,POST,PUT,PATCH,DELETE,OPTIONS');
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type,Authorization');
 
-const app = express()
-app.use(cors())
-app.use(express.json())
+  if (req.method === 'OPTIONS') {
+    return res.sendStatus(200); // preflight răspuns instant
+  }
 
-// Servește fișierele statice din uploads
-app.use('/uploads', express.static(path.join(__dirname, 'uploads'))) 
-// sau dacă folderul e în backend/uploads:
-// app.use('/uploads', express.static(path.join(__dirname, 'src', '..', 'uploads')))
+  next();
+});
+// --- SFÂRȘIT CORS ---
 
+// Middleware JSON
+app.use(express.json());
+
+// Servește fișiere statice
+app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
+
+// Importă rutele principale
 const apiRoutes = require('./src/api');
-
-app.get('/', (req, res) => {
-    res.status(200).json({ message: `Salut! API-ul pentru aplciatie functioneaza` })
-})
-
 app.use('/api', apiRoutes);
 
-module.exports = app;
+// Rută de test
+app.get('/', (req, res) => {
+  res.status(200).json({ message: 'Salut! API-ul funcționează și acceptă cereri.' });
+});
 
+module.exports = app;

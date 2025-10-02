@@ -1,36 +1,30 @@
 import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom'; // Importă useNavigate
+import { useNavigate } from 'react-router-dom';
+import apiClient from '../apiClient'; // <-- MODIFICARE: Importăm apiClient
 import './LoginPage.css';
-import axios from 'axios';
+import PasswordInput from '../components/PasswordInput'; // <-- MODIFICARE: Folosim componenta de parolă
 
-// LoginPage primește o funcție onLogin ca prop
 export default function LoginPage({ onLogin }) {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
-  const navigate = useNavigate(); // Hook pentru a redirecționa
+  const [loading, setLoading] = useState(false);
+  const navigate = useNavigate();
 
-    const handleLogin = async (event) => {
+  const handleLogin = async (event) => {
     event.preventDefault();
+    setLoading(true);
+    setError('');
     try {
-    
-      const config = {
-        headers: {
-          'Content-Type': 'application/json',
-        },
-      };
-
-      const { data } = await axios.post(
-        'http://localhost:3000/api/auth/login', 
-        { email, password }, 
-        config
-      );
-
+      // <-- MODIFICARE: Folosim apiClient, fără config și URL complet
+      const { data } = await apiClient.post('/auth/login', { email, password });
+      
       onLogin(data); 
       navigate('/');
-
     } catch (err) {
       setError(err.response?.data?.message || 'A apărut o eroare. Vă rugăm să încercați din nou.');
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -48,22 +42,26 @@ export default function LoginPage({ onLogin }) {
               placeholder="Introdu email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
+              required
+              className="form-input"
             />
           </div>
-          <div className="form-group">
-            <label htmlFor="password">Parolă</label>
-            <input
-              type="password"
-              id="password"
-              name="password"
-              placeholder="Introdu parola"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-            />
-          </div>
-          {error && <p className="error-message">{error}</p>}
-          <button type="submit" className="submit-btn">
-            Log In
+          
+          {/* <-- MODIFICARE: Înlocuim input-ul de parolă cu componenta PasswordInput */}
+          <PasswordInput
+            label="Parolă"
+            id="password"
+            name="password"
+            placeholder="Introdu parola"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            required
+            className="form-input"
+          />
+
+          {error && <p className="error-message" style={{color: 'red'}}>{error}</p>}
+          <button type="submit" className="submit-btn" disabled={loading}>
+            {loading ? 'Se conectează...' : 'Log In'}
           </button>
         </form>
       </div>

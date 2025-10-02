@@ -1,14 +1,13 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import apiClient from '../apiClient'; // <-- MODIFICARE: Importăm apiClient
 import "./AdaugaSolicitare.css";
 
 export default function AdaugaSolicitare() {
   const [formData, setFormData] = useState({ titlu: "", descriere: "" });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
-
   const navigate = useNavigate();
-  const currentUser = JSON.parse(localStorage.getItem("currentUser"));
 
   const handleChange = (e) => {
     setFormData((prev) => ({
@@ -19,29 +18,24 @@ export default function AdaugaSolicitare() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    if (!formData.titlu || !formData.descriere) {
+      setError("Titlul și descrierea sunt obligatorii.");
+      return;
+    }
     setLoading(true);
+    setError("");
 
     try {
-      const token = currentUser?.token;
-      if (!token) throw new Error("Utilizator neautentificat!");
-
-      const res = await fetch("http://localhost:3000/api/sesizari", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify({
-          titlu: formData.titlu,
-          descriere: formData.descriere,
-        }),
+      // <-- MODIFICARE: Folosim apiClient, care gestionează automat token-ul
+      await apiClient.post("/sesizari", {
+        titlu: formData.titlu,
+        descriere: formData.descriere,
       });
 
-      if (!res.ok) throw new Error("Eroare la adăugarea solicitării!");
-
+      alert("✅ Solicitarea a fost trimisă cu succes!");
       navigate("/solicitariB");
     } catch (err) {
-      setError(err.message);
+      setError(err.response?.data?.message || "Eroare la adăugarea solicitării!");
     } finally {
       setLoading(false);
     }
@@ -49,38 +43,34 @@ export default function AdaugaSolicitare() {
 
   return (
     <div className="adauga-solicitare-container">
-      <h1>Adaugă Solicitare</h1>
+      <h1>Adaugă o Solicitare Nouă</h1>
 
-      {error && <div className="error">{error}</div>}
+      {error && <p style={{color: 'red', textAlign: 'center'}}>{error}</p>}
 
       <form className="adauga-solicitare-form" onSubmit={handleSubmit}>
         <input
           type="text"
           name="titlu"
-          placeholder="Titlul solicitării"
+          placeholder="Subiectul solicitării"
           value={formData.titlu}
           onChange={handleChange}
           required
         />
         <textarea
           name="descriere"
-          placeholder="Descrierea detaliată a solicitării"
+          placeholder="Descrieți în detaliu solicitarea dumneavoastră..."
           value={formData.descriere}
           onChange={handleChange}
           required
-          rows="4"
+          rows="5"
         ></textarea>
 
         <div className="form-buttons">
-          <button
-            type="button"
-            className="back-btn-form"
-            onClick={() => navigate("/solicitariB")}
-          >
+          <button type="button" className="back-btn-form" onClick={() => navigate("/solicitariB")} disabled={loading}>
             Înapoi
           </button>
           <button type="submit" className="submit-btn-form" disabled={loading}>
-            {loading ? "Se trimite..." : "Trimite solicitarea"}
+            {loading ? "Se trimite..." : "Trimite Solicitarea"}
           </button>
         </div>
       </form>

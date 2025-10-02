@@ -1,81 +1,67 @@
-import React, { useRef, useState, useCallback } from "react";
+import React, { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { useQuery } from "@tanstack/react-query";
-import "ol/ol.css";
-import Map from "ol/Map";
-import View from "ol/View";
-import TileLayer from "ol/layer/Tile";
-import OSM from "ol/source/OSM";
-import Feature from "ol/Feature";
-import Point from "ol/geom/Point";
-import { Icon, Style } from "ol/style";
-import VectorLayer from "ol/layer/Vector";
-import VectorSource from "ol/source/Vector";
-import { fromLonLat } from "ol/proj";
+import { MapContainer, TileLayer, Marker, Popup } from "react-leaflet";
+import "leaflet/dist/leaflet.css";
+import L from 'leaflet';
+import apiClient from '../apiClient'; // <-- MODIFICARE: Importăm apiClient
+
+// --- Bloc pentru corectarea iconiței default din Leaflet ---
+import iconUrl from 'leaflet/dist/images/marker-icon.png';
+import iconShadowUrl from 'leaflet/dist/images/marker-shadow.png';
+let DefaultIcon = L.icon({
+    iconUrl,
+    shadowUrl: iconShadowUrl,
+    iconAnchor: [12, 41],
+    popupAnchor: [1, -34],
+    shadowSize: [41, 41]
+});
+L.Marker.prototype.options.icon = DefaultIcon;
+// --- Sfârșit bloc ---
 
 export default function UrmarireAngajat() {
   const { id } = useParams();
+  const [location, setLocation] = useState(null);
+  const [error, setError] = useState('');
   const navigate = useNavigate();
-  const olMap = useRef(null);
-  const markerLayer = useRef(null);
-  const [initialized, setInitialized] = useState(false);
 
-  // Inițializare hartă cu callback ref
-  const mapRef = useCallback((node) => {
-    if (node && !olMap.current) {
-      markerLayer.current = new VectorLayer({
-        source: new VectorSource(),
-        style: new Style({
-          image: new Icon({
-            anchor: [0.5, 1],
-            anchorXUnits: "fraction",
-            anchorYUnits: "fraction",
-            src: "https://cdn-icons-png.flaticon.com/512/684/684908.png",
-            scale: 0.07,
-          }),
-        }),
-      });
+  useEffect(() => {
+    let intervalId = null;
 
-      olMap.current = new Map({
-        target: node,
-        layers: [new TileLayer({ source: new OSM() }), markerLayer.current],
-        view: new View({
-          center: fromLonLat([0, 0]),
-          zoom: 2,
-        }),
-      });
+    const fetchLocation = async () => {
+      try {
+        // <-- MODIFICARE: Folosim apiClient
+        const { data } = await apiClient.get(`/pontaj/locatie/${id}`);
+        setError(''); // Resetează eroarea dacă cererea are succes
+        setLocation({
+          latitude: Number(data.latitude),
+          longitude: Number(data.longitude),
+        });
+      } catch (err) {
+        console.error(err.response?.data?.message || err.message);
+        setError(err.response?.data?.message || "Eroare la preluarea locației.");
+        if (intervalId) clearInterval(intervalId); // Oprește intervalul dacă apare o eroare
+      }
+    };
 
-      setTimeout(() => olMap.current.updateSize(), 100);
-      setInitialized(true);
-    }
-  }, []);
+    fetchLocation(); // Apel inițial
+    intervalId = setInterval(fetchLocation, 5000); // Setează actualizarea la 5 secunde
 
-  // Fetch locație cu React Query
-  const token = JSON.parse(localStorage.getItem("currentUser"))?.token;
+    return () => clearInterval(intervalId); // Curăță intervalul la demontarea componentei
+  }, [id]);
 
-  const { data: location, isLoading } = useQuery({
-    queryKey: ["locatie", id],
-    queryFn: async () => {
-      const res = await fetch(`http://localhost:3000/api/pontaj/locatie/${id}`, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-      if (!res.ok) throw new Error("Eroare la preluarea locației!");
-      const data = await res.json();
-      return {
-        latitude: Number(data.latitude),
-        longitude: Number(data.longitude),
-      };
-    },
-    refetchInterval: 5000, // update la 5 secunde
-    enabled: !!id && !!token && initialized, // rulează doar când harta e inițializată
-  });
+  if (error && !location) {
+    return (
+      <div style={{ padding: '50px', textAlign: 'center' }}>
+        <h2 style={{ color: 'red' }}>{error}</h2>
+        <button onClick={() => navigate(-1)} style={{padding: '10px 20px', cursor: 'pointer'}}>
+          ⬅ Înapoi
+        </button>
+      </div>
+    );
+  }
 
-  // Actualizare marker când se schimbă locația
-  if (location && olMap.current && markerLayer.current) {
-    const coords = fromLonLat([location.longitude, location.latitude]);
-    olMap.current.getView().animate({ center: coords, zoom: 16, duration: 1000 });
-    markerLayer.current.getSource().clear();
-    markerLayer.current.getSource().addFeature(new Feature({ geometry: new Point(coords) }));
+  if (!location) {
+    return <div style={{textAlign: 'center', padding: '50px'}}>Se încarcă locația...</div>;
   }
 
   return (
@@ -84,41 +70,37 @@ export default function UrmarireAngajat() {
         onClick={() => navigate(-1)}
         style={{
           position: "absolute",
-          top: "10px",
-          left: "10px",
+          top: "20px",
+          left: "20px",
           zIndex: 1000,
-          padding: "8px 12px",
+          padding: "10px 15px",
           backgroundColor: "#007bff",
           color: "#fff",
           border: "none",
-          borderRadius: "4px",
+          borderRadius: "5px",
           cursor: "pointer",
+          boxShadow: '0 2px 5px rgba(0,0,0,0.2)'
         }}
       >
         ⬅ Înapoi
       </button>
 
-      <h2 style={{ textAlign: "center", marginTop: "10px" }}>Urmărire angajat</h2>
+      <h2 style={{ textAlign: "center", margin: "10px 0" }}>Urmărire Angajat</h2>
 
-      <div ref={mapRef} style={{ height: "calc(100% - 60px)", width: "100%" }}></div>
-
-      {isLoading && (
-        <div
-          style={{
-            position: "absolute",
-            top: "50%",
-            left: "50%",
-            transform: "translate(-50%, -50%)",
-            backgroundColor: "#fff",
-            padding: "10px 20px",
-            borderRadius: "8px",
-            boxShadow: "0 0 10px rgba(0,0,0,0.3)",
-            zIndex: 1000,
-          }}
-        >
-          Se încarcă locația...
-        </div>
-      )}
+      <MapContainer
+        center={[location.latitude, location.longitude]}
+        zoom={17}
+        style={{ height: "calc(100% - 50px)", width: "100%" }}
+        key={`${location.latitude}-${location.longitude}`} // Forțează re-randarea hărții dacă se schimbă centrul
+      >
+        <TileLayer
+          attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+          url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+        />
+        <Marker position={[location.latitude, location.longitude]}>
+          <Popup>Angajatul este aici. 📍<br /> Ultima actualizare: {new Date().toLocaleTimeString('ro-RO')}</Popup>
+        </Marker>
+      </MapContainer>
     </div>
   );
 }
