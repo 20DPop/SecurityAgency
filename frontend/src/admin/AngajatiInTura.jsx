@@ -23,7 +23,6 @@ export default function AngajatiInTura() {
   useEffect(() => {
     const fetchAngajati = async () => {
       try {
-
         if (!token) throw new Error("Utilizator neautentificat!");
 
         const res = await fetch("http://localhost:3000/api/pontaj/angajati-activi", {
@@ -49,11 +48,10 @@ export default function AngajatiInTura() {
     fetchAngajati();
   }, [token]);
 
-  // Fetch istoric pontaje ultimele 30 de zile
+  // Fetch istoric pontaje ultimele 60 zile
   useEffect(() => {
     const fetchIstoric = async () => {
       try {
-
         if (!token) throw new Error("Utilizator neautentificat!");
 
         const res = await fetch("http://localhost:3000/api/pontaj/istoric-60zile", {
@@ -79,23 +77,29 @@ export default function AngajatiInTura() {
 
   // Filtrare angajati activi
   const filteredAngajati = selectedBeneficiar
-    ? angajati.filter((p) => p.beneficiaryId?.profile?.nume_companie === selectedBeneficiar)
-    : angajati;
+  ? angajati.filter(
+      (p) => p.paznicId && p.beneficiaryId?.profile?.nume_companie === selectedBeneficiar
+    )
+  : angajati.filter((p) => p.paznicId);
 
   // Filtrare paznici istoric
   const pazniciUnici = Array.from(
-    new Set(
-      istoricPontaje
-        .filter((p) => !selectedBeneficiar || p.beneficiaryId?.profile?.nume_companie === selectedBeneficiar)
-        .map((p) => p.paznicId._id)
-    )
+  new Set(
+    istoricPontaje
+      .filter(
+        (p) =>
+          p.paznicId &&
+          (!selectedBeneficiar || p.beneficiaryId?.profile?.nume_companie === selectedBeneficiar)
+      )
+      .map((p) => p.paznicId._id)
+  )
   );
 
   // --- GENERARE PDF ---
   const handleDownloadPDF = () => {
     if (!selectedPaznic) return;
 
-    const paznicData = istoricPontaje.find(p => p.paznicId._id === selectedPaznic);
+    const paznicData = istoricPontaje.find(p => p.paznicId?._id === selectedPaznic);
     if (!paznicData) return;
 
     const doc = new jsPDF();
@@ -115,7 +119,7 @@ export default function AngajatiInTura() {
     const tableData = istoricPontaje
       .filter(
         p =>
-          p.paznicId._id === selectedPaznic &&
+          p.paznicId?._id === selectedPaznic &&
           (!selectedBeneficiar || p.beneficiaryId?.profile?.nume_companie === selectedBeneficiar)
       )
       .map(p => [
@@ -166,7 +170,9 @@ export default function AngajatiInTura() {
             >
               <option value="">Toate firmele</option>
               {beneficiari.map((firma, idx) => (
-                <option key={idx} value={firma}>{firma}</option>
+                <option key={firma || `firma-${idx}`} value={firma || ""}>
+                  {firma || "N/A"}
+                </option>
               ))}
             </select>
           </div>
@@ -203,8 +209,8 @@ export default function AngajatiInTura() {
             </thead>
             <tbody>
               {filteredAngajati.length > 0 ? (
-                filteredAngajati.map((p) => (
-                  <tr key={p._id}>
+                filteredAngajati.map((p, idx) => (
+                  <tr key={p._id || `angajat-${p.paznicId?._id || idx}`}>
                     <td>{p.paznicId?.nume}</td>
                     <td>{p.paznicId?.prenume}</td>
                     <td>{p.paznicId?.email}</td>
@@ -247,13 +253,13 @@ export default function AngajatiInTura() {
             </thead>
             <tbody>
               {pazniciUnici.length > 0 ? (
-                pazniciUnici.map((paznicId) => {
-                  const p = istoricPontaje.find((i) => i.paznicId._id === paznicId);
+                pazniciUnici.map((paznicId, idx) => {
+                  const p = istoricPontaje.find((i) => i.paznicId?._id === paznicId);
                   return (
-                    <tr key={paznicId}>
-                      <td>{p.paznicId?.nume}</td>
-                      <td>{p.paznicId?.prenume}</td>
-                      <td>{p.beneficiaryId?.profile?.nume_companie}</td>
+                    <tr key={paznicId || `paznic-${idx}`}>
+                      <td>{p?.paznicId?.nume}</td>
+                      <td>{p?.paznicId?.prenume}</td>
+                      <td>{p?.beneficiaryId?.profile?.nume_companie}</td>
                       <td>
                         <button
                           className="btn-alege"
@@ -299,12 +305,12 @@ export default function AngajatiInTura() {
               {istoricPontaje
                 .filter(
                   (p) =>
-                    p.paznicId._id === selectedPaznic &&
+                    p.paznicId?._id === selectedPaznic &&
                     (!selectedBeneficiar ||
                       p.beneficiaryId?.profile?.nume_companie === selectedBeneficiar)
                 )
-                .map((p) => (
-                  <tr key={p._id}>
+                .map((p, idx) => (
+                  <tr key={p._id || `istoric-${p.paznicId?._id || idx}`}>
                     <td>{new Date(p.createdAt).toLocaleDateString()}</td>
                     <td>{new Date(p.ora_intrare).toLocaleTimeString()}</td>
                     <td>{p.ora_iesire ? new Date(p.ora_iesire).toLocaleTimeString() : "-"}</td>

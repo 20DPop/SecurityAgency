@@ -105,7 +105,7 @@ const deleteUser = async (req, res) => {
 const getUsersByRole = async (req, res) => {
   try {
     const role = req.params.role;
-    const users = await User.find({ role: role, creatDeAdminId: req.user._id }).select('-password');
+    const users = await User.find({ role: role }).select('-password');
     res.status(200).json(users);
   } catch (error) {
     res.status(500).json({ message: `Eroare de server: ${error.message}` });
