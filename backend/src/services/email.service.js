@@ -1,26 +1,40 @@
-import nodemailer from 'nodemailer';
+// Cale: backend/src/services/email.service.js (VERSIUNE FINALĂ CU SENDGRID)
 
-// Crează transporter folosind SendGrid SMTP (foarte stabil)
-const transporter = nodemailer.createTransport({
-  host: 'smtp.sendgrid.net',
-  port: 587,
-  auth: {
-    user: 'apikey', // asta trebuie să fie literal 'apikey'
-    pass: process.env.SENDGRID_API_KEY
-  }
-});
+const sgMail = require('@sendgrid/mail');
 
-export const sendEmail = async ({ to, subject, text, html }) => {
+// Setează cheia API din variabilele de mediu
+sgMail.setApiKey(process.env.SENDGRID_API_KEY);
+
+/**
+ * Trimite un email folosind API-ul SendGrid.
+ */
+const sendEmail = async ({ to, subject, html, senderName }) => {
   try {
-    await transporter.sendMail({
-      from: 'noreply@mg.your-sendgrid-domain.com', // adresa implicită SendGrid
-      to,
-      subject,
-      text,
-      html
-    });
-    console.log('Email trimis cu succes!');
-  } catch (err) {
-    console.error('Eroare la trimiterea email-ului:', err);
+    // Verificăm dacă variabilele esențiale sunt setate
+    if (!process.env.SENDGRID_API_KEY || !process.env.SENDGRID_VERIFIED_SENDER) {
+      console.error('EROARE CRITICĂ: Cheia API SendGrid sau expeditorul verificat nu sunt setate!');
+      return;
+    }
+
+    const msg = {
+      to: to,
+      from: {
+        email: process.env.SENDGRID_VERIFIED_SENDER, // FOLOSEȘTE EMAIL-UL VERIFICAT!
+        name: senderName || 'Aplicație Suport Pază'
+      },
+      subject: subject,
+      html: html,
+    };
+
+    // Trimite email-ul
+    await sgMail.send(msg);
+    console.log('Email trimis cu succes prin SendGrid!');
+    
+  } catch (error) {
+    // SendGrid oferă erori foarte detaliate
+    console.error('Eroare la trimiterea email-ului prin SendGrid:', error.response ? error.response.body : error.message);
+    throw new Error('Eroare la trimiterea email-ului prin SendGrid.');
   }
 };
+
+module.exports = { sendEmail };
