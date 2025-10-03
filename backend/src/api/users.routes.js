@@ -24,6 +24,21 @@ router.delete("/:id", protect, authorize("admin", "administrator"), deleteUser);
 
 // Ruta pentru a lista utilizatorii după rol (folosită în pagina de Alocări)
 router.get('/list/:role', protect, authorize('admin', 'administrator'), getUsersByRole);
+router.get('/paznici', protect, async (req,res)=>{
+  try {
+    let paznici;
+    if(req.user.role === 'admin' || req.user.role === 'administrator'){
+      paznici = await User.find({ role: 'paznic' }).select('-password');
+    } else if(req.user.role === 'paznic'){
+      paznici = await User.find({ _id: req.user.id }).select('-password'); // doar ei înșiși
+    } else {
+      return res.status(403).json({ message: 'Acces interzis' });
+    }
+    res.json(paznici);
+  } catch(err){
+    res.status(500).json({ message: err.message });
+  }
+});
 
 // router.get('/beneficiari', protect, authorize('administrator', 'paznic'), getBeneficiari);
 

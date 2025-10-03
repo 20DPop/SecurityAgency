@@ -109,7 +109,12 @@ export default function Incidente() {
 
       <div style={{ display: "flex", gap: "10px", flexWrap: 'wrap' }}>
         <button className="add-btn" onClick={() => setShowForm(!showForm)}>{showForm ? ' ascunde formular' : '➕ Adaugă incident'}</button>
-        <button className="history-btn" style={{backgroundColor: '#6c757d', color: 'white'}} onClick={() => navigate("/istoric-incidente")}>📜 Istoric Incidente</button>
+        <button 
+          className="history-btn" 
+          onClick={() => navigate("/istoric-incidente")}
+        >
+          📜 Istoric Incidente
+        </button>
       </div>
 
       {showForm && (

@@ -101,7 +101,7 @@ export default function Solicitari() {
   return (
     <div className="solicitari-container">
       <div style={{ marginBottom: "15px" }}>
-        <button className="back-btn" style={{position: 'static', backgroundColor: '#6c757d', color: 'white'}} onClick={() => navigate(-1)}>
+        <button className="back-btn" style={{position: 'static', backgroundColor: '#6c757d', color: 'white'}} onClick={() => navigate("/admin/dashboard")}>
           ⬅ Înapoi
         </button>
       </div>

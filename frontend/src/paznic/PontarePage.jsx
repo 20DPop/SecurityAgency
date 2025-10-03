@@ -12,10 +12,12 @@ const ProcesVerbalModal = ({ pontajId, onSubmit, onCancel, loading }) => {
     obiecte_predate: "",
     reprezentantBeneficiar: "",
     signatureDataURL: '',
+    reprezentantVigilent: "",
   });
 
   const [beneficiari, setBeneficiari] = useState([]);
   const [signatureSaved, setSignatureSaved] = useState(false);
+  const [paznici, setPaznici] = useState([]);
 
   useEffect(() => {
     const fetchBeneficiari = async () => {
@@ -28,6 +30,19 @@ const ProcesVerbalModal = ({ pontajId, onSubmit, onCancel, loading }) => {
       }
     };
     fetchBeneficiari();
+  }, []);
+
+  useEffect(() => {
+  const fetchPaznici = async () => {
+    try {
+      
+      const { data } = await apiClient.get("/users/paznici");
+      setPaznici(data);
+    } catch (err) {
+      console.error("Eroare la încărcarea paznicilor:", err);
+    }
+  };
+  fetchPaznici();
   }, []);
 
   const handleChange = (e) => {
@@ -58,6 +73,23 @@ const ProcesVerbalModal = ({ pontajId, onSubmit, onCancel, loading }) => {
             <div className="modal-form-group">
               <label htmlFor="data_incheierii">Data și Ora Încheierii</label>
               <input id="data_incheierii" type="datetime-local" name="data_incheierii" value={formData.data_incheierii} onChange={handleChange} required />
+            </div>
+            <div className="modal-form-group">
+              <label htmlFor="reprezentantVigilent">Reprezentant Vigilent</label>
+              <select
+                id="reprezentantVigilent"
+                name="reprezentantVigilent"
+                value={formData.reprezentantVigilent}
+                onChange={handleChange}
+                required
+              >
+                <option value="">-- Selectează un angajat --</option>
+                {paznici.map((p) => (
+                  <option key={p._id} value={p._id}>
+                    {p.nume} {p.prenume}
+                  </option>
+                ))}
+              </select>
             </div>
             <div className="modal-form-group">
               <label htmlFor="nume_reprezentant_primire">Nume Reprezentant Firmă Beneficiar</label>

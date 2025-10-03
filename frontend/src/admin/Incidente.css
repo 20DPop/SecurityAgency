@@ -24,6 +24,20 @@
   background: #f9f9f9;
 }
 
+.history-btn {
+  background: #6c757d;
+  color: white;
+  border: none;
+  padding: 8px 16px;   /* la fel ca add-btn */
+  margin: 10px 0;
+  border-radius: 8px;
+  cursor: pointer;
+}
+
+.history-btn:hover {
+  background: #5a6268; /* un gri mai închis la hover */
+}
+
 .form-group {
   margin-bottom: 10px;
 }

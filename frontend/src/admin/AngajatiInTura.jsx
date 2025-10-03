@@ -67,34 +67,43 @@ export default function AngajatiInTura() {
 
   // Filtrare angajati activi
   const filteredAngajati = selectedBeneficiar
-    ? angajati.filter((p) => p.beneficiaryId?.profile?.nume_companie === selectedBeneficiar)
-    : angajati;
+  ? angajati.filter(
+      (p) => p.paznicId && p.beneficiaryId?.profile?.nume_companie === selectedBeneficiar
+    )
+  : angajati.filter((p) => p.paznicId);
+
 
   // Filtrare paznici istoric
   const pazniciUnici = Array.from(
-    new Set(
-      istoricPontaje
-        .filter((p) => !selectedBeneficiar || p.beneficiaryId?.profile?.nume_companie === selectedBeneficiar)
-        .map((p) => p.paznicId._id)
-    )
-  );
+  new Set(
+    istoricPontaje
+      .filter(
+        (p) =>
+          p.paznicId &&
+          (!selectedBeneficiar || p.beneficiaryId?.profile?.nume_companie === selectedBeneficiar)
+      )
+      .map((p) => p.paznicId?._id)
+      .filter(Boolean) // elimină null / undefined
+  )
+);
+
 
   // --- GENERARE PDF ---
   const handleDownloadPDF = () => {
     if (!selectedPaznic) return;
 
-    const paznicData = istoricPontaje.find(p => p.paznicId._id === selectedPaznic);
+    const paznicData = istoricPontaje.find(p => p.paznicId?._id === selectedPaznic);
     if (!paznicData) return;
 
     const doc = new jsPDF();
     doc.setFontSize(16);
-    doc.text("Istoric prezență angajat", 14, 20);
+    doc.text("Istoric prezenta angajat", 14, 20);
     doc.setFontSize(12);
     doc.text(`Nume: ${paznicData.paznicId?.nume} ${paznicData.paznicId?.prenume}`, 14, 30);
-    doc.text(`Data descărcării: ${new Date().toLocaleDateString('ro-RO')}`, 14, 36);
+    doc.text(`Data descarcarii: ${new Date().toLocaleDateString('ro-RO')}`, 14, 36);
 
     const tableData = istoricPontaje
-      .filter(p => p.paznicId._id === selectedPaznic && (!selectedBeneficiar || p.beneficiaryId?.profile?.nume_companie === selectedBeneficiar))
+      .filter(p => p.paznicId?._id === selectedPaznic && (!selectedBeneficiar || p.beneficiaryId?.profile?.nume_companie === selectedBeneficiar))
       .map(p => [
         new Date(p.ora_intrare).toLocaleDateString('ro-RO'),
         new Date(p.ora_intrare).toLocaleTimeString('ro-RO'),
@@ -168,7 +177,7 @@ export default function AngajatiInTura() {
             <tbody>
               {pazniciUnici.length > 0 ? (
                 pazniciUnici.map((paznicId) => {
-                  const p = istoricPontaje.find((i) => i.paznicId._id === paznicId);
+                  const p = istoricPontaje.find((i) => i.paznicId?._id === paznicId);
                   return (
                     <tr key={paznicId}>
                       <td>{p.paznicId?.nume}</td><td>{p.paznicId?.prenume}</td>
@@ -195,7 +204,7 @@ export default function AngajatiInTura() {
             </thead>
             <tbody>
               {istoricPontaje
-                .filter(p => p.paznicId._id === selectedPaznic && (!selectedBeneficiar || p.beneficiaryId?.profile?.nume_companie === selectedBeneficiar))
+                .filter(p => p.paznicId?._id === selectedPaznic && (!selectedBeneficiar || p.beneficiaryId?.profile?.nume_companie === selectedBeneficiar))
                 .map((p) => (
                   <tr key={p._id}>
                     <td>{new Date(p.ora_intrare).toLocaleDateString('ro-RO')}</td>

@@ -33,24 +33,25 @@ export default function RaportEveniment() {
   };
 
   const handleSubmit = async (e) => {
-    e.preventDefault();
-    if (!formData.signatureDataURL) {
-      setError('EROARE: Raportul trebuie semnat înainte de a fi salvat.');
-      return;
-    }
-    setLoading(true);
-    setError('');
-    try {
-      // <-- MODIFICARE: Folosim apiClient
-      await apiClient.post('/raport-eveniment/create', formData);
-      alert('✅ Raport de eveniment salvat cu succes!');
-      navigate('/');
-    } catch (err) {
-      setError(err.response?.data?.message || 'A apărut o eroare la salvare.');
-    } finally {
-      setLoading(false);
-    }
-  };
+  e.preventDefault();
+  if (!formData.signatureDataURL) {
+    setError('EROARE: Raportul trebuie semnat înainte de a fi salvat.');
+    return;
+  }
+  setLoading(true);
+  setError('');
+  try {
+    // ✅ ruta corectă pentru backend-ul tău
+    await apiClient.post('/raport-eveniment/create', formData);
+
+    alert('✅ Raport de eveniment salvat cu succes!');
+    navigate('/');
+  } catch (err) {
+    setError(err.response?.data?.message || 'A apărut o eroare la salvare.');
+  } finally {
+    setLoading(false);
+  }
+};
 
   return (
     <div className="form-page-container">
