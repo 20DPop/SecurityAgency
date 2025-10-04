@@ -1,68 +1,73 @@
-import React, { useState } from 'react';
-import { useNavigate, useParams } from 'react-router-dom';
-import apiClient from '../apiClient'; // <-- MODIFICARE: Importăm apiClient
+// frontend/src/paznic/ProcesVerbal.jsx
+
+import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
+import apiClient from '../apiClient';
 import './ProcesVerbal.css';
 import SignaturePadWrapper from '../components/SignaturePad';
 
 export default function ProcesVerbal() {
   const navigate = useNavigate();
-  const { pontajId } = useParams(); // Preluăm ID-ul pontajului din URL, dacă e necesar
   
   const [formData, setFormData] = useState({
+    beneficiaryId: '',
+    punctDeLucru: '',
     reprezentant_beneficiar: '',
     ora_declansare_alarma: '',
     ora_prezentare_echipaj: '',
     ora_incheiere_misiune: '',
-    evenimente: [
-      { 
-        dataOraReceptionarii: '', tipulAlarmei: '', echipajAlarmat: '', 
-        oraSosirii: '', cauzeleAlarmei: '', modulDeSolutionare: '', observatii: '' 
-      }
-    ],
+    evenimente: [{ dataOraReceptionarii: '', tipulAlarmei: '', echipajAlarmat: '', oraSosirii: '', cauzeleAlarmei: '', modulDeSolutionare: '', observatii: '' }],
     agentSignatureDataURL: '',
     beneficiarySignatureDataURL: '',
   });
   
+  const [beneficiariCuPuncte, setBeneficiariCuPuncte] = useState([]);
+  const [puncteFiltrate, setPuncteFiltrate] = useState([]);
+  
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
-  const [signaturesSaved, setSignaturesSaved] = useState({
-    agent: false,
-    beneficiary: false
-  });
+  const [signaturesSaved, setSignaturesSaved] = useState({ agent: false, beneficiary: false });
 
-  const handleChange = (e) => {
-    setFormData(prev => ({ ...prev, [e.target.name]: e.target.value }));
+  useEffect(() => {
+    const fetchAssignedData = async () => {
+      setLoading(true);
+      try {
+        const { data } = await apiClient.get('/posts/my-assigned-workpoints');
+        setBeneficiariCuPuncte(data);
+      } catch (err) {
+        setError(err.response?.data?.message || 'Nu s-au putut încărca datele de alocare.');
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchAssignedData();
+  }, []);
+
+  const handleBeneficiarChange = (e) => {
+    const selectedId = e.target.value;
+    setFormData(prev => ({ ...prev, beneficiaryId: selectedId, punctDeLucru: '' }));
+    
+    const beneficiarSelectat = beneficiariCuPuncte.find(b => b.beneficiarId === selectedId);
+    setPuncteFiltrate(beneficiarSelectat ? beneficiarSelectat.puncteDeLucru : []);
   };
-  
+
+  const handleChange = (e) => setFormData(prev => ({ ...prev, [e.target.name]: e.target.value }));
   const handleEventChange = (index, e) => {
-    const { name, value } = e.target;
     const updatedEvenimente = [...formData.evenimente];
-    updatedEvenimente[index][name] = value;
+    updatedEvenimente[index][e.target.name] = e.target.value;
     setFormData(prev => ({ ...prev, evenimente: updatedEvenimente }));
   };
-  
-  const handleAddRow = () => {
-    setFormData(prev => ({
-      ...prev,
-      evenimente: [
-        ...prev.evenimente,
-        { dataOraReceptionarii: '', tipulAlarmei: '', echipajAlarmat: '', oraSosirii: '', cauzeleAlarmei: '', modulDeSolutionare: '', observatii: '' }
-      ]
-    }));
-  };
-  
+  const handleAddRow = () => setFormData(prev => ({ ...prev, evenimente: [...prev.evenimente, { dataOraReceptionarii: '', tipulAlarmei: '', echipajAlarmat: '', oraSosirii: '', cauzeleAlarmei: '', modulDeSolutionare: '', observatii: '' }]}));
   const handleRemoveRow = (index) => {
-    if (formData.evenimente.length <= 1) return; 
-    const updatedEvenimente = formData.evenimente.filter((_, i) => i !== index);
-    setFormData(prev => ({ ...prev, evenimente: updatedEvenimente }));
+    if (formData.evenimente.length > 1) {
+      setFormData(prev => ({ ...prev, evenimente: prev.evenimente.filter((_, i) => i !== index) }));
+    }
   };
-
   const handleSaveAgentSignature = (signature) => {
     setFormData(prev => ({ ...prev, agentSignatureDataURL: signature }));
     setSignaturesSaved(prev => ({ ...prev, agent: true }));
     alert('Semnătura agentului a fost salvată.');
   };
-
   const handleSaveBeneficiarySignature = (signature) => {
     setFormData(prev => ({ ...prev, beneficiarySignatureDataURL: signature }));
     setSignaturesSaved(prev => ({ ...prev, beneficiary: true }));
@@ -72,27 +77,26 @@ export default function ProcesVerbal() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError('');
-
-    if (!signaturesSaved.agent || !signaturesSaved.beneficiary) {
-      setError('EROARE: Atât agentul, cât și beneficiarul trebuie să semneze documentul.');
+    if (!formData.beneficiaryId || !formData.punctDeLucru) {
+      setError('EROARE: Trebuie să selectați un beneficiar și un punct de lucru.');
       return;
     }
-    
+    if (!signaturesSaved.agent || !signaturesSaved.beneficiary) {
+      setError('EROARE: Ambele semnături sunt obligatorii.');
+      return;
+    }
     setLoading(true);
-
     try {
-      // <-- MODIFICARE: Folosim apiClient, care se ocupă de token și URL
       await apiClient.post(`/proces-verbal/create`, formData);
-      
-      alert('✅ Proces verbal salvat și PDF generat cu succes!');
-      navigate('/'); // Redirecționăm la dashboard-ul paznicului
+      alert('✅ Proces verbal salvat cu succes!');
+      navigate('/');
     } catch (err) {
       setError(err.response?.data?.message || 'A apărut o eroare la salvarea documentului.');
     } finally {
       setLoading(false);
     }
   };
-
+  
   const areAllSignaturesSaved = signaturesSaved.agent && signaturesSaved.beneficiary;
 
   return (
@@ -100,7 +104,33 @@ export default function ProcesVerbal() {
       <h1>Completare Proces Verbal de Intervenție</h1>
       <p className="pv-subtitle">Documentul va fi generat automat pe baza datelor introduse.</p>
       
+      {error && <p className="error-message">{error}</p>}
+
       <form onSubmit={handleSubmit} className="pv-form">
+        <fieldset disabled={areAllSignaturesSaved}>
+            <legend>Selectare Obiectiv</legend>
+            <div className="form-grid">
+                <div className="form-group">
+                    <label htmlFor="beneficiaryId">Selectează Beneficiarul</label>
+                    <select id="beneficiaryId" name="beneficiaryId" value={formData.beneficiaryId} onChange={handleBeneficiarChange} required disabled={loading}>
+                        <option value="">-- Alege o firmă --</option>
+                        {beneficiariCuPuncte.map(b => (
+                            <option key={b.beneficiarId} value={b.beneficiarId}>{b.numeCompanie}</option>
+                        ))}
+                    </select>
+                </div>
+                <div className="form-group">
+                    <label htmlFor="punctDeLucru">Selectează Punctul de Lucru</label>
+                    <select id="punctDeLucru" name="punctDeLucru" value={formData.punctDeLucru} onChange={handleChange} required disabled={!formData.beneficiaryId}>
+                        <option value="">-- Alege un punct --</option>
+                        {puncteFiltrate.map((p, index) => (
+                            <option key={index} value={p}>{p}</option>
+                        ))}
+                    </select>
+                </div>
+            </div>
+        </fieldset>
+        
         <fieldset disabled={areAllSignaturesSaved}>
             <legend>Detalii Principale Intervenție</legend>
             <div className="form-grid">
@@ -125,7 +155,6 @@ export default function ProcesVerbal() {
 
         <fieldset disabled={areAllSignaturesSaved}>
             <legend>Tabel Evenimente Detaliate</legend>
-            <p className="fieldset-description">Completați un rând pentru fiecare eveniment important.</p>
             {formData.evenimente.map((event, index) => (
               <div key={index} className="event-row">
                 <span className="event-row-number">{index + 1}.</span>
@@ -138,9 +167,7 @@ export default function ProcesVerbal() {
                   <input type="text" name="modulDeSolutionare" value={event.modulDeSolutionare} onChange={(e) => handleEventChange(index, e)} placeholder="Mod de soluționare" required />
                   <input type="text" name="observatii" value={event.observatii} onChange={(e) => handleEventChange(index, e)} placeholder="Observații (opțional)" />
                 </div>
-                {formData.evenimente.length > 1 && (
-                  <button type="button" className="remove-row-btn" onClick={() => handleRemoveRow(index)}>Șterge</button>
-                )}
+                {formData.evenimente.length > 1 && (<button type="button" className="remove-row-btn" onClick={() => handleRemoveRow(index)}>Șterge</button>)}
               </div>
             ))}
             <button type="button" className="add-row-btn" onClick={handleAddRow}>+ Adaugă Rând</button>
@@ -149,31 +176,14 @@ export default function ProcesVerbal() {
         <div className="signatures-grid">
             <fieldset>
                 <legend>Semnătură Agent Intervenție</legend>
-                {!signaturesSaved.agent ? (
-                    <SignaturePadWrapper onSave={handleSaveAgentSignature} />
-                ) : (
-                    <div className="signature-display">
-                        <p className="signature-saved-text">✓ Semnat</p>
-                        <img src={formData.agentSignatureDataURL} alt="Semnatura Agent" className="signature-image" />
-                    </div>
-                )}
+                {!signaturesSaved.agent ? (<SignaturePadWrapper onSave={handleSaveAgentSignature} />) : (<div className="signature-display"><p className="signature-saved-text">✓ Semnat</p><img src={formData.agentSignatureDataURL} alt="Semnatura Agent" className="signature-image" /></div>)}
             </fieldset>
-
             <fieldset>
                 <legend>Semnătură Beneficiar</legend>
-                {!signaturesSaved.beneficiary ? (
-                    <SignaturePadWrapper onSave={handleSaveBeneficiarySignature} />
-                ) : (
-                    <div className="signature-display">
-                        <p className="signature-saved-text">✓ Semnat</p>
-                        <img src={formData.beneficiarySignatureDataURL} alt="Semnatura Beneficiar" className="signature-image" />
-                    </div>
-                )}
+                {!signaturesSaved.beneficiary ? (<SignaturePadWrapper onSave={handleSaveBeneficiarySignature} />) : (<div className="signature-display"><p className="signature-saved-text">✓ Semnat</p><img src={formData.beneficiarySignatureDataURL} alt="Semnatura Beneficiar" className="signature-image" /></div>)}
             </fieldset>
         </div>
         
-        {error && <p className="error-message">{error}</p>}
-
         <div className="form-actions">
             <button type="button" className="back-btn" onClick={() => navigate(-1)} disabled={loading}>Anulează</button>
             <button type="submit" className="submit-btn" disabled={loading || !areAllSignaturesSaved}>

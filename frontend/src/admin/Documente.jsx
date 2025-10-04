@@ -1,6 +1,8 @@
+// frontend/src/admin/Documente.jsx
+
 import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import apiClient from '../apiClient'; // <-- MODIFICARE: Importăm apiClient
+import apiClient from '../apiClient';
 import "./Documente.css";
 
 export default function Documente() {
@@ -10,14 +12,16 @@ export default function Documente() {
   const [searchTerm, setSearchTerm] = useState(""); 
   const navigate = useNavigate();
 
-  // <-- MODIFICARE: Preluăm URL-ul de bază din variabilele de mediu
-  const apiBaseUrl = import.meta.env.VITE_API_BASE_URL;
+  // --- MODIFICARE APLICATĂ AICI ---
+  // Adăugăm un fallback `|| ''` pentru a preveni `undefined` în URL.
+  const apiBaseUrl = import.meta.env.VITE_API_BASE_URL || '';
+  // --- SFÂRȘIT MODIFICARE ---
 
   useEffect(() => {
     const fetchDocumente = async () => {
       setLoading(true);
+      setMessage("");
       try {
-        // <-- MODIFICARE: Folosim apiClient pentru toate cererile
         const [predareRes, interventieRes, rapoarteRes] = await Promise.all([
           apiClient.get("/proces-verbal-predare/documente"),
           apiClient.get("/proces-verbal/documente"),
@@ -29,7 +33,6 @@ export default function Documente() {
         const rapoarteDocs = rapoarteRes.data.map(doc => ({ ...doc, tip: "Raport Eveniment" }));
 
         const allDocs = [...predareDocs, ...interventieDocs, ...rapoarteDocs];
-        // Sortăm documentele după data creării, cele mai noi primele
         allDocs.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
         setDocumente(allDocs);
 
@@ -40,12 +43,24 @@ export default function Documente() {
         setLoading(false);
       }
     };
-
     fetchDocumente();
   }, []);
 
+  const getNumeRelevant = (doc) => {
+    switch (doc.tip) {
+      case "Predare-Primire":
+        return doc.paznicPredareId ? `${doc.paznicPredareId.nume} ${doc.paznicPredareId.prenume}` : "N/A";
+      case "Intervenție":
+        return doc.beneficiaryId?.profile?.nume_companie || "N/A";
+      case "Raport Eveniment":
+        return doc.paznicId ? `${doc.paznicId.nume} ${doc.paznicId.prenume}` : "N/A";
+      default:
+        return "N/A";
+    }
+  };
+
   const filteredDocumente = documente.filter((doc) => {
-    const nume = doc.nume_reprezentant_primire || doc.reprezentant_beneficiar || doc.numePaznic || "";
+    const nume = getNumeRelevant(doc);
     return nume.toLowerCase().includes(searchTerm.toLowerCase());
   });
 
@@ -56,7 +71,7 @@ export default function Documente() {
       <div className="search-container">
         <input
           type="text"
-          placeholder="Caută după nume reprezentant/paznic..."
+          placeholder="Caută după nume sau companie..."
           value={searchTerm}
           onChange={(e) => setSearchTerm(e.target.value)}
           className="search-input"
@@ -66,7 +81,7 @@ export default function Documente() {
       {loading && <p style={{textAlign: 'center'}}>Se încarcă documentele...</p>}
       {message && <p style={{textAlign: 'center', color: 'red'}}>{message}</p>}
       
-      {!loading && filteredDocumente.length === 0 && 
+      {!loading && !message && filteredDocumente.length === 0 && 
         <p style={{textAlign: 'center'}}>Nu există documente disponibile care să corespundă căutării.</p>
       }
 
@@ -76,7 +91,7 @@ export default function Documente() {
             <thead>
               <tr>
                 <th>Tip Document</th>
-                <th>Nume / Reprezentant</th>
+                <th>Nume / Companie</th>
                 <th>Data Creare</th>
                 <th>Acțiune</th>
               </tr>
@@ -85,10 +100,9 @@ export default function Documente() {
               {filteredDocumente.map((doc) => (
                 <tr key={doc._id}>
                   <td>{doc.tip}</td>
-                  <td>{doc.nume_reprezentant_primire || doc.reprezentant_beneficiar || doc.numePaznic || "N/A"}</td>
+                  <td>{getNumeRelevant(doc)}</td>
                   <td>{new Date(doc.createdAt).toLocaleString('ro-RO')}</td>
                   <td>
-                    {/* <-- MODIFICARE: Construim link-ul dinamic */}
                     <a href={`${apiBaseUrl}${doc.caleStocarePDF}`} target="_blank" rel="noopener noreferrer">
                       Deschide PDF
                     </a>
