@@ -66,7 +66,7 @@ export default function SolicitariB() {
           </tbody>
         </table>
       </div>
-      <button className="back-bottom-btn" onClick={() => navigate("/beneficiar")}>
+      <button className="back-bottom-btn" onClick={() => navigate("/beneficiar/dashboard")}>
         ⬅ Înapoi
       </button>
     </div>
