@@ -1,144 +1,216 @@
-Platformă de Management pentru Agenții de Pază
-O soluție web full-stack, construită cu stack-ul MERN (MongoDB, Express, React, Node.js), destinată digitalizării și eficientizării operațiunilor unei companii de securitate. Aplicația centralizează managementul personalului, al clienților (beneficiarilor), al incidentelor și al documentației, oferind o interfață modernă și accesibilă pentru fiecare tip de utilizator.
-Cuprins
-Despre Proiect
-Public Țintă
-Funcționalități Cheie
-Tehnologii Folosite
-Ghid de Instalare și Rulare Locală
-Cerințe preliminare
-Configurare Backend
-Configurare Frontend
-Ghid de Utilizare
-Rolul Administrator
-Rolul Admin (Operator Agenție)
-Rolul Beneficiar (Client)
-Rolul Paznic (Agent de Teren)
-Deploy
-Despre Proiect
-Acest proiect a fost dezvoltat pentru a oferi o alternativă modernă la metodele tradiționale (bazate pe hârtie și telefon) de management în industria de securitate. Platforma reduce birocrația, îmbunătățește timpul de răspuns și oferă o transparență completă între agenție, clienți și agenții din teren.
-Principalele fluxuri de lucru includ:
-Managementul turelor și pontajul digital al paznicilor.
-Urmărirea în timp real a locației agenților activi.
-Sistem de ticketing pentru sesizările clienților, cu notificări prin email.
-Generarea automată a documentelor oficiale (procese verbale, rapoarte de eveniment) în format PDF.
-Un sistem de control al accesului bazat pe roluri, asigurând că fiecare utilizator are acces doar la informațiile relevante pentru el.
-Public Țintă
-Aplicația este proiectată pentru a servi patru roluri principale, fiecare cu un set specific de permisiuni și funcționalități:
-Administrator (Super-Admin): Deține control total asupra platformei, inclusiv crearea și gestionarea conturilor de Admin pentru agenții.
-Admin (Operator Agenție): Rolul operațional principal. Gestionează paznicii, beneficiarii, alocările, incidentele și documentele.
-Beneficiar (Client): Clientul agenției de pază. Poate vizualiza prezența paznicilor alocați, poate crea solicitări și poate vizualiza incidentele care îl privesc.
-Paznic (Agent de Teren): Angajatul din teren. Folosește aplicația pentru pontaj, generarea de rapoarte și procese verbale.
-Funcționalități Cheie
-🔐 Autentificare și Autorizare Bazată pe Roluri (RBAC): Sistem securizat cu JWT (JSON Web Tokens) care restricționează accesul la rute și acțiuni specifice fiecărui rol.
-👤 Management Utilizatori: Creare, vizualizare, actualizare și ștergere de conturi pentru toate rolurile.
-📍 Urmărire în Timp Real: Adminii și beneficiarii pot vizualiza pe o hartă interactivă (Leaflet) locația curentă a paznicilor aflați în tură.
-🕒 Sistem de Pontaj (Check-in/Check-out): Paznicii pot începe și încheia tura, înregistrând ora și locația.
-📝 Sistem de Ticketing (Sesizări): Beneficiarii pot crea solicitări, iar adminii le pot gestiona statusul (preluată, în curs, rezolvată).
-📧 Notificări Automate prin Email: Beneficiarii sunt notificați prin email la crearea și la fiecare schimbare de status a unei solicitări, cu email-uri personalizate cu numele agenției.
-📄 Generare Automată de PDF-uri:
-Proces Verbal de Predare-Primire la finalul turei.
-Raport de Eveniment.
-Proces Verbal de Intervenție.
-Toate documentele sunt generate pe baza unor șabloane și includ semnături digitale capturate direct în aplicație.
-⚙️ Management Alocări: Interfață drag-and-drop-style pentru alocarea și dezalocarea paznicilor la punctele de lucru ale beneficiarilor.
-🚨 Gestionare Incidente: Adminii pot crea și rezolva incidente, care sunt vizibile și pentru beneficiarii afectați.
-🧹 Mentenanță Automată: Un cron job rulează zilnic pentru a șterge automat documentele mai vechi de 60 de zile, menținând baza de date curată.
-📱 Design Responsiv: Interfața este optimizată pentru a fi utilizabilă pe desktop, tablete și telefoane mobile.
-Tehnologii Folosite
-Frontend:
-React.js (cu Vite)
-React Router
-Axios
-React Leaflet (pentru hărți)
-jsPDF & jsPDF-AutoTable (pentru generare PDF în client)
-CSS3
-Backend:
-Node.js
-Express.js
-MongoDB cu Mongoose
-JSON Web Token (JWT) pentru autentificare
-Bcrypt.js pentru hashing-ul parolelor
-Nodemailer pentru trimiterea de email-uri
-pdf-lib pentru manipularea PDF-urilor pe server
-node-cron pentru task-uri programate
-Baza de Date:
-MongoDB
-Ghid de Instalare și Rulare Locală
-Pentru a rula acest proiect pe mașina locală, urmați pașii de mai jos.
-Cerințe preliminare
-Node.js (versiunea 18.x sau mai nouă)
-npm sau yarn
-MongoDB (o instanță locală sau un cont pe MongoDB Atlas)
-Git
-Configurare Backend
-Clonează repository-ul:
-code
-Bash
-git clone [---URL-UL-TAU-DE-GITHUB---]
-cd [---numele-repository-ului---]/backend
-Instalează dependențele:
-code
-Bash
-npm install
-Configurează variabilele de mediu:
-Creează un fișier .env în folderul backend/ și adaugă următoarele variabile:
-code
-Code
-PORT=3000
-MONGO_URI=[---STRING-UL-TAU-DE-CONEXIUNE-MONGODB---]
-JWT_SECRET=[---O-FRAZA-SECRETA-LUNGA-SI-COMPLEXA---]
+# Platformă de Management pentru Agenții de Pază
 
-# Configurații pentru Nodemailer (Gmail)
-EMAIL_USER=[---ADRESA-TA-DE-GMAIL---]
-EMAIL_PASS=[---PAROLA-DE-APLICATIE-GENERATA-DE-GMAIL---]
-Pornește serverul de backend:
-code
-Bash
-npm run dev
-Serverul va rula la http://localhost:3000.
-Configurare Frontend
-Deschide un nou terminal și navighează în folderul frontend:
-code
-Bash
-cd ../frontend
-Instalează dependențele:
-code
-Bash
+O aplicație web full‑stack construită cu MERN (MongoDB, Express, React, Node.js) pentru digitalizarea și eficientizarea operațiunilor unei companii de securitate.
+
+[![Status](https://img.shields.io/badge/status-beta-orange)]()
+[![License](https://img.shields.io/badge/license-MIT-blue)]()
+[![Node.js](https://img.shields.io/badge/node-%3E%3D18-brightgreen)]()
+
+Cuprins
+- [Despre Proiect](#despre-proiect)
+- [Public Țintă](#public-țintă)
+- [Funcționalități Cheie](#funcționalități-cheie)
+- [Tehnologii Folosite](#tehnologii-folosite)
+- [Arhitectură scurtă](#arhitectură-scurtă)
+- [Instalare și Rulare Locală](#instalare-și-rulare-locală)
+  - [Cerințe preliminare](#cerințe-preliminare)
+  - [Configurare Backend](#configurare-backend)
+  - [Configurare Frontend](#configurare-frontend)
+- [Variabile de mediu (exemplu)](#variabile-de-mediu-exemplu)
+- [Ghid de Utilizare — Roluri și Fluxuri](#ghid-de-utilizare---roluri-și-fluxuri)
+- [Deploy](#deploy)
+- [Contribuire](#contribuire)
+- [License](#license)
+
+---
+
+## Despre Proiect
+
+Această platformă înlocuiește procesele tradiționale (hârtie, apeluri telefonice) cu un sistem digital care:
+- reduce birocrația,
+- oferă trasabilitate completă a turelor și incidentelor,
+- automatizează generarea de documente oficiale (PDF),
+- permite urmărire în timp real a agenților și notificări automate.
+
+Principalele fluxuri:
+- management ture și pontaj digital,
+- urmărirea locației în timp real a agenților,
+- sistem de ticketing cu notificări prin email,
+- generare automată de documente PDF pe șabloane,
+- control al accesului pe roluri (RBAC).
+
+---
+
+## Public Țintă
+
+Aplicația servește patru tipuri principale de utilizatori:
+- Administrator (Super‑Admin) — gestionare completă a platformei și a conturilor Admin;
+- Admin (Operator Agenție) — operațiuni zilnice: gestionare angajați, clienți, incidente, documente;
+- Beneficiar (Client) — vizualizare prezență, creare solicitări, vizualizare incidente;
+- Paznic (Agent de Teren) — pontaj (check‑in/out), generare procese verbale și rapoarte.
+
+---
+
+## Funcționalități Cheie
+
+- Autentificare și autorizare bazată pe roluri (JWT).
+- Management utilizatori: CRUD pentru toate rolurile.
+- Urmărire locație în timp real (React Leaflet).
+- Pontaj: check‑in / check‑out cu înregistrare oră și locație.
+- Sistem de ticketing: creare, urmărire și notificare email la schimbarea statusului.
+- Generare automată PDF (procese verbale, rapoarte) cu semnături digitale.
+- Management alocări (drag & drop).
+- Gestionare incidente.
+- Mentenanță automată: cron job pentru curățare documente (>60 zile).
+- Design responsiv (desktop / tabletă / mobil).
+
+---
+
+## Tehnologii Folosite
+
+Frontend:
+- React (Vite)
+- React Router
+- Axios
+- React Leaflet
+- jsPDF & jsPDF‑AutoTable
+- CSS3
+
+Backend:
+- Node.js, Express
+- MongoDB + Mongoose
+- JSON Web Tokens (JWT)
+- bcrypt.js
+- Nodemailer
+- pdf-lib
+- node-cron
+
+Bază de date: MongoDB (local sau Atlas)
+
+---
+
+## Arhitectură scurtă
+
+- frontend/ — aplicația React servită de Vite
+- backend/ — API REST construit cu Express și MongoDB
+- documente generate atât pe client (jsPDF) cât și pe server (pdf-lib)
+- autentificare stateless cu JWT, roluri pentru autorizare
+
+---
+
+## Instalare și Rulare Locală
+
+Urmează pașii de mai jos pentru a rula proiectul local.
+
+### Cerințe preliminare
+- Node.js v18+ și npm sau yarn
+- MongoDB (local sau MongoDB Atlas)
+- Git
+
+### Configurare Backend
+1. Clonează repository-ul:
+```bash
+git clone https://github.com/20DPop/SecurityAgency.git
+cd SecurityAgency/backend
+```
+
+2. Instalează dependențele:
+```bash
 npm install
-Configurează proxy-ul (deja făcut):
-Fișierul vite.config.js este deja configurat să redirecționeze cererile de la /api către http://localhost:3000.
-Pornește serverul de frontend:
-code
-Bash
+```
+
+3. Creează fișierul `.env` în `backend/` (vezi secțiunea Variabile de mediu).
+
+4. Pornește serverul de dezvoltare:
+```bash
 npm run dev
-Aplicația va fi accesibilă la http://localhost:5173 (sau un port similar afișat în terminal).
-Ghid de Utilizare
-Rolul Administrator
-Se autentifică cu contul de administrator.
-Din dashboard, poate naviga la "Adaugă Cont Admin" pentru a crea un cont nou pentru un operator al agenției.
-Poate naviga la "Gestionează Conturi Admin" pentru a șterge conturi existente.
-Poate naviga pentru a vedea aplicația din perspectiva celorlalte roluri.
-Rolul Admin (Operator Agenție)
-Se autentifică cu contul de admin.
-Poate adăuga noi angajați (Adăugare Angajat) și noi clienți (Adăugare Firmă).
-Poate aloca paznicii la punctele de lucru ale beneficiarilor din pagina Alocare Paznici.
-Vede în timp real cine este în tură din pagina Prezență Angajați și poate urmări locația unui paznic.
-Gestionează solicitările venite de la clienți în pagina Solicitări.
-Creează și gestionează Incidente.
-Vizionează și descarcă toate Documentele generate în sistem.
-Rolul Beneficiar (Client)
-Se autentifică cu contul de beneficiar.
-Din dashboard, poate vizualiza Prezența Angajaților alocați firmei sale și le poate vedea locația.
-Poate crea o nouă cerere/problemă din pagina Solicitări -> Adaugă Solicitare.
-Poate vizualiza Incidentele care au fost raportate la punctele sale de lucru.
-Poate vedea o listă cu toți Angajații care îi sunt alocați.
-Rolul Paznic (Agent de Teren)
-Se autentifică cu contul de paznic.
-Începe și termină tura din pagina Pontare. La finalul turei, trebuie să completeze un Proces Verbal de Predare-Primire.
-În cazul unui eveniment special, poate genera un Raport de Eveniment sau un Proces Verbal de Intervenție din paginile dedicate.
-Deploy
-Aplicația este configurată pentru un deploy facil pe platforme de tip PaaS (Platform as a Service) precum Railway.
-Backend-ul este configurat să ruleze cu npm start.
-Frontend-ul folosește Vite și este configurat pentru a fi servit ca un site static, conectându-se la backend printr-o variabilă de mediu (VITE_API_BASE_URL).
-Configurația CORS din backend este pregătită pentru a accepta cereri de la domeniul de producție al frontend-ului.
+```
+Serverul default: http://localhost:3000
+
+### Configurare Frontend
+1. Într-un alt terminal:
+```bash
+cd SecurityAgency/frontend
+npm install
+```
+
+2. Frontendul folosește Vite; rulează:
+```bash
+npm run dev
+```
+Aplicația va fi accesibilă la http://localhost:5173 (sau portul afișat în terminal).
+
+---
+
+## Variabile de mediu (exemplu)
+
+Creează `backend/.env` cu valorile adaptate:
+
+```
+PORT=3000
+MONGO_URI=mongodb+srv://<user>:<pass>@cluster0.mongodb.net/dbname?retryWrites=true&w=majority
+JWT_SECRET=O_FRAZA_SECRETA_FOARTE_LUNGA
+EMAIL_USER=exemplu@gmail.com
+EMAIL_PASS=parola_aplicatie_gmail
+FRONTEND_URL=http://localhost:5173
+```
+
+Pentru frontend, setări Vite (exemplu `.env` în `frontend/`):
+```
+VITE_API_BASE_URL=http://localhost:3000/api
+```
+
+---
+
+## Ghid de Utilizare — Roluri și Fluxuri
+
+Rol Administrator (Super‑Admin):
+- creare / ștergere conturi Admin
+- vizualizare platformă din perspectiva altor roluri
+
+Rol Admin (Operator Agenție):
+- adăugare angajați și clienți
+- alocare paznici la puncte de lucru (drag & drop)
+- vizualizare prezență și urmărire locație
+- gestionare solicitări, incidente și documente
+
+Rol Beneficiar (Client):
+- vizualizează prezența paznicilor alocați
+- creează solicitări (ticketing)
+- vede incidentele pentru punctele sale de lucru
+
+Rol Paznic (Agent de Teren):
+- pontaj (start/end tură)
+- completare Proces Verbal de Predare‑Primire la finalul turei
+- generare Raport de Eveniment / Proces Verbal de Intervenție
+
+---
+
+## Deploy
+
+Aplicația poate fi deploy‑ată pe PaaS (ex: Railway, Heroku, Vercel pentru frontend static). Pașii generali:
+- Configurează variabilele de mediu în serviciul PaaS.
+- Backend: rulează `npm start` în producție.
+- Frontend: build cu Vite (`npm run build`) și servește fișierele statice sau folosește platforma care le servește direct.
+
+CORS este configurat pentru a permite conexiuni de la frontendul de producție (setează FRONTEND_URL corespunzător).
+
+---
+
+## Contribuire
+
+1. Fork → Branch feature → Pull Request
+2. Descrie clar schimbările și pașii de testare
+3. Respectă convențiile de codare și style guide‑ul proiectului
+
+Dacă vrei, poți deschide issue‑uri pentru buguri sau propuneri de funcționalități.
+
+---
+
+## License
+
+Acest proiect este licențiat sub MIT License. Vezi fișierul LICENSE pentru detalii.
+
+---
+
+Notă: Acest README este o versiune clarificată și organizată a informațiilor existente în repository. Pentru detalii tehnice suplimentare (ex: endpointuri API, modele Mongoose, structura directoarelor), recomand să completezi cu secțiuni adiționale sau linkuri către documentația internă din `docs/` dacă le adaugi în repo.
