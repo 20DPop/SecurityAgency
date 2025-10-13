@@ -8,7 +8,8 @@ const app = express();
 // --- CORS global manual ---
 const allowedOrigins = [
   'https://vigilent-security.up.railway.app',
-  'http://localhost:5173'
+  'http://localhost:5173',
+  'https://vigilent-security-app.up.railway.app'
 ];
 
 app.use((req, res, next) => {
