@@ -118,7 +118,7 @@ export default function PrezentaAngajati() {
 
       {selectedPaznicId && (
         <div className="table-responsive">
-          <button onClick={() => setSelectedPaznicId(null)} className="back-btn" style={{position: 'static', marginBottom: '10px'}}>⬅ Înapoi la lista paznicilor</button>
+          <button onClick={() => setSelectedPaznicId(null)} className="back-btn" style={{position: 'static', marginBottom: '10px'}}>⬅ Înapoi la lista agenților de securitate</button>
           <table className="angajati-table">
             <thead>
               <tr><th>Data</th><th>Check-in</th><th>Check-out</th></tr>

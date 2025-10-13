@@ -10,7 +10,7 @@ export default function PaznicDashboard() {
   return (
     <div className="paznic-dashboard">
       <main>
-        <h1 className="page-title">Panou de Control Paznic</h1>
+        <h1 className="page-title">Panou de Control Agent de Securitate</h1>
         <div className="cards-container">
           {/* Acest link va funcționa când se scanează un QR code care duce la o adresă de tip /pontare/some-qr-id */}
           <Link to={`/pontare/${qrCodePlaceholder}`} className="card link-card">

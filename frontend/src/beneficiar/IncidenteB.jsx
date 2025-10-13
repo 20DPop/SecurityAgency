@@ -33,7 +33,7 @@ export default function IncidenteB() {
 
   return (
     <div className="incidente-container">
-      <h1>Incidente Raportate la Firma Mea</h1>
+      <h1>Incidente Raportate la Obiectivele Beneficiarului</h1>
       
       {incidente.length === 0 ? (
         <p style={{textAlign: 'center'}}>Nu există incidente raportate pentru firma ta.</p>

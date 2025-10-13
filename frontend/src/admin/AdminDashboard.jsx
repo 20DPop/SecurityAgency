@@ -11,7 +11,7 @@ export default function AdminDashboard() {
 
           <Link to="/solicitari" className="card link-card">📄<p>Solicitări</p></Link>
 
-          <Link to="/alocare-paznici" className="card link-card">👥<p>Alocare Paznici</p></Link>
+          <Link to="/alocare-paznici" className="card link-card">👥<p>Alocare Agenți de Securitate</p></Link>
           <Link to="/incidente" className="card link-card">🚨<p>Incidente</p></Link>
           {/* <div className="card">👤<p>Angajați</p></div> */}
           <Link to="/angajati" className="card link-card">👤<p>Angajați</p></Link>

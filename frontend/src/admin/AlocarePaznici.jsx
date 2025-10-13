@@ -81,8 +81,8 @@ export default function AlocarePaznici() {
       await apiClient.post('/assignments/assign', payload);
       await fetchAllData();
     } catch (err) {
-      console.error("Error assigning paznic:", err.response?.data?.message || err.message);
-      setError(err.response?.data?.message || 'Eroare la alocarea paznicului.');
+      console.error("Error assigning agent de securitate:", err.response?.data?.message || err.message);
+      setError(err.response?.data?.message || 'Eroare la alocarea agentului de securitate.');
     } finally {
       setLoading(false);
     }
@@ -102,8 +102,8 @@ export default function AlocarePaznici() {
       await apiClient.post('/assignments/unassign', payload);
       await fetchAllData();
     } catch (err) {
-      console.error("Error unassigning paznic:", err.response?.data?.message || err.message);
-      setError(err.response?.data?.message || 'Eroare la dezalocarea paznicului.');
+      console.error("Error unassigning agentului de securitate:", err.response?.data?.message || err.message);
+      setError(err.response?.data?.message || 'Eroare la dezalocarea agentului de securitate.');
     } finally {
       setLoading(false);
     }
@@ -116,7 +116,7 @@ export default function AlocarePaznici() {
   return (
     <div className="assignment-page">
       <div className="assignment-header">
-        <h1>Alocare Paznici la Beneficiari</h1>
+        <h1>Alocare Agenți de Securitate la Beneficiari</h1>
         <button onClick={() => navigate(-1)} className="back-btn-assignment">⬅ Înapoi</button>
       </div>
 
@@ -155,7 +155,7 @@ export default function AlocarePaznici() {
         <div className="assignment-columns">
           {/* Coloana Paznici Disponibili */}
           <div className="column">
-            <h2>Paznici Disponibili</h2>
+            <h2>Agenți de Securitate Disponibili</h2>
             <ul className="paznic-list">
               {availablePaznici.length > 0 ? (
                 availablePaznici.map(p => (
@@ -164,13 +164,13 @@ export default function AlocarePaznici() {
                     <button onClick={() => handleAssign(p._id)} className="assign-btn">Alocă ➡</button>
                   </li>
                 ))
-              ) : <p>Toți paznicii sunt alocați.</p>}
+              ) : <p>Toți agenții de securitate sunt alocați.</p>}
             </ul>
           </div>
 
           {/* Coloana Paznici Alocați */}
           <div className="column">
-            <h2>Paznici Alocați</h2>
+            <h2>Agenți de Securitate Alocați</h2>
             <ul className="paznic-list">
               {assignedPaznici.length > 0 ? (
                 assignedPaznici.map(p => (
@@ -179,7 +179,7 @@ export default function AlocarePaznici() {
                     <button onClick={() => handleUnassign(p._id)} className="unassign-btn">⬅ Dezalocă</button>
                   </li>
                 ))
-              ) : <p>Niciun paznic alocat.</p>}
+              ) : <p>Niciun agent de securitate alocat.</p>}
             </ul>
           </div>
         </div>

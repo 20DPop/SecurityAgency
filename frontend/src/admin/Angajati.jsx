@@ -128,7 +128,7 @@ export default function Angajati() {
   if (editUser) {
     return (
       <div className="angajati-container edit-form-container">
-        <h1>Editare Paznic</h1>
+        <h1>Editare Agent de Securitate</h1>
         <div className="form-group"><label>Nume</label><input name="nume" value={formData.nume} onChange={handleChange} /></div>
         <div className="form-group"><label>Prenume</label><input name="prenume" value={formData.prenume} onChange={handleChange} /></div>
         <div className="form-group"><label>Email</label><input name="email" value={formData.email} onChange={handleChange} /></div>
@@ -141,7 +141,7 @@ export default function Angajati() {
 
   return (
     <div className="angajati-container">
-      <h1>Lista Paznicilor</h1>
+      <h1>Lista Agenților de Securitate</h1>
       <div className="search-container">
         <input type="text" placeholder="Caută după nume sau prenume..." value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} />
       </div>
@@ -165,7 +165,7 @@ export default function Angajati() {
                 </tr>
               ))
             ) : (
-              <tr><td colSpan="4" style={{ textAlign: "center" }}>Nu există paznici care să corespundă căutării.</td></tr>
+              <tr><td colSpan="4" style={{ textAlign: "center" }}>Nu există agenți de securitate care să corespundă căutării.</td></tr>
             )}
           </tbody>
         </table>
