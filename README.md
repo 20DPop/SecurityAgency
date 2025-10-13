@@ -2,7 +2,7 @@
 
 O aplicație web full‑stack construită cu MERN (MongoDB, Express, React, Node.js) pentru digitalizarea și eficientizarea operațiunilor unei companii de securitate.
 
-[![Status](https://img.shields.io/badge/status-beta-orange)]()
+[![Status](https://img.shields.io/badge/status-active-green)]()
 [![License](https://img.shields.io/badge/license-MIT-blue)]()
 [![Node.js](https://img.shields.io/badge/node-%3E%3D18-brightgreen)]()
 
