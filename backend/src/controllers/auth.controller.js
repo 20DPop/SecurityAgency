@@ -26,6 +26,7 @@ const loginUser = async (req, res) => {
         nume: user.nume,
         role: user.role,
         token: token,
+        seeUpdates: user.seeUpdates,
       });
     } else {
         res.status(401).json({ message: 'Email sau parolă invalidă.' });
