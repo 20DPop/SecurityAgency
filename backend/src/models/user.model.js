@@ -8,7 +8,6 @@ const profileSchema = new mongoose.Schema({
   nume_companie: { type: String },
   punct_de_lucru: [{ type: String }],
 
-  // În loc de un array simplu, facem mapping
   assignedPaznici: [{
     punct: { type: String, required: true },
     paznici: [{
@@ -29,19 +28,19 @@ const userSchema = new mongoose.Schema({
   creatDeAdminId: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
   profile: {
     type: profileSchema,
-    default: () =>({})
+    default: () => ({})
   },
+
+  
+  seeUpdates: { type: Number, default: 0 }
+
 }, { timestamps: true });
 
-
-// --- ADAUGĂ ACEST COD ÎNAPOI ---
 // Criptează parola înainte de a salva utilizatorul
 userSchema.pre('save', async function (next) {
-  // Rulează funcția doar dacă parola a fost modificată
   if (!this.isModified('password')) {
     return next();
   }
-
   const salt = await bcrypt.genSalt(10);
   this.password = await bcrypt.hash(this.password, salt);
   next();
@@ -51,8 +50,6 @@ userSchema.pre('save', async function (next) {
 userSchema.methods.matchPassword = async function (enteredPassword) {
   return await bcrypt.compare(enteredPassword, this.password);
 };
-// --- SFÂRȘIT COD DE ADĂUGAT ---
-
 
 const User = mongoose.model('User', userSchema);
 module.exports = User;
