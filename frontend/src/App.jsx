@@ -1,3 +1,4 @@
+// Cale: frontend/src/App.jsx
 import React, { useState, useEffect } from 'react';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import Header from './admin/Header';
@@ -21,7 +22,7 @@ import AdaugaAngajat from "./admin/AdaugaAngajat";
 import AdaugaFirma from "./admin/AdaugaFirma";
 import PontarePage from './paznic/PontarePage';
 import ProcesVerbal from './documents/ProcesVerbal';
-import AlocarePaznici from './admin/AlocarePaznici'; 
+import AlocarePaznici from './admin/AlocarePaznici';
 import Angajati from "./admin/Angajati";
 import Firmacolaboratoare from "./admin/Firmacolaboratoare";
 import PrezentaAngajati from './beneficiar/PrezentaAngajati';
@@ -35,8 +36,10 @@ import Incidente from './admin/Incidente';
 import IncidenteB from './beneficiar/IncidenteB';
 import IstoricIncidente from './admin/IstoricIncidente';
 import Documente from './admin/Documente';
-import AdaugaAdmin  from './administrator/AdaugaAdmin';
+import AdaugaAdmin from './administrator/AdaugaAdmin';
 import GestionareAdmini from './administrator/GestionareAdmini';
+import TraseuLiveList from './beneficiar/TraseuLiveList'; // ✅ IMPORT NOU
+import TraseuLive from './beneficiar/TraseuLive';         // ✅ IMPORT NOU
 
 function Dashboard({ user }) {
   switch (user.role) {
@@ -57,8 +60,7 @@ function ProtectedRoute({ user, allowedRoles, children }) {
 
 export default function App() {
   const [currentUser, setCurrentUser] = useState(null);
-  // Stările pentru sesizări/solicitări sunt gestionate acum în componentele respective
-  
+
   useEffect(() => {
     const savedUser = localStorage.getItem("currentUser");
     if (savedUser) {
@@ -90,7 +92,7 @@ export default function App() {
         <Route path="/admin/dashboard" element={<ProtectedRoute user={currentUser} allowedRoles={['admin', 'administrator']}><AdminDashboard /></ProtectedRoute>} />
         <Route path="/beneficiar/dashboard" element={<ProtectedRoute user={currentUser} allowedRoles={['beneficiar', 'administrator']}><BeneficiarDashboard /></ProtectedRoute>} />
         <Route path="/paznic/dashboard" element={<ProtectedRoute user={currentUser} allowedRoles={['paznic', 'administrator']}><PaznicDashboard /></ProtectedRoute>} />
-        
+
         {/* --- RUTE ADMINISTRATOR --- */}
         <Route path="/administrator/adauga-admin" element={<ProtectedRoute user={currentUser} allowedRoles={['administrator']}><AdaugaAdmin /></ProtectedRoute>} />
         <Route path="/administrator/gestionare-admini" element={<ProtectedRoute user={currentUser} allowedRoles={['administrator']}><GestionareAdmini /></ProtectedRoute>} />
@@ -107,7 +109,6 @@ export default function App() {
         <Route path="/documente" element={<ProtectedRoute user={currentUser} allowedRoles={['admin', 'administrator']}><Documente /></ProtectedRoute>} />
         <Route path="/solicitari" element={<ProtectedRoute user={currentUser} allowedRoles={['admin', 'administrator']}><Solicitari /></ProtectedRoute>} />
         <Route path="/solicitari/:id" element={<ProtectedRoute user={currentUser} allowedRoles={['admin', 'administrator']}><SolicitariDetalii /></ProtectedRoute>} />
-        {/* Am eliminat rutele duplicate pentru sesizări, deoarece 'Solicitari' face același lucru */}
         <Route path="/sesizari" element={<ProtectedRoute user={currentUser} allowedRoles={['admin', 'administrator']}><Solicitari /></ProtectedRoute>} />
         <Route path="/sesizare/:id" element={<ProtectedRoute user={currentUser} allowedRoles={['admin', 'administrator']}><SolicitariDetalii /></ProtectedRoute>} />
 
@@ -121,6 +122,24 @@ export default function App() {
         <Route path="/angajatiB" element={<ProtectedRoute user={currentUser} allowedRoles={['beneficiar', 'administrator']}><AngajatiB /></ProtectedRoute>} />
         <Route path="/angajatiB/:id" element={<ProtectedRoute user={currentUser} allowedRoles={['beneficiar', 'administrator']}><DetaliiAngajatB /></ProtectedRoute>} />
         <Route path="/urmarire/:id" element={<ProtectedRoute user={currentUser} allowedRoles={['admin', 'administrator', 'beneficiar']}><UrmarireAngajat /></ProtectedRoute>} />
+
+        {/* ✅ RUTE NOI GPS */}
+        <Route
+          path="/traseu-live-list"
+          element={
+            <ProtectedRoute user={currentUser} allowedRoles={['beneficiar', 'administrator']}>
+              <TraseuLiveList />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/traseu-live/:paznicId"
+          element={
+            <ProtectedRoute user={currentUser} allowedRoles={['beneficiar', 'administrator']}>
+              <TraseuLive />
+            </ProtectedRoute>
+          }
+        />
 
         {/* --- RUTE PAZNIC --- */}
         <Route path="/pontare/:qrCode" element={<ProtectedRoute user={currentUser} allowedRoles={['paznic', 'administrator']}><PontarePage /></ProtectedRoute>} />

@@ -12,7 +12,6 @@ const { sendEmail } = require('../services/email.service');
 const genereazaHartaURL = (locationHistory) => {
   if (!locationHistory || locationHistory.length === 0) return null;
 
-  // Reducem la maxim 100 de puncte pentru a nu depăși limita URL
   const total = locationHistory.length;
   const step = Math.ceil(total / 100);
   const puncteReduse = locationHistory.filter((_, i) => i % step === 0);
@@ -20,64 +19,37 @@ const genereazaHartaURL = (locationHistory) => {
   const primul = locationHistory[0];
   const ultimul = locationHistory[locationHistory.length - 1];
 
-  // Mapbox: [longitude, latitude] - invers față de cum salvezi tu!
   const coordinates = puncteReduse.map(p => [p.longitude, p.latitude]);
 
   const geojson = {
     type: 'FeatureCollection',
     features: [
-      // Linia roșie a traseului
       {
         type: 'Feature',
-        properties: {
-          stroke: '#ff0000',
-          'stroke-width': 3,
-          'stroke-opacity': 0.9
-        },
-        geometry: {
-          type: 'LineString',
-          coordinates: coordinates
-        }
+        properties: { stroke: '#ff0000', 'stroke-width': 3, 'stroke-opacity': 0.9 },
+        geometry: { type: 'LineString', coordinates }
       },
-      // Marker verde = punct START
       {
         type: 'Feature',
-        properties: {
-          'marker-color': '#00b300',
-          'marker-size': 'large',
-          'marker-symbol': 'star'
-        },
-        geometry: {
-          type: 'Point',
-          coordinates: [primul.longitude, primul.latitude]
-        }
+        properties: { 'marker-color': '#00b300', 'marker-size': 'large', 'marker-symbol': 'star' },
+        geometry: { type: 'Point', coordinates: [primul.longitude, primul.latitude] }
       },
-      // Marker roșu = punct FINAL
       {
         type: 'Feature',
-        properties: {
-          'marker-color': '#cc0000',
-          'marker-size': 'large',
-          'marker-symbol': 'embassy'
-        },
-        geometry: {
-          type: 'Point',
-          coordinates: [ultimul.longitude, ultimul.latitude]
-        }
+        properties: { 'marker-color': '#cc0000', 'marker-size': 'large', 'marker-symbol': 'embassy' },
+        geometry: { type: 'Point', coordinates: [ultimul.longitude, ultimul.latitude] }
       }
     ]
   };
 
   const geojsonEncoded = encodeURIComponent(JSON.stringify(geojson));
 
-  const url =
+  return (
     `https://api.mapbox.com/styles/v1/mapbox/streets-v11/static/` +
     `geojson(${geojsonEncoded})/` +
-    `auto/800x500` +
-    `?padding=50` +
-    `&access_token=${process.env.MAPBOX_TOKEN}`;
-
-  return url;
+    `auto/800x500?padding=50` +
+    `&access_token=${process.env.MAPBOX_TOKEN}`
+  );
 };
 
 // ============================================================
@@ -92,20 +64,16 @@ const trimiteEmailTraseu = async (pontaj) => {
       console.log('[GPS Email] Beneficiarul nu are email setat, skip.');
       return;
     }
-
     if (!paznic) {
       console.log('[GPS Email] Paznicul nu a fost găsit, skip.');
       return;
     }
-
-    // Trimitem emailul doar dacă beneficiarul are seeUpdates = 1
     if (beneficiar.seeUpdates !== 1) {
       console.log('[GPS Email] Beneficiarul nu are acces la funcția GPS, skip.');
       return;
     }
 
     const { locationHistory } = pontaj;
-
     if (!locationHistory || locationHistory.length === 0) {
       console.log('[GPS Email] Nu există date GPS pentru această tură, skip.');
       return;
@@ -114,16 +82,12 @@ const trimiteEmailTraseu = async (pontaj) => {
     const hartaURL = genereazaHartaURL(locationHistory);
 
     const dataAzi = new Date().toLocaleDateString('ro-RO', {
-      weekday: 'long',
-      year: 'numeric',
-      month: 'long',
-      day: 'numeric'
+      weekday: 'long', year: 'numeric', month: 'long', day: 'numeric'
     });
 
     const oraIntrare = pontaj.ora_intrare
       ? new Date(pontaj.ora_intrare).toLocaleTimeString('ro-RO', { hour: '2-digit', minute: '2-digit' })
       : 'N/A';
-
     const oraIesire = pontaj.ora_iesire
       ? new Date(pontaj.ora_iesire).toLocaleTimeString('ro-RO', { hour: '2-digit', minute: '2-digit' })
       : 'N/A';
@@ -138,27 +102,23 @@ const trimiteEmailTraseu = async (pontaj) => {
       senderName: 'SecurityApp',
       html: `
         <div style="font-family: Arial, sans-serif; max-width: 650px; margin: auto; border: 1px solid #ddd; border-radius: 8px; overflow: hidden;">
-
           <div style="background-color: #1a1a2e; padding: 24px; text-align: center;">
             <h1 style="color: #ffffff; margin: 0; font-size: 22px;">🗺️ Raport Traseu Zilnic</h1>
             <p style="color: #aaaaaa; margin: 8px 0 0 0; font-size: 14px;">${dataAzi}</p>
           </div>
-
           <div style="padding: 28px;">
             <p style="font-size: 16px; color: #333;">Stimate beneficiar,</p>
             <p style="color: #555;">
-              Tura paznicului <strong>${paznic.nume} ${paznic.prenume}</strong>
-              a fost încheiată. Mai jos găsiți raportul complet al traseului efectuat.
+              Tura paznicului <strong>${paznic.nume} ${paznic.prenume}</strong> a fost încheiată.
             </p>
-
             <div style="background: #f8f9fa; border-radius: 8px; padding: 20px; margin: 20px 0;">
               <table style="width: 100%; border-collapse: collapse;">
                 <tr>
-                  <td style="padding: 8px 0; color: #666; font-size: 14px;">🕐 Ora intrare (Check-in):</td>
+                  <td style="padding: 8px 0; color: #666; font-size: 14px;">🕐 Check-in:</td>
                   <td style="padding: 8px 0; font-weight: bold; font-size: 14px;">${oraIntrare}</td>
                 </tr>
                 <tr>
-                  <td style="padding: 8px 0; color: #666; font-size: 14px;">🕕 Ora ieșire (Check-out):</td>
+                  <td style="padding: 8px 0; color: #666; font-size: 14px;">🕕 Check-out:</td>
                   <td style="padding: 8px 0; font-weight: bold; font-size: 14px;">${oraIesire}</td>
                 </tr>
                 <tr>
@@ -166,38 +126,33 @@ const trimiteEmailTraseu = async (pontaj) => {
                   <td style="padding: 8px 0; font-weight: bold; font-size: 14px;">${durataOre}h ${durataMinute}min</td>
                 </tr>
                 <tr>
-                  <td style="padding: 8px 0; color: #666; font-size: 14px;">📍 Puncte GPS înregistrate:</td>
+                  <td style="padding: 8px 0; color: #666; font-size: 14px;">📍 Puncte GPS:</td>
                   <td style="padding: 8px 0; font-weight: bold; font-size: 14px;">${locationHistory.length}</td>
                 </tr>
               </table>
             </div>
-
             <p style="font-weight: bold; color: #333; margin-bottom: 10px;">Traseul parcurs:</p>
             ${hartaURL
-              ? `<img src="${hartaURL}" style="width: 100%; border-radius: 8px; border: 1px solid #eee;" alt="Harta traseu paznic" />`
-              : `<p style="color: #e74c3c; padding: 16px; background: #ffeaea; border-radius: 6px;">⚠️ Nu au fost înregistrate date GPS pentru această tură.</p>`
+              ? `<img src="${hartaURL}" style="width:100%;border-radius:8px;border:1px solid #eee;" alt="Harta traseu"/>`
+              : `<p style="color:#e74c3c;padding:16px;background:#ffeaea;border-radius:6px;">⚠️ Nu s-au înregistrat date GPS.</p>`
             }
-
-            <p style="color: #999; font-size: 12px; margin-top: 12px; text-align: center;">
-              ⭐ = Punct de start &nbsp;&nbsp;&nbsp; 🔴 = Punct final &nbsp;&nbsp;&nbsp; Linia roșie = traseul parcurs
+            <p style="color:#999;font-size:12px;margin-top:12px;text-align:center;">
+              ⭐ = Start &nbsp;&nbsp; 🔴 = Final &nbsp;&nbsp; Linia roșie = traseul parcurs
             </p>
           </div>
-
-          <div style="background: #f0f0f0; padding: 16px; text-align: center;">
-            <p style="margin: 0; color: #999; font-size: 11px;">
-              Email generat automat de SecurityApp la încheierea turei.<br>
-              Datele GPS sunt păstrate timp de 60 de zile.
+          <div style="background:#f0f0f0;padding:16px;text-align:center;">
+            <p style="margin:0;color:#999;font-size:11px;">
+              Email generat automat de SecurityApp.<br>
+              Datele GPS sunt păstrate 60 de zile.
             </p>
           </div>
-
         </div>
       `
     });
 
     console.log(`[GPS Email] Email trimis cu succes la ${beneficiar.email}`);
-
   } catch (error) {
-    console.error('[GPS Email] Eroare la trimiterea emailului de traseu:', error.message);
+    console.error('[GPS Email] Eroare:', error.message);
   }
 };
 
@@ -210,12 +165,12 @@ const checkIn = async (req, res) => {
     const paznicId = req.user._id;
 
     if (!latitude || !longitude) {
-      return res.status(400).json({ message: 'Datele de localizare sunt obligatorii pentru a începe tura.' });
+      return res.status(400).json({ message: 'Coordonatele GPS sunt obligatorii.' });
     }
 
     const pontajDeschis = await Pontaj.findOne({ paznicId, ora_iesire: null });
     if (pontajDeschis) {
-      return res.status(400).json({ message: 'Aveți deja o tură activă. Vă rugăm să faceți check-out mai întâi.' });
+      return res.status(400).json({ message: 'Aveți deja o tură activă. Faceți check-out mai întâi.' });
     }
 
     const beneficiarAlocat = await User.findOne({
@@ -224,7 +179,7 @@ const checkIn = async (req, res) => {
     });
 
     if (!beneficiarAlocat) {
-      return res.status(404).json({ message: 'Nu sunteți alocat la niciun beneficiar. Vă rugăm contactați administratorul.' });
+      return res.status(404).json({ message: 'Nu sunteți alocat la niciun beneficiar.' });
     }
 
     const newPontaj = await Pontaj.create({
@@ -235,16 +190,16 @@ const checkIn = async (req, res) => {
     });
 
     res.status(201).json({
-      message: `Check-in efectuat cu succes la ${beneficiarAlocat.profile.nume_companie}!`,
+      message: `Check-in efectuat la ${beneficiarAlocat.profile.nume_companie}!`,
       pontaj: newPontaj
     });
   } catch (error) {
-    res.status(500).json({ message: `Eroare de server: ${error.message}` });
+    res.status(500).json({ message: `Eroare server: ${error.message}` });
   }
 };
 
 // ============================================================
-// CHECK-OUT - trimite email cu traseul după încheierea turei
+// CHECK-OUT
 // ============================================================
 const checkOut = async (req, res) => {
   try {
@@ -252,25 +207,24 @@ const checkOut = async (req, res) => {
     const turaActiva = await Pontaj.findOne({ paznicId, ora_iesire: null });
 
     if (!turaActiva) {
-      return res.status(404).json({ message: 'Nu aveți nicio tură activă pe care să o încheiați.' });
+      return res.status(404).json({ message: 'Nu aveți nicio tură activă.' });
     }
 
     const pvPredare = await ProcesVerbalPredarePrimire.findOne({ pontajId: turaActiva._id });
     if (!pvPredare) {
-      return res.status(400).json({ message: 'EROARE: Procesul Verbal de Predare-Primire nu a fost găsit. Tura nu poate fi încheiată.' });
+      return res.status(400).json({ message: 'Procesul Verbal de Predare-Primire lipsește. Tura nu poate fi încheiată.' });
     }
 
     turaActiva.ora_iesire = new Date();
     await turaActiva.save();
 
-    // Trimitem emailul în fundal - nu blocăm răspunsul paznicului
     trimiteEmailTraseu(turaActiva).catch(err =>
-      console.error('[GPS Email] Eroare în fundal:', err.message)
+      console.error('[GPS Email] Eroare fundal:', err.message)
     );
 
-    res.status(200).json({ message: 'Check-out efectuat cu succes. Tura a fost încheiată.' });
+    res.status(200).json({ message: 'Check-out efectuat cu succes.' });
   } catch (error) {
-    res.status(500).json({ message: `Eroare de server: ${error.message}` });
+    res.status(500).json({ message: `Eroare server: ${error.message}` });
   }
 };
 
@@ -279,11 +233,10 @@ const checkOut = async (req, res) => {
 // ============================================================
 const getActivePontaj = async (req, res) => {
   try {
-    const paznicId = req.user._id;
-    const turaActiva = await Pontaj.findOne({ paznicId, ora_iesire: null });
+    const turaActiva = await Pontaj.findOne({ paznicId: req.user._id, ora_iesire: null });
     res.status(200).json(turaActiva || null);
   } catch (error) {
-    res.status(500).json({ message: `Eroare de server: ${error.message}` });
+    res.status(500).json({ message: `Eroare server: ${error.message}` });
   }
 };
 
@@ -297,28 +250,32 @@ const getActiveEmployees = async (req, res) => {
       .populate('beneficiaryId', 'profile.nume_companie');
     res.status(200).json(pontajeActive);
   } catch (error) {
-    res.status(500).json({ message: `Eroare de server: ${error.message}` });
+    res.status(500).json({ message: `Eroare server: ${error.message}` });
   }
 };
 
 // ============================================================
 // GET ANGAJAȚI ACTIVI (beneficiar)
+// Returnează TOȚI paznicii activi alocați acestui beneficiar
 // ============================================================
 const getActiveEmployeesForBeneficiar = async (req, res) => {
   try {
     const beneficiaryId = req.user._id;
+
     const pontajeActive = await Pontaj.find({ ora_iesire: null, beneficiaryId })
       .populate('paznicId', 'nume prenume email telefon')
       .populate('beneficiaryId', 'profile.nume_companie');
+
     res.status(200).json(pontajeActive);
   } catch (error) {
     console.error('Eroare backend:', error);
-    res.status(500).json({ message: `Eroare de server: ${error.message}` });
+    res.status(500).json({ message: `Eroare server: ${error.message}` });
   }
 };
 
 // ============================================================
-// UPDATE LOCAȚIE - emite și prin Socket.io live
+// UPDATE LOCAȚIE - emite Socket.io live
+// ✅ FIX: paznicId trimis ca STRING pentru comparație corectă în frontend
 // ============================================================
 const updateLocation = async (req, res) => {
   try {
@@ -329,9 +286,8 @@ const updateLocation = async (req, res) => {
     }
 
     const pontaj = await Pontaj.findOne({ paznicId: req.user._id, ora_iesire: null });
-
     if (!pontaj) {
-      return res.status(404).json({ message: 'Nu există tura activă pentru acest paznic.' });
+      return res.status(404).json({ message: 'Nu există tură activă.' });
     }
 
     pontaj.locationHistory.push({
@@ -339,14 +295,15 @@ const updateLocation = async (req, res) => {
       longitude: Number(longitude),
       timestamp: new Date()
     });
-
     await pontaj.save();
 
-    // ✅ Emitem locația live către beneficiar prin Socket.io
+    // ✅ FIX: .toString() pe paznicId și beneficiaryId
+    // Fără toString(), comparația în frontend (data.paznicId === paznicId) eșua
+    // când aveai mai mulți paznici activi simultan
     const io = req.app.get('io');
     if (io && pontaj.beneficiaryId) {
-      io.to(`beneficiar_${pontaj.beneficiaryId}`).emit('guard_moved', {
-        paznicId: req.user._id,
+      io.to(`beneficiar_${pontaj.beneficiaryId.toString()}`).emit('guard_moved', {
+        paznicId: req.user._id.toString(),       // ✅ string, nu ObjectId
         numePaznic: `${req.user.nume} ${req.user.prenume}`,
         lat: Number(latitude),
         lng: Number(longitude),
@@ -354,7 +311,7 @@ const updateLocation = async (req, res) => {
       });
     }
 
-    res.status(200).json({ message: 'Locația a fost actualizată.' });
+    res.status(200).json({ message: 'Locația actualizată.' });
   } catch (err) {
     res.status(500).json({ message: 'Eroare server: ' + err.message });
   }
@@ -369,7 +326,7 @@ const getLatestLocation = async (req, res) => {
     const pontaj = await Pontaj.findOne({ paznicId, ora_iesire: null });
 
     if (!pontaj || !pontaj.locationHistory.length) {
-      return res.status(404).json({ message: 'Nicio locație găsită pentru acest paznic.' });
+      return res.status(404).json({ message: 'Nicio locație găsită.' });
     }
 
     const latest = pontaj.locationHistory[pontaj.locationHistory.length - 1];
@@ -380,15 +337,19 @@ const getLatestLocation = async (req, res) => {
 };
 
 // ============================================================
-// GET TRASEU COMPLET - pentru harta live din aplicație
+// GET TRASEU COMPLET
+// ✅ Verifică că paznicul aparține beneficiarului (oricare punct de lucru)
 // ============================================================
 const getTraseuComplet = async (req, res) => {
   try {
     const { paznicId } = req.params;
 
     // Beneficiarul poate vedea doar paznicii alocați lui
+    // (indiferent de punctul de lucru - un beneficiar poate avea mai mulți paznici!)
     if (req.user.role === 'beneficiar') {
       const beneficiar = await User.findById(req.user._id);
+
+      // Extragem TOȚI paznicii din TOATE punctele de lucru ale beneficiarului
       const pazniciAlocati = (beneficiar.profile.assignedPaznici || [])
         .flatMap(punct => punct.paznici.map(id => id.toString()));
 
@@ -408,7 +369,6 @@ const getTraseuComplet = async (req, res) => {
       oraIntrare: pontaj.ora_intrare,
       totalPuncte: pontaj.locationHistory.length
     });
-
   } catch (err) {
     res.status(500).json({ message: 'Eroare server: ' + err.message });
   }
@@ -429,8 +389,7 @@ const getIstoricPontaje = async (req, res) => {
 
     res.status(200).json(pontaje);
   } catch (err) {
-    console.error('Eroare la preluarea istoricului pontajelor:', err);
-    res.status(500).json({ message: 'Eroare de server: ' + err.message });
+    res.status(500).json({ message: 'Eroare server: ' + err.message });
   }
 };
 
