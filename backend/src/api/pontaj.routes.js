@@ -10,32 +10,22 @@ const {
   updateLocation,
   getLatestLocation,
   getTraseuComplet,
+  getTraseuIstoric,
   getIstoricPontaje,
   getIstoricBeneficiar
 } = require('../controllers/pontaj.controller');
 const { protect, authorize } = require('../middleware/auth.middleware');
 const { featureGPS } = require('../middleware/featureFlag.middleware');
 
-// Check-in / Check-out
 router.post('/check-in', protect, authorize('paznic'), checkIn);
 router.post('/check-out', protect, authorize('paznic'), checkOut);
-
-// Tură activă
 router.get('/active', protect, authorize('paznic', 'administrator'), getActivePontaj);
-
-// Angajați activi (admin)
 router.get('/angajati-activi', protect, authorize('admin', 'administrator'), getActiveEmployees);
-
-// Angajați activi (beneficiar)
 router.get('/angajati-activi-beneficiar', protect, authorize('beneficiar'), getActiveEmployeesForBeneficiar);
-
-// Update locație (paznic trimite coordonatele)
 router.post('/update-location', protect, authorize('paznic'), updateLocation);
-
-// Ultima locație
 router.get('/locatie/:paznicId', protect, authorize('admin', 'administrator', 'beneficiar'), getLatestLocation);
 
-// ✅ RUTĂ NOUĂ - Traseu complet al turei active (cu feature flag)
+// Traseu tură activă (live)
 router.get(
   '/traseu/:paznicId',
   protect,
@@ -44,10 +34,16 @@ router.get(
   getTraseuComplet
 );
 
-// Istoric 60 zile (admin)
-router.get('/istoric-60zile', protect, authorize('admin', 'administrator'), getIstoricPontaje);
+// ✅ Traseu tură încheiată (istoric) - după pontajId
+router.get(
+  '/traseu-istoric/:pontajId',
+  protect,
+  authorize('admin', 'administrator', 'beneficiar'),
+  featureGPS,
+  getTraseuIstoric
+);
 
-// Istoric 60 zile (beneficiar)
+router.get('/istoric-60zile', protect, authorize('admin', 'administrator'), getIstoricPontaje);
 router.get('/istoric-60zile-beneficiar', protect, authorize('beneficiar'), getIstoricBeneficiar);
 
 module.exports = router;

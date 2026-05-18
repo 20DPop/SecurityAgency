@@ -38,8 +38,8 @@ import IstoricIncidente from './admin/IstoricIncidente';
 import Documente from './admin/Documente';
 import AdaugaAdmin from './administrator/AdaugaAdmin';
 import GestionareAdmini from './administrator/GestionareAdmini';
-import TraseuLiveList from './beneficiar/TraseuLiveList'; // ✅ IMPORT NOU
-import TraseuLive from './beneficiar/TraseuLive';         // ✅ IMPORT NOU
+import TraseuLive from './beneficiar/TraseuLive';           // ✅ hartă live
+import TraseuIstoric from './beneficiar/TraseuIstoric';     // ✅ hartă istorică
 
 function Dashboard({ user }) {
   switch (user.role) {
@@ -63,9 +63,7 @@ export default function App() {
 
   useEffect(() => {
     const savedUser = localStorage.getItem("currentUser");
-    if (savedUser) {
-      setCurrentUser(JSON.parse(savedUser));
-    }
+    if (savedUser) setCurrentUser(JSON.parse(savedUser));
   }, []);
 
   const handleLogin = (user) => {
@@ -82,22 +80,22 @@ export default function App() {
     <Router>
       <Header user={currentUser} onLogout={handleLogout} />
       <Routes>
-        {/* Rute Publice */}
+        {/* Publice */}
         <Route path="/" element={currentUser ? <Dashboard user={currentUser} /> : <HomePage />} />
         <Route path="/login" element={<LoginPage onLogin={handleLogin} />} />
         <Route path="/loginB" element={<LoginPageB onLogin={handleLogin} />} />
         <Route path="/loginP" element={<LoginPageP onLogin={handleLogin} />} />
 
-        {/* --- DASHBOARD-URI PROTEJATE --- */}
+        {/* Dashboard-uri */}
         <Route path="/admin/dashboard" element={<ProtectedRoute user={currentUser} allowedRoles={['admin', 'administrator']}><AdminDashboard /></ProtectedRoute>} />
         <Route path="/beneficiar/dashboard" element={<ProtectedRoute user={currentUser} allowedRoles={['beneficiar', 'administrator']}><BeneficiarDashboard /></ProtectedRoute>} />
         <Route path="/paznic/dashboard" element={<ProtectedRoute user={currentUser} allowedRoles={['paznic', 'administrator']}><PaznicDashboard /></ProtectedRoute>} />
 
-        {/* --- RUTE ADMINISTRATOR --- */}
+        {/* Administrator */}
         <Route path="/administrator/adauga-admin" element={<ProtectedRoute user={currentUser} allowedRoles={['administrator']}><AdaugaAdmin /></ProtectedRoute>} />
         <Route path="/administrator/gestionare-admini" element={<ProtectedRoute user={currentUser} allowedRoles={['administrator']}><GestionareAdmini /></ProtectedRoute>} />
 
-        {/* --- RUTE ADMIN --- */}
+        {/* Admin */}
         <Route path="/adauga-angajat" element={<ProtectedRoute user={currentUser} allowedRoles={['admin', 'administrator']}><AdaugaAngajat /></ProtectedRoute>} />
         <Route path="/adauga-firma" element={<ProtectedRoute user={currentUser} allowedRoles={['admin', 'administrator']}><AdaugaFirma /></ProtectedRoute>} />
         <Route path="/alocare-paznici" element={<ProtectedRoute user={currentUser} allowedRoles={['admin', 'administrator']}><AlocarePaznici /></ProtectedRoute>} />
@@ -112,7 +110,7 @@ export default function App() {
         <Route path="/sesizari" element={<ProtectedRoute user={currentUser} allowedRoles={['admin', 'administrator']}><Solicitari /></ProtectedRoute>} />
         <Route path="/sesizare/:id" element={<ProtectedRoute user={currentUser} allowedRoles={['admin', 'administrator']}><SolicitariDetalii /></ProtectedRoute>} />
 
-        {/* --- RUTE BENEFICIAR --- */}
+        {/* Beneficiar */}
         <Route path="/incidenteB" element={<ProtectedRoute user={currentUser} allowedRoles={['beneficiar', 'administrator']}><IncidenteB /></ProtectedRoute>} />
         <Route path="/prezentaAngajati" element={<ProtectedRoute user={currentUser} allowedRoles={['beneficiar', 'administrator']}><PrezentaAngajati /></ProtectedRoute>} />
         <Route path="/solicitariB" element={<ProtectedRoute user={currentUser} allowedRoles={['beneficiar', 'administrator']}><SolicitariB /></ProtectedRoute>} />
@@ -123,25 +121,21 @@ export default function App() {
         <Route path="/angajatiB/:id" element={<ProtectedRoute user={currentUser} allowedRoles={['beneficiar', 'administrator']}><DetaliiAngajatB /></ProtectedRoute>} />
         <Route path="/urmarire/:id" element={<ProtectedRoute user={currentUser} allowedRoles={['admin', 'administrator', 'beneficiar']}><UrmarireAngajat /></ProtectedRoute>} />
 
-        {/* ✅ RUTE NOI GPS */}
-        <Route
-          path="/traseu-live-list"
-          element={
-            <ProtectedRoute user={currentUser} allowedRoles={['beneficiar', 'administrator']}>
-              <TraseuLiveList />
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/traseu-live/:paznicId"
-          element={
-            <ProtectedRoute user={currentUser} allowedRoles={['beneficiar', 'administrator']}>
-              <TraseuLive />
-            </ProtectedRoute>
-          }
-        />
+        {/* ✅ GPS - Traseu live (tură activă) */}
+        <Route path="/traseu-live/:paznicId" element={
+          <ProtectedRoute user={currentUser} allowedRoles={['beneficiar', 'administrator']}>
+            <TraseuLive />
+          </ProtectedRoute>
+        } />
 
-        {/* --- RUTE PAZNIC --- */}
+        {/* ✅ GPS - Traseu istoric (tură încheiată) */}
+        <Route path="/traseu-istoric/:pontajId" element={
+          <ProtectedRoute user={currentUser} allowedRoles={['beneficiar', 'administrator']}>
+            <TraseuIstoric />
+          </ProtectedRoute>
+        } />
+
+        {/* Paznic */}
         <Route path="/pontare/:qrCode" element={<ProtectedRoute user={currentUser} allowedRoles={['paznic', 'administrator']}><PontarePage /></ProtectedRoute>} />
         <Route path="/proces-verbal/:pontajId" element={<ProtectedRoute user={currentUser} allowedRoles={['paznic', 'administrator']}><ProcesVerbal /></ProtectedRoute>} />
         <Route path="/proces-verbal-predare/:pontajId" element={<ProtectedRoute user={currentUser} allowedRoles={['paznic', 'administrator']}><ProcesVerbalPredarePrimire /></ProtectedRoute>} />
