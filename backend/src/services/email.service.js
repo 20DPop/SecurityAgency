@@ -1,39 +1,46 @@
-// Cale: backend/src/services/email.service.js (VERSIUNE FINALĂ CU SENDGRID)
+// Cale: backend/src/services/email.service.js
 
-const sgMail = require('@sendgrid/mail');
+const { Resend } = require('resend');
 
-// Setează cheia API din variabilele de mediu
-sgMail.setApiKey(process.env.SENDGRID_API_KEY);
+const resend = new Resend(process.env.RESEND_API_KEY);
 
 /**
- * Trimite un email folosind API-ul SendGrid.
+ * Trimite un email folosind Resend.
  */
 const sendEmail = async ({ to, subject, html, senderName }) => {
   try {
     // Verificăm dacă variabilele esențiale sunt setate
-    if (!process.env.SENDGRID_API_KEY || !process.env.SENDGRID_VERIFIED_SENDER) {
-      console.error('EROARE CRITICĂ: Cheia API SendGrid sau expeditorul verificat nu sunt setate!');
+    if (!process.env.RESEND_API_KEY || !process.env.EMAIL_FROM) {
+      console.error(
+        'EROARE CRITICĂ: RESEND_API_KEY sau EMAIL_FROM nu sunt setate!'
+      );
       return;
     }
 
-    const msg = {
-      to: to,
-      from: {
-        email: process.env.SENDGRID_VERIFIED_SENDER, // FOLOSEȘTE EMAIL-UL VERIFICAT!
-        name: senderName || 'Aplicație Suport Pază'
-      },
-      subject: subject,
-      html: html,
-    };
+    const { data, error } = await resend.emails.send({
+      from: `${senderName || 'Aplicație Suport Pază'} <${process.env.EMAIL_FROM}>`,
+      to: Array.isArray(to) ? to : [to],
+      subject,
+      html,
+    });
 
-    // Trimite email-ul
-    await sgMail.send(msg);
-    console.log('Email trimis cu succes prin SendGrid!');
-    
+    if (error) {
+      console.error('Eroare Resend:', error);
+      throw new Error(error.message);
+    }
+
+    console.log(`Email trimis cu succes prin Resend! ID: ${data?.id}`);
+    return data;
+
   } catch (error) {
-    // SendGrid oferă erori foarte detaliate
-    console.error('Eroare la trimiterea email-ului prin SendGrid:', error.response ? error.response.body : error.message);
-    throw new Error('Eroare la trimiterea email-ului prin SendGrid.');
+    console.error(
+      'Eroare la trimiterea email-ului prin Resend:',
+      error.message
+    );
+
+    throw new Error(
+      `Eroare la trimiterea email-ului prin Resend: ${error.message}`
+    );
   }
 };
 
