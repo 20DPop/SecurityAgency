@@ -14,34 +14,56 @@ const allowedOrigins = [
 
 app.use((req, res, next) => {
   const origin = req.headers.origin;
+
   if (allowedOrigins.includes(origin)) {
     res.setHeader('Access-Control-Allow-Origin', origin);
   }
 
-  res.setHeader('Access-Control-Allow-Methods', 'GET,POST,PUT,PATCH,DELETE,OPTIONS');
-  res.setHeader('Access-Control-Allow-Headers', 'Content-Type,Authorization');
+  res.setHeader(
+    'Access-Control-Allow-Methods',
+    'GET,POST,PUT,PATCH,DELETE,OPTIONS'
+  );
+
+  res.setHeader(
+    'Access-Control-Allow-Headers',
+    'Content-Type,Authorization'
+  );
 
   if (req.method === 'OPTIONS') {
-    return res.sendStatus(200); // preflight răspuns instant
+    return res.sendStatus(200);
   }
 
   next();
 });
-// --- SFÂRȘIT CORS ---
 
 // Middleware JSON
 app.use(express.json());
 
-// Servește fișiere statice
+// ==============================
+// FISIERE STATICE
+// ==============================
+
+// Upload-uri existente
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
-// Importă rutele principale
+// APK Android
+app.use('/downloads', express.static(path.join(__dirname, 'downloads')));
+
+// ==============================
+// API
+// ==============================
+
 const apiRoutes = require('./src/api');
 app.use('/api', apiRoutes);
 
-// Rută de test
+// ==============================
+// TEST
+// ==============================
+
 app.get('/', (req, res) => {
-  res.status(200).json({ message: 'Salut! API-ul funcționează și acceptă cereri.' });
+  res.status(200).json({
+    message: 'Salut! API-ul funcționează și acceptă cereri.'
+  });
 });
 
 module.exports = app;
