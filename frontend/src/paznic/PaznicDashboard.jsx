@@ -2,6 +2,10 @@ import React from "react";
 import { Link } from "react-router-dom";
 import "./PaznicDashboard.css";
 
+const apkUrl = import.meta.env.PROD
+  ? `${import.meta.env.VITE_API_BASE_URL}/downloads/VigilentSecurity.apk`
+  : `/downloads/VigilentSecurity.apk`;
+
 export default function PaznicDashboard() {
   const qrCodePlaceholder = "scaneaza-un-cod-qr";
 
@@ -28,9 +32,9 @@ export default function PaznicDashboard() {
           </Link>
 
           <a
-            href="/downloads/VigilentSecurity.apk"
+            href={apkUrl}
             className="card link-card"
-            download
+            download="VigilentSecurity.apk"
           >
             <span style={{ fontSize: "2rem" }}>📱</span>
             <p>Aplicație Pontare</p>
