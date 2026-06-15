@@ -56,8 +56,7 @@ const trimiteEmailTraseu = async (pontaj) => {
     const paznic = await User.findById(pontaj.paznicId);
 
     if (!beneficiar || !beneficiar.email) return;
-    if (!paznic) return;
-    if (beneficiar.seeUpdates !== 1) return;
+    if (!paznic) return;  
 
     const { locationHistory } = pontaj;
     if (!locationHistory || locationHistory.length === 0) return;
