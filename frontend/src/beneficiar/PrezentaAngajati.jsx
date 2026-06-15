@@ -14,10 +14,6 @@ export default function PrezentaAngajati() {
   const [searchName, setSearchName] = useState("");
   const navigate = useNavigate();
 
-  // Verificăm dacă are acces GPS
-  const currentUser = JSON.parse(localStorage.getItem('currentUser') || '{}');
-  const areAccesGPS = currentUser.seeUpdates === 1;
-
   useEffect(() => {
     const fetchAngajatiActivi = async () => {
       setLoading(true);
@@ -31,7 +27,10 @@ export default function PrezentaAngajati() {
         setLoading(false);
       }
     };
-    if (view === "prezenta") fetchAngajatiActivi();
+
+    if (view === "prezenta") {
+      fetchAngajatiActivi();
+    }
   }, [view]);
 
   useEffect(() => {
@@ -49,6 +48,7 @@ export default function PrezentaAngajati() {
         }
       }
     };
+
     fetchIstoric();
   }, [view]);
 
@@ -61,8 +61,21 @@ export default function PrezentaAngajati() {
     p.paznicId?.prenume.toLowerCase().includes(searchName.toLowerCase())
   );
 
-  if (loading) return <div style={{ textAlign: 'center', padding: '50px' }}>Se încarcă...</div>;
-  if (error) return <div style={{ textAlign: 'center', padding: '50px', color: 'red' }}>Eroare: {error}</div>;
+  if (loading) {
+    return (
+      <div style={{ textAlign: 'center', padding: '50px' }}>
+        Se încarcă...
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div style={{ textAlign: 'center', padding: '50px', color: 'red' }}>
+        Eroare: {error}
+      </div>
+    );
+  }
 
   return (
     <div className="angajati-container">
@@ -70,19 +83,33 @@ export default function PrezentaAngajati() {
 
       <div className="view-options">
         <label>
-          <input type="radio" name="view" value="prezenta"
-            checked={view === "prezenta"} onChange={() => setView("prezenta")} />
+          <input
+            type="radio"
+            name="view"
+            value="prezenta"
+            checked={view === "prezenta"}
+            onChange={() => setView("prezenta")}
+          />
           {' '}Prezență curentă
         </label>
+
         <label>
-          <input type="radio" name="view" value="istoric"
+          <input
+            type="radio"
+            name="view"
+            value="istoric"
             checked={view === "istoric"}
-            onChange={() => { setView("istoric"); setSelectedPaznicId(null); setSearchName(""); }} />
+            onChange={() => {
+              setView("istoric");
+              setSelectedPaznicId(null);
+              setSearchName("");
+            }}
+          />
           {' '}Istoric prezență
         </label>
       </div>
 
-      {/* ===== PREZENȚĂ CURENTĂ ===== */}
+      {/* PREZENȚĂ CURENTĂ */}
       {view === "prezenta" && (
         <div className="table-responsive">
           <table className="angajati-table">
@@ -95,23 +122,20 @@ export default function PrezentaAngajati() {
               </tr>
             </thead>
             <tbody>
-              {angajatiActivi.length > 0 ? angajatiActivi.map((p) => (
-                <tr key={p._id}>
-                  <td>{p.paznicId?.nume}</td>
-                  <td>{p.paznicId?.prenume}</td>
-                  <td>{new Date(p.ora_intrare).toLocaleString('ro-RO')}</td>
-                  <td style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
+              {angajatiActivi.length > 0 ? (
+                angajatiActivi.map((p) => (
+                  <tr key={p._id}>
+                    <td>{p.paznicId?.nume}</td>
+                    <td>{p.paznicId?.prenume}</td>
+                    <td>{new Date(p.ora_intrare).toLocaleString('ro-RO')}</td>
+                    <td style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
+                      <button
+                        className="btn-urmarire"
+                        onClick={() => navigate(`/urmarire/${p.paznicId?._id}`)}
+                      >
+                        📍 Urmărire
+                      </button>
 
-                    {/* Buton urmărire punct (existent) */}
-                    <button
-                      className="btn-urmarire"
-                      onClick={() => navigate(`/urmarire/${p.paznicId?._id}`)}
-                    >
-                      📍 Urmărire
-                    </button>
-
-                    {/* ✅ Buton Detalii Traseu Live - doar cu seeUpdates = 1 */}
-                    {areAccesGPS && (
                       <button
                         onClick={() => navigate(`/traseu-live/${p.paznicId?._id}`)}
                         style={{
@@ -127,10 +151,10 @@ export default function PrezentaAngajati() {
                       >
                         🗺️ Traseu Live
                       </button>
-                    )}
-                  </td>
-                </tr>
-              )) : (
+                    </td>
+                  </tr>
+                ))
+              ) : (
                 <tr>
                   <td colSpan="4" style={{ textAlign: "center" }}>
                     Niciun angajat în tură acum.
@@ -142,17 +166,19 @@ export default function PrezentaAngajati() {
         </div>
       )}
 
-      {/* ===== ISTORIC - Lista paznici ===== */}
+      {/* ISTORIC - LISTA PAZNICI */}
       {view === "istoric" && !selectedPaznicId && (
         <div className="table-responsive">
           <div className="filter-container">
             <label htmlFor="searchName">Caută după nume: </label>
             <input
-              id="searchName" type="text"
+              id="searchName"
+              type="text"
               value={searchName}
               onChange={(e) => setSearchName(e.target.value)}
             />
           </div>
+
           <table className="angajati-table">
             <thead>
               <tr>
@@ -162,20 +188,22 @@ export default function PrezentaAngajati() {
               </tr>
             </thead>
             <tbody>
-              {filteredPazniciIstoric.length > 0 ? filteredPazniciIstoric.map(p => (
-                <tr key={p.paznicId._id}>
-                  <td>{p.paznicId?.nume}</td>
-                  <td>{p.paznicId?.prenume}</td>
-                  <td>
-                    <button
-                      className="btn-alege"
-                      onClick={() => setSelectedPaznicId(p.paznicId._id)}
-                    >
-                      Alege
-                    </button>
-                  </td>
-                </tr>
-              )) : (
+              {filteredPazniciIstoric.length > 0 ? (
+                filteredPazniciIstoric.map(p => (
+                  <tr key={p.paznicId._id}>
+                    <td>{p.paznicId?.nume}</td>
+                    <td>{p.paznicId?.prenume}</td>
+                    <td>
+                      <button
+                        className="btn-alege"
+                        onClick={() => setSelectedPaznicId(p.paznicId._id)}
+                      >
+                        Alege
+                      </button>
+                    </td>
+                  </tr>
+                ))
+              ) : (
                 <tr>
                   <td colSpan="3" style={{ textAlign: "center" }}>
                     Nicio pontare în ultimele 60 de zile.
@@ -187,7 +215,7 @@ export default function PrezentaAngajati() {
         </div>
       )}
 
-      {/* ===== ISTORIC - Lista pontaje pentru paznicul ales ===== */}
+      {/* ISTORIC PONTAJE */}
       {selectedPaznicId && (
         <div className="table-responsive">
           <button
@@ -197,14 +225,14 @@ export default function PrezentaAngajati() {
           >
             ⬅ Înapoi la lista paznicilor
           </button>
+
           <table className="angajati-table">
             <thead>
               <tr>
                 <th>Data</th>
                 <th>Check-in</th>
                 <th>Check-out</th>
-                {/* ✅ Coloana traseu apare doar cu seeUpdates = 1 */}
-                {areAccesGPS && <th>Traseu</th>}
+                <th>Traseu</th>
               </tr>
             </thead>
             <tbody>
@@ -215,32 +243,35 @@ export default function PrezentaAngajati() {
                   <tr key={p._id}>
                     <td>{new Date(p.ora_intrare).toLocaleDateString('ro-RO')}</td>
                     <td>{new Date(p.ora_intrare).toLocaleString('ro-RO')}</td>
-                    <td>{p.ora_iesire ? new Date(p.ora_iesire).toLocaleString('ro-RO') : '-'}</td>
+                    <td>
+                      {p.ora_iesire
+                        ? new Date(p.ora_iesire).toLocaleString('ro-RO')
+                        : '-'}
+                    </td>
 
-                    {/* ✅ Buton traseu istoric - doar pentru ture încheiate și cu GPS activ */}
-                    {areAccesGPS && (
-                      <td>
-                        {p.ora_iesire ? (
-                          <button
-                            onClick={() => navigate(`/traseu-istoric/${p._id}`)}
-                            style={{
-                              padding: '5px 10px',
-                              backgroundColor: '#1a1a2e',
-                              color: 'white',
-                              border: 'none',
-                              borderRadius: '4px',
-                              cursor: 'pointer',
-                              fontSize: '13px',
-                              whiteSpace: 'nowrap'
-                            }}
-                          >
-                            🗺️ Vezi Traseu
-                          </button>
-                        ) : (
-                          <span style={{ color: '#aaa', fontSize: '12px' }}>Tură activă</span>
-                        )}
-                      </td>
-                    )}
+                    <td>
+                      {p.ora_iesire ? (
+                        <button
+                          onClick={() => navigate(`/traseu-istoric/${p._id}`)}
+                          style={{
+                            padding: '5px 10px',
+                            backgroundColor: '#1a1a2e',
+                            color: 'white',
+                            border: 'none',
+                            borderRadius: '4px',
+                            cursor: 'pointer',
+                            fontSize: '13px',
+                            whiteSpace: 'nowrap'
+                          }}
+                        >
+                          🗺️ Vezi Traseu
+                        </button>
+                      ) : (
+                        <span style={{ color: '#aaa', fontSize: '12px' }}>
+                          Tură activă
+                        </span>
+                      )}
+                    </td>
                   </tr>
                 ))}
             </tbody>
@@ -249,7 +280,12 @@ export default function PrezentaAngajati() {
       )}
 
       {!selectedPaznicId && (
-        <button className="back-bottom-btn" onClick={() => navigate(-1)}>⬅ Înapoi</button>
+        <button
+          className="back-bottom-btn"
+          onClick={() => navigate(-1)}
+        >
+          ⬅ Înapoi
+        </button>
       )}
     </div>
   );

@@ -10,26 +10,7 @@ export default function TraseuIstoric() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
 
-  // ✅ Verificare seeUpdates
-  const currentUser = JSON.parse(localStorage.getItem('currentUser') || '{}');
-
-  if (currentUser.seeUpdates !== 1) {
-    return (
-      <div style={{
-        display: 'flex', flexDirection: 'column', alignItems: 'center',
-        justifyContent: 'center', height: '100vh', gap: '16px'
-      }}>
-        <h2 style={{ color: '#e74c3c' }}>⚠️ Funcție indisponibilă</h2>
-        <p style={{ color: '#666' }}>Această funcție nu este disponibilă momentan.</p>
-        <button onClick={() => navigate(-1)} style={{
-          padding: '10px 20px', cursor: 'pointer', borderRadius: '6px',
-          border: 'none', backgroundColor: '#007bff', color: '#fff'
-        }}>
-          ⬅ Înapoi
-        </button>
-      </div>
-    );
-  }
+ 
 
   useEffect(() => {
     const fetchTraseu = async () => {
