@@ -7,6 +7,35 @@ const fs = require('fs').promises;
 const path = require('path');
 const { PDFDocument, rgb, StandardFonts } = require('pdf-lib');
 
+// Zona "Fotografia obiectivului:" din șablon (coordonate pdf-lib, origine jos-stânga, A4 595x842).
+// Începe sub textul "Fotografia obiectivului:" și se termină deasupra semnăturilor.
+const FOTO_BOX = { x: 70, y: 292, w: 455, h: 138 };
+const FOTO_GAP = 8;
+
+const addPhotosToPage = async (pdfDoc, page, files) => {
+  const n = files.length;
+  const cellW = (FOTO_BOX.w - FOTO_GAP * (n - 1)) / n;
+
+  for (let i = 0; i < n; i++) {
+    const buf = files[i].buffer;
+    // Detectăm formatul după primii octeți, nu după ce declară clientul
+    const isPng = buf[0] === 0x89 && buf[1] === 0x50;
+    const isJpg = buf[0] === 0xff && buf[1] === 0xd8;
+    if (!isPng && !isJpg) throw new Error('Format de imagine necunoscut');
+
+    const img = isPng ? await pdfDoc.embedPng(buf) : await pdfDoc.embedJpg(buf);
+    const scale = Math.min(cellW / img.width, FOTO_BOX.h / img.height);
+    const w = img.width * scale;
+    const h = img.height * scale;
+    page.drawImage(img, {
+      x: FOTO_BOX.x + i * (cellW + FOTO_GAP) + (cellW - w) / 2,
+      y: FOTO_BOX.y + (FOTO_BOX.h - h) / 2,
+      width: w,
+      height: h
+    });
+  }
+};
+
 const createProcesVerbal = async (req, res) => {
   try {
     const paznicLogat = req.user;
@@ -18,10 +47,16 @@ const createProcesVerbal = async (req, res) => {
       ora_declansare_alarma,
       ora_prezentare_echipaj,
       ora_incheiere_misiune,
-      evenimente,
       agentSignatureDataURL,
       beneficiarySignatureDataURL
     } = req.body;
+
+    // Din multipart (aplicația cu poze), `evenimente` vine ca text JSON; din JSON simplu vine ca listă
+    let evenimente = req.body.evenimente;
+    if (typeof evenimente === 'string') {
+      try { evenimente = JSON.parse(evenimente); }
+      catch (e) { return res.status(400).json({ message: 'Lista de evenimente este invalidă.' }); }
+    }
 
     if (!beneficiaryId || !punctDeLucru) {
         return res.status(400).json({ message: 'Beneficiarul și punctul de lucru sunt obligatorii.' });
@@ -78,6 +113,16 @@ const createProcesVerbal = async (req, res) => {
       });
     }
     // --- SFÂRȘIT MODIFICARE ---
+
+    // Fotografia obiectivului (opțional, maximum 3)
+    if (req.files && req.files.length > 0) {
+      try {
+        await addPhotosToPage(pdfDoc, page1, req.files);
+      } catch (e) {
+        console.error('Eroare la încorporarea pozelor:', e.message);
+        return res.status(400).json({ message: 'Una dintre poze nu a putut fi procesată. Încercați alte fotografii (JPG sau PNG).' });
+      }
+    }
 
     if (agentSignatureDataURL) {
       const signatureImageBytes = Buffer.from(agentSignatureDataURL.split(',')[1], 'base64');

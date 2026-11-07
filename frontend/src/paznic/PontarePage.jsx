@@ -125,6 +125,51 @@ const ProcesVerbalModal = ({ pontajId, onSubmit, onCancel, loading }) => {
   );
 };
 
+// --- Alegerea modului de închidere a turei ---
+const AlegeInchidereModal = ({ onCuPv, onFaraPv, onCancel, loading }) => {
+  const [pasConfirmare, setPasConfirmare] = useState(false);
+  const [motiv, setMotiv] = useState("");
+
+  return (
+    <div className="modal-overlay">
+      <div className="modal-content">
+        <h2>Încheie tura</h2>
+        {!pasConfirmare ? (
+          <>
+            <p style={{ textAlign: 'center', marginBottom: '1.2rem' }}>Cum doriți să încheiați tura?</p>
+            <div className="buttons">
+              <button type="button" className="start-btn" onClick={onCuPv}>
+                Completez PV de predare-primire
+              </button>
+              <button type="button" className="end-btn" onClick={() => setPasConfirmare(true)}>
+                Închid tura fără PV
+              </button>
+              <button type="button" className="status-btn" onClick={onCancel}>Anulează</button>
+            </div>
+          </>
+        ) : (
+          <>
+            <p style={{ marginBottom: '1rem' }}>
+              Tura se va închide <b>fără proces verbal de predare-primire</b>. Acest lucru va fi vizibil în evidența turelor.
+            </p>
+            <div className="modal-form-group">
+              <label htmlFor="motivInchidere">Motiv (opțional)</label>
+              <textarea id="motivInchidere" rows="3" maxLength={300} value={motiv}
+                onChange={(e) => setMotiv(e.target.value)} placeholder="Ex: predare către alt agent, fără schimb de obiecte" />
+            </div>
+            <div className="modal-actions">
+              <button type="button" className="cancel-btn" onClick={() => setPasConfirmare(false)} disabled={loading}>Înapoi</button>
+              <button type="button" className="submit-pv-btn" onClick={() => onFaraPv(motiv.trim())} disabled={loading}>
+                {loading ? "Se încheie..." : "Confirmă închiderea"}
+              </button>
+            </div>
+          </>
+        )}
+      </div>
+    </div>
+  );
+};
+
 // --- Componenta Principală PontarePage ---
 export default function PontarePage() {
   const navigate = useNavigate();
@@ -132,6 +177,7 @@ export default function PontarePage() {
   const [message, setMessage] = useState("");
   const [activePontaj, setActivePontaj] = useState(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isChoiceOpen, setIsChoiceOpen] = useState(false);
   const [gpsStatus, setGpsStatus] = useState(''); // ✅ Status GPS vizibil pentru paznic
 
   // ✅ Ref pentru interval - nu provoacă re-render
@@ -241,20 +287,47 @@ export default function PontarePage() {
   // ============================================================
   // CHECK-OUT
   // ============================================================
+  // Închide tura. Dacă răspunsul s-a pierdut dar serverul a închis-o deja, nu mai dăm eroare.
+  const inchideTura = async (body) => {
+    try {
+      const { data } = await apiClient.post("/pontaj/check-out", body);
+      return data.message;
+    } catch (err) {
+      const res = await apiClient.get("/pontaj/active").catch(() => null);
+      if (!res || res.data !== null) throw err;
+      return "Tura a fost încheiată.";
+    }
+  };
+
   const handleFinalizeShift = async (procesVerbalData) => {
     setLoading(true);
     setMessage("Se salvează procesul verbal...");
     try {
+      // Idempotent pe server: dacă PV-ul există deja, răspunde 200 și continuăm cu check-out
       await apiClient.post("/proces-verbal-predare/create", procesVerbalData);
       setMessage("Proces verbal salvat. Se încheie tura...");
-
-      const { data: checkoutData } = await apiClient.post("/pontaj/check-out");
+      const mesajFinal = await inchideTura();
 
       setActivePontaj(null); // ✅ Asta oprește și intervalul GPS
       setIsModalOpen(false);
-      setMessage(`✅ ${checkoutData.message}`);
+      setMessage(`✅ ${mesajFinal}`);
     } catch (err) {
-      setMessage(`❌ ${err.response?.data?.message || "A apărut o eroare."}`);
+      setMessage(`❌ ${err.response?.data?.message || "A apărut o eroare. Puteți apăsa din nou „Salvează și Încheie Tura”."}`);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleFaraPv = async (motiv) => {
+    setLoading(true);
+    setMessage("Se încheie tura...");
+    try {
+      const mesajFinal = await inchideTura({ fara_pv: true, motiv });
+      setActivePontaj(null); // oprește intervalul GPS
+      setIsChoiceOpen(false);
+      setMessage(`✅ ${mesajFinal} (fără proces verbal)`);
+    } catch (err) {
+      setMessage(`❌ ${err.response?.data?.message || "Nu s-a putut încheia tura. Încercați din nou."}`);
     } finally {
       setLoading(false);
     }
@@ -262,6 +335,14 @@ export default function PontarePage() {
 
   return (
     <div className="pontare-page">
+      {isChoiceOpen && activePontaj && (
+        <AlegeInchidereModal
+          loading={loading}
+          onCancel={() => setIsChoiceOpen(false)}
+          onCuPv={() => { setIsChoiceOpen(false); setIsModalOpen(true); }}
+          onFaraPv={handleFaraPv}
+        />
+      )}
       {isModalOpen && activePontaj && (
         <ProcesVerbalModal
           pontajId={activePontaj._id}
@@ -301,7 +382,7 @@ export default function PontarePage() {
           <button className="start-btn" onClick={handleIncepeTura} disabled={loading || activePontaj}>
             Începe Tura
           </button>
-          <button className="end-btn" onClick={() => setIsModalOpen(true)} disabled={loading || !activePontaj}>
+          <button className="end-btn" onClick={() => setIsChoiceOpen(true)} disabled={loading || !activePontaj}>
             Termină Tura
           </button>
         </div>

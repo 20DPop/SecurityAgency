@@ -1,118 +1,15 @@
 // Cale: backend/src/controllers/pontaj.controller.js
+const mongoose = require('mongoose');
 const Pontaj = require('../models/pontaj.model');
 const User = require('../models/user.model');
 const ProcesVerbalPredarePrimire = require('../models/procesVerbalPredarePrimire.model');
-const { sendEmail } = require('../services/email.service');
+const { buildMapUrl, programareEmail, retrimiteAcum } = require('../services/traseuEmail.service');
 
-// ============================================================
-// FUNCȚIE AJUTĂTOARE - Generează URL harta statică Mapbox
-// ============================================================
-const genereazaHartaURL = (locationHistory) => {
-  if (!locationHistory || locationHistory.length === 0) return null;
+// Punctele pot sosi în loturi, la momente diferite: le ordonăm după timestamp înainte de afișare
+const sortPuncte = (h) =>
+  [...(h || [])].sort((a, b) => new Date(a.timestamp) - new Date(b.timestamp));
 
-  const total = locationHistory.length;
-  const step = Math.ceil(total / 100);
-  const puncteReduse = locationHistory.filter((_, i) => i % step === 0);
-
-  const primul = locationHistory[0];
-  const ultimul = locationHistory[locationHistory.length - 1];
-  const coordinates = puncteReduse.map(p => [p.longitude, p.latitude]);
-
-  const geojson = {
-    type: 'FeatureCollection',
-    features: [
-      {
-        type: 'Feature',
-        properties: { stroke: '#ff0000', 'stroke-width': 3, 'stroke-opacity': 0.9 },
-        geometry: { type: 'LineString', coordinates }
-      },
-      {
-        type: 'Feature',
-        properties: { 'marker-color': '#00b300', 'marker-size': 'large', 'marker-symbol': 'star' },
-        geometry: { type: 'Point', coordinates: [primul.longitude, primul.latitude] }
-      },
-      {
-        type: 'Feature',
-        properties: { 'marker-color': '#cc0000', 'marker-size': 'large', 'marker-symbol': 'embassy' },
-        geometry: { type: 'Point', coordinates: [ultimul.longitude, ultimul.latitude] }
-      }
-    ]
-  };
-
-  const geojsonEncoded = encodeURIComponent(JSON.stringify(geojson));
-  return (
-    `https://api.mapbox.com/styles/v1/mapbox/streets-v11/static/` +
-    `geojson(${geojsonEncoded})/auto/800x500?padding=50` +
-    `&access_token=${process.env.MAPBOX_TOKEN}`
-  );
-};
-
-// ============================================================
-// FUNCȚIE AJUTĂTOARE - Trimite email cu traseul la check-out
-// ============================================================
-const trimiteEmailTraseu = async (pontaj) => {
-  try {
-    const beneficiar = await User.findById(pontaj.beneficiaryId);
-    const paznic = await User.findById(pontaj.paznicId);
-
-    if (!beneficiar || !beneficiar.email) return;
-    if (!paznic) return;  
-
-    const { locationHistory } = pontaj;
-    if (!locationHistory || locationHistory.length === 0) return;
-
-    const hartaURL = genereazaHartaURL(locationHistory);
-    const dataAzi = new Date().toLocaleDateString('ro-RO', {
-      weekday: 'long', year: 'numeric', month: 'long', day: 'numeric'
-    });
-
-    const oraIntrare = pontaj.ora_intrare
-      ? new Date(pontaj.ora_intrare).toLocaleTimeString('ro-RO', { hour: '2-digit', minute: '2-digit' })
-      : 'N/A';
-    const oraIesire = pontaj.ora_iesire
-      ? new Date(pontaj.ora_iesire).toLocaleTimeString('ro-RO', { hour: '2-digit', minute: '2-digit' })
-      : 'N/A';
-
-    const durataMs = new Date(pontaj.ora_iesire) - new Date(pontaj.ora_intrare);
-    const durataOre = Math.floor(durataMs / (1000 * 60 * 60));
-    const durataMinute = Math.floor((durataMs % (1000 * 60 * 60)) / (1000 * 60));
-
-    await sendEmail({
-      to: beneficiar.email,
-      subject: `Raport traseu paznic - ${dataAzi}`,
-      senderName: 'SecurityApp',
-      html: `
-        <div style="font-family: Arial, sans-serif; max-width: 650px; margin: auto; border: 1px solid #ddd; border-radius: 8px; overflow: hidden;">
-          <div style="background-color: #1a1a2e; padding: 24px; text-align: center;">
-            <h1 style="color: #ffffff; margin: 0; font-size: 22px;">🗺️ Raport Traseu Zilnic</h1>
-            <p style="color: #aaaaaa; margin: 8px 0 0 0; font-size: 14px;">${dataAzi}</p>
-          </div>
-          <div style="padding: 28px;">
-            <p style="color: #555;">Tura paznicului <strong>${paznic.nume} ${paznic.prenume}</strong> a fost încheiată.</p>
-            <div style="background: #f8f9fa; border-radius: 8px; padding: 20px; margin: 20px 0;">
-              <table style="width: 100%; border-collapse: collapse;">
-                <tr><td style="padding: 8px 0; color: #666;">🕐 Check-in:</td><td style="font-weight: bold;">${oraIntrare}</td></tr>
-                <tr><td style="padding: 8px 0; color: #666;">🕕 Check-out:</td><td style="font-weight: bold;">${oraIesire}</td></tr>
-                <tr><td style="padding: 8px 0; color: #666;">⏱️ Durata:</td><td style="font-weight: bold;">${durataOre}h ${durataMinute}min</td></tr>
-                <tr><td style="padding: 8px 0; color: #666;">📍 Puncte GPS:</td><td style="font-weight: bold;">${locationHistory.length}</td></tr>
-              </table>
-            </div>
-            ${hartaURL
-              ? `<img src="${hartaURL}" style="width:100%;border-radius:8px;" alt="Harta traseu"/>`
-              : `<p style="color:#e74c3c;">Nu s-au înregistrat date GPS.</p>`
-            }
-          </div>
-          <div style="background:#f0f0f0;padding:16px;text-align:center;">
-            <p style="margin:0;color:#999;font-size:11px;">Email generat automat de SecurityApp.</p>
-          </div>
-        </div>
-      `
-    });
-    console.log(`[GPS Email] Trimis la ${beneficiar.email}`);
-  } catch (error) {
-    console.error('[GPS Email] Eroare:', error.message);
-  }
-};
+// (Generarea hărții și trimiterea emailului cu traseul sunt în services/traseuEmail.service.js)
 
 // ============================================================
 // CHECK-IN
@@ -162,25 +59,40 @@ const checkIn = async (req, res) => {
 const checkOut = async (req, res) => {
   try {
     const paznicId = req.user._id;
-    const turaActiva = await Pontaj.findOne({ paznicId, ora_iesire: null });
 
+    // fara_pv: agentul alege explicit să închidă tura fără proces verbal de predare-primire
+    const cereFaraPv = req.body?.fara_pv === true || req.body?.fara_pv === 'true';
+    const motiv = typeof req.body?.motiv === 'string' ? req.body.motiv.trim().slice(0, 300) : '';
+
+    const turaActiva = await Pontaj.findOne({ paznicId, ora_iesire: null }).select('_id');
     if (!turaActiva) {
       return res.status(404).json({ message: 'Nu aveți nicio tură activă.' });
     }
 
     const pvPredare = await ProcesVerbalPredarePrimire.findOne({ pontajId: turaActiva._id });
-    if (!pvPredare) {
+
+    // Fără cerere explicită, PV-ul rămâne obligatoriu
+    if (!pvPredare && !cereFaraPv) {
       return res.status(400).json({ message: 'Procesul Verbal de Predare-Primire lipsește.' });
     }
 
-    turaActiva.ora_iesire = new Date();
-    await turaActiva.save();
+    // Dacă PV-ul există deja, tura se consideră închisă cu PV, chiar dacă s-a cerut "fără PV"
+    const tipInchidere = pvPredare ? 'cu_pv' : 'fara_pv';
+    // programareEmail(): emailul cu traseul se trimite de worker, cu retry automat (vezi traseuEmail.service.js)
+    const set = { ora_iesire: new Date(), tipInchidere, ...programareEmail() };
+    if (tipInchidere === 'fara_pv' && motiv) set.motivInchidere = motiv;
 
-    trimiteEmailTraseu(turaActiva).catch(err =>
-      console.error('[GPS Email] Eroare fundal:', err.message)
+    // Atomic: două cereri simultane nu pot închide tura de două ori
+    const pontajInchis = await Pontaj.findOneAndUpdate(
+      { _id: turaActiva._id, ora_iesire: null },
+      { $set: set },
+      { new: true }
     );
+    if (!pontajInchis) {
+      return res.status(404).json({ message: 'Nu aveți nicio tură activă.' });
+    }
 
-    res.status(200).json({ message: 'Check-out efectuat cu succes.' });
+    res.status(200).json({ message: 'Check-out efectuat cu succes.', tipInchidere });
   } catch (error) {
     res.status(500).json({ message: `Eroare server: ${error.message}` });
   }
@@ -232,35 +144,105 @@ const getActiveEmployeesForBeneficiar = async (req, res) => {
 // ============================================================
 const updateLocation = async (req, res) => {
   try {
-    const { latitude, longitude } = req.body;
-    if (!latitude || !longitude) {
+    const lat = Number(req.body.latitude);
+    const lng = Number(req.body.longitude);
+    if (!Number.isFinite(lat) || !Number.isFinite(lng)) {
       return res.status(400).json({ message: 'Coordonate invalide!' });
     }
 
-    const pontaj = await Pontaj.findOne({ paznicId: req.user._id, ora_iesire: null });
+    const timestamp = new Date();
+
+    // $push atomic: nu mai încărcăm tot istoricul și nu mai apar conflicte de versiune
+    const pontaj = await Pontaj.findOneAndUpdate(
+      { paznicId: req.user._id, ora_iesire: null },
+      { $push: { locationHistory: { latitude: lat, longitude: lng, timestamp } } },
+      { projection: { beneficiaryId: 1 } }
+    );
     if (!pontaj) {
       return res.status(404).json({ message: 'Nu există tură activă.' });
     }
-
-    pontaj.locationHistory.push({
-      latitude: Number(latitude),
-      longitude: Number(longitude),
-      timestamp: new Date()
-    });
-    await pontaj.save();
 
     const io = req.app.get('io');
     if (io && pontaj.beneficiaryId) {
       io.to(`beneficiar_${pontaj.beneficiaryId.toString()}`).emit('guard_moved', {
         paznicId: req.user._id.toString(),
         numePaznic: `${req.user.nume} ${req.user.prenume}`,
-        lat: Number(latitude),
-        lng: Number(longitude),
-        timestamp: new Date()
+        lat,
+        lng,
+        timestamp
       });
     }
 
     res.status(200).json({ message: 'Locația actualizată.' });
+  } catch (err) {
+    res.status(500).json({ message: 'Eroare server: ' + err.message });
+  }
+};
+
+// ============================================================
+// UPDATE LOCAȚIE ÎN LOT (coada offline din aplicația mobilă)
+// Idempotent: punctele deja existente (același timestamp) sunt ignorate, deci retry-ul e sigur.
+// ============================================================
+const BATCH_MAX = 500;
+const GRATIE_DUPA_INCHIDERE_MS = 48 * 60 * 60 * 1000; // acceptăm puncte întârziate 48h după check-out
+
+const updateLocationBatch = async (req, res) => {
+  try {
+    const { pontajId, points } = req.body || {};
+    if (!mongoose.Types.ObjectId.isValid(pontajId) || !Array.isArray(points) || points.length === 0 || points.length > BATCH_MAX) {
+      return res.status(400).json({ message: 'Date invalide.' });
+    }
+
+    const pontaj = await Pontaj.findById(pontajId)
+      .select('paznicId beneficiaryId ora_intrare ora_iesire locationHistory.timestamp');
+    if (!pontaj) return res.status(404).json({ message: 'Pontajul nu există.' });
+    if (pontaj.paznicId.toString() !== req.user._id.toString()) {
+      return res.status(403).json({ message: 'Acest pontaj aparține altui cont.' });
+    }
+    const acum = Date.now();
+    if (pontaj.ora_iesire && acum - pontaj.ora_iesire.getTime() > GRATIE_DUPA_INCHIDERE_MS) {
+      return res.status(410).json({ message: 'Tura a fost închisă de prea mult timp.' });
+    }
+
+    // Intervalul acceptat: de la intrare (-5 min) până acum (+5 min) sau până la ieșire (+10 min)
+    const minTs = pontaj.ora_intrare.getTime() - 5 * 60 * 1000;
+    const maxTs = pontaj.ora_iesire
+      ? pontaj.ora_iesire.getTime() + 10 * 60 * 1000
+      : acum + 5 * 60 * 1000;
+
+    const existente = new Set((pontaj.locationHistory || []).map((p) => new Date(p.timestamp).getTime()));
+    const noi = [];
+    for (const p of points) {
+      const lat = Number(p.latitude);
+      const lng = Number(p.longitude);
+      const ts = Number(p.timestamp);
+      if (!Number.isFinite(lat) || !Number.isFinite(lng) || !Number.isFinite(ts)) continue;
+      if (Math.abs(lat) > 90 || Math.abs(lng) > 180) continue;
+      if (ts < minTs || ts > maxTs) continue;
+      if (existente.has(ts)) continue;
+      existente.add(ts); // ignoră și duplicatele din același lot
+      noi.push({ latitude: lat, longitude: lng, timestamp: new Date(ts) });
+    }
+    noi.sort((a, b) => a.timestamp - b.timestamp);
+
+    if (noi.length > 0) {
+      await Pontaj.updateOne({ _id: pontaj._id }, { $push: { locationHistory: { $each: noi } } });
+    }
+
+    // Marker live către beneficiar: doar dacă ultimul punct e recent (nu mutăm markerul pe poziții vechi)
+    const ultim = noi[noi.length - 1];
+    const io = req.app.get('io');
+    if (io && ultim && !pontaj.ora_iesire && acum - ultim.timestamp.getTime() < 2 * 60 * 1000) {
+      io.to(`beneficiar_${pontaj.beneficiaryId.toString()}`).emit('guard_moved', {
+        paznicId: req.user._id.toString(),
+        numePaznic: `${req.user.nume} ${req.user.prenume}`,
+        lat: ultim.latitude,
+        lng: ultim.longitude,
+        timestamp: ultim.timestamp
+      });
+    }
+
+    res.status(200).json({ received: points.length, saved: noi.length });
   } catch (err) {
     res.status(500).json({ message: 'Eroare server: ' + err.message });
   }
@@ -309,7 +291,7 @@ const getTraseuComplet = async (req, res) => {
     }
 
     res.status(200).json({
-      puncte: pontaj.locationHistory,
+      puncte: sortPuncte(pontaj.locationHistory),
       oraIntrare: pontaj.ora_intrare,
       totalPuncte: pontaj.locationHistory.length
     });
@@ -340,7 +322,7 @@ const getTraseuIstoric = async (req, res) => {
       }
     }
 
-    const hartaURL = genereazaHartaURL(pontaj.locationHistory);
+    const hartaURL = buildMapUrl(sortPuncte(pontaj.locationHistory));
 
     res.status(200).json({
       hartaURL,
@@ -348,6 +330,29 @@ const getTraseuIstoric = async (req, res) => {
       oraIesire: pontaj.ora_iesire,
       totalPuncte: pontaj.locationHistory.length,
       paznic: pontaj.paznicId
+    });
+  } catch (err) {
+    res.status(500).json({ message: 'Eroare server: ' + err.message });
+  }
+};
+
+// ============================================================
+// RETRIMITE EMAILUL CU TRASEUL (admin)
+// ============================================================
+const retrimiteEmailTraseu = async (req, res) => {
+  try {
+    const { pontajId } = req.params;
+    if (!mongoose.Types.ObjectId.isValid(pontajId)) {
+      return res.status(400).json({ message: 'Id invalid.' });
+    }
+    const rezultat = await retrimiteAcum(pontajId);
+    if (!rezultat) {
+      return res.status(404).json({ message: 'Pontajul nu există, este încă activ sau emailul se trimite chiar acum.' });
+    }
+    res.status(200).json({
+      emailStatus: rezultat.emailStatus,
+      emailSentTo: rezultat.emailSentTo,
+      emailLastError: rezultat.emailLastError || null
     });
   } catch (err) {
     res.status(500).json({ message: 'Eroare server: ' + err.message });
@@ -403,9 +408,11 @@ module.exports = {
   getActiveEmployees,
   getActiveEmployeesForBeneficiar,
   updateLocation,
+  updateLocationBatch,
   getLatestLocation,
   getTraseuComplet,
   getTraseuIstoric,
+  retrimiteEmailTraseu,
   getIstoricPontaje,
   getIstoricBeneficiar
 };

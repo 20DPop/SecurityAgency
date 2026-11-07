@@ -8,9 +8,11 @@ const {
   getActiveEmployees,
   getActiveEmployeesForBeneficiar,
   updateLocation,
+  updateLocationBatch,
   getLatestLocation,
   getTraseuComplet,
   getTraseuIstoric,
+  retrimiteEmailTraseu,
   getIstoricPontaje,
   getIstoricBeneficiar
 } = require('../controllers/pontaj.controller');
@@ -49,6 +51,14 @@ router.post(
   updateLocation
 );
 
+// Coada GPS offline din aplicația mobilă (trimitere în loturi)
+router.post(
+  '/update-location-batch',
+  protect,
+  authorize('paznic'),
+  updateLocationBatch
+);
+
 router.get(
   '/locatie/:paznicId',
   protect,
@@ -72,6 +82,14 @@ router.get(
   getTraseuIstoric
 );
 
+// Retrimite emailul cu traseul pentru o tură încheiată (admin)
+router.post(
+  '/:pontajId/retrimite-email',
+  protect,
+  authorize('admin', 'administrator'),
+  retrimiteEmailTraseu
+);
+
 router.get(
   '/istoric-60zile',
   protect,
@@ -87,4 +105,3 @@ router.get(
 );
 
 module.exports = router;
-

@@ -1,10 +1,34 @@
 // frontend/src/paznic/ProcesVerbal.jsx
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import apiClient from '../apiClient';
 import './ProcesVerbal.css';
 import SignaturePadWrapper from '../components/SignaturePad';
+
+const MAX_POZE = 3;
+
+// Redimensionează poza la max 1280px și o convertește în JPEG (și HEIC/PNG mari devin ~300 KB).
+// Browserul aplică singur orientarea EXIF la desenarea pe canvas.
+const redimensioneaza = (file, maxDim = 1280, quality = 0.75) =>
+  new Promise((resolve, reject) => {
+    const url = URL.createObjectURL(file);
+    const img = new Image();
+    img.onload = () => {
+      const scale = Math.min(1, maxDim / Math.max(img.width, img.height));
+      const canvas = document.createElement('canvas');
+      canvas.width = Math.round(img.width * scale);
+      canvas.height = Math.round(img.height * scale);
+      const ctx = canvas.getContext('2d');
+      ctx.fillStyle = '#ffffff'; // PNG-urile transparente nu devin negre în JPEG
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+      ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+      URL.revokeObjectURL(url);
+      canvas.toBlob((b) => (b ? resolve(b) : reject(new Error('conversie'))), 'image/jpeg', quality);
+    };
+    img.onerror = () => { URL.revokeObjectURL(url); reject(new Error('format')); };
+    img.src = url;
+  });
 
 export default function ProcesVerbal() {
   const navigate = useNavigate();
@@ -27,6 +51,14 @@ export default function ProcesVerbal() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [signaturesSaved, setSignaturesSaved] = useState({ agent: false, beneficiary: false });
+  const [poze, setPoze] = useState([]); // [{ id, blob, preview }]
+  const cameraInputRef = useRef(null);
+  const galleryInputRef = useRef(null);
+  const pozeRef = useRef([]);
+  pozeRef.current = poze;
+
+  // Eliberăm previzualizările la ieșirea din pagină
+  useEffect(() => () => pozeRef.current.forEach(p => URL.revokeObjectURL(p.preview)), []);
 
   useEffect(() => {
     const fetchAssignedData = async () => {
@@ -53,9 +85,33 @@ export default function ProcesVerbal() {
 
   const handleChange = (e) => setFormData(prev => ({ ...prev, [e.target.name]: e.target.value }));
   const handleEventChange = (index, e) => {
-    const updatedEvenimente = [...formData.evenimente];
-    updatedEvenimente[index][e.target.name] = e.target.value;
-    setFormData(prev => ({ ...prev, evenimente: updatedEvenimente }));
+    const { name, value } = e.target;
+    setFormData(prev => ({
+      ...prev,
+      evenimente: prev.evenimente.map((ev, i) => (i === index ? { ...ev, [name]: value } : ev))
+    }));
+  };
+  const handlePozeSelectate = async (e) => {
+    const files = Array.from(e.target.files || []);
+    e.target.value = ''; // permite alegerea aceleiași poze din nou
+    const locuri = MAX_POZE - poze.length;
+    if (files.length > locuri) setError(`Puteți adăuga maximum ${MAX_POZE} poze.`);
+    else setError('');
+    for (const file of files.slice(0, Math.max(0, locuri))) {
+      try {
+        const blob = await redimensioneaza(file);
+        setPoze(prev => (prev.length >= MAX_POZE ? prev : [...prev, { id: `${Date.now()}-${Math.random()}`, blob, preview: URL.createObjectURL(blob) }]));
+      } catch (err) {
+        setError('Poza nu a putut fi citită. Folosiți o imagine JPG sau PNG.');
+      }
+    }
+  };
+  const handleRemovePoza = (id) => {
+    setPoze(prev => {
+      const p = prev.find(x => x.id === id);
+      if (p) URL.revokeObjectURL(p.preview);
+      return prev.filter(x => x.id !== id);
+    });
   };
   const handleAddRow = () => setFormData(prev => ({ ...prev, evenimente: [...prev.evenimente, { dataOraReceptionarii: '', tipulAlarmei: '', echipajAlarmat: '', oraSosirii: '', cauzeleAlarmei: '', modulDeSolutionare: '', observatii: '' }]}));
   const handleRemoveRow = (index) => {
@@ -87,7 +143,13 @@ export default function ProcesVerbal() {
     }
     setLoading(true);
     try {
-      await apiClient.post(`/proces-verbal/create`, formData);
+      // multipart: câmpurile text + poze. `evenimente` pleacă ca text JSON.
+      const { evenimente, ...campuri } = formData;
+      const fd = new FormData();
+      Object.entries(campuri).forEach(([k, v]) => fd.append(k, v));
+      fd.append('evenimente', JSON.stringify(evenimente));
+      poze.forEach((p, i) => fd.append('poze', p.blob, `poza${i + 1}.jpg`));
+      await apiClient.post(`/proces-verbal/create`, fd);
       alert('✅ Proces verbal salvat cu succes!');
       navigate('/');
     } catch (err) {
@@ -173,6 +235,27 @@ export default function ProcesVerbal() {
             <button type="button" className="add-row-btn" onClick={handleAddRow}>+ Adaugă Rând</button>
         </fieldset>
         
+        <fieldset disabled={areAllSignaturesSaved}>
+            <legend>Fotografia obiectivului (opțional, maximum {MAX_POZE})</legend>
+            <input ref={cameraInputRef} type="file" accept="image/*" capture="environment" onChange={handlePozeSelectate} style={{ display: 'none' }} />
+            <input ref={galleryInputRef} type="file" accept="image/*" multiple onChange={handlePozeSelectate} style={{ display: 'none' }} />
+            <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap', marginBottom: '12px' }}>
+              <button type="button" className="add-row-btn" onClick={() => cameraInputRef.current?.click()} disabled={poze.length >= MAX_POZE}>📷 Fă poză</button>
+              <button type="button" className="add-row-btn" onClick={() => galleryInputRef.current?.click()} disabled={poze.length >= MAX_POZE}>🖼️ Alege din galerie</button>
+            </div>
+            {poze.length > 0 && (
+              <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap' }}>
+                {poze.map((p, i) => (
+                  <div key={p.id} style={{ position: 'relative' }}>
+                    <img src={p.preview} alt={`Poza ${i + 1}`} style={{ width: '140px', height: '105px', objectFit: 'cover', borderRadius: '6px', border: '1px solid #ccc' }} />
+                    <button type="button" onClick={() => handleRemovePoza(p.id)} title="Șterge poza"
+                      style={{ position: 'absolute', top: '-8px', right: '-8px', width: '24px', height: '24px', borderRadius: '50%', border: 'none', background: '#dc3545', color: '#fff', cursor: 'pointer' }}>✕</button>
+                  </div>
+                ))}
+              </div>
+            )}
+        </fieldset>
+
         <div className="signatures-grid">
             <fieldset>
                 <legend>Semnătură Agent Intervenție</legend>

@@ -15,6 +15,7 @@ const ProcesVerbal = require('./src/models/procesVerbal.model');
 const ProcesVerbalPredarePrimire = require('./src/models/procesVerbalPredarePrimire.model');
 const RaportEveniment = require('./src/models/raportEveniment.model');
 const Pontaj = require('./src/models/pontaj.model');
+const { startTraseuEmailWorker } = require('./src/services/traseuEmail.service');
 
 // ✅ Cream serverul HTTP și atașăm Socket.io
 const httpServer = http.createServer(app);
@@ -92,6 +93,9 @@ const startServer = () => {
     console.log(`🚀 Serverul a pornit și ascultă pe http://${HOST}:${PORT}`);
     console.log(`🔌 Socket.io activ`);
   });
+
+  // Worker care trimite emailurile cu traseul (și reîncearcă dacă eșuează)
+  startTraseuEmailWorker(cron);
 };
 
 connectDB()

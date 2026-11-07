@@ -7,14 +7,15 @@ const resend = new Resend(process.env.RESEND_API_KEY);
 /**
  * Trimite un email folosind Resend.
  */
-const sendEmail = async ({ to, subject, html, senderName }) => {
+const sendEmail = async ({ to, subject, html, senderName, attachments }) => {
   try {
     // Verificăm dacă variabilele esențiale sunt setate
     if (!process.env.RESEND_API_KEY || !process.env.EMAIL_FROM) {
       console.error(
         'EROARE CRITICĂ: RESEND_API_KEY sau EMAIL_FROM nu sunt setate!'
       );
-      return;
+      // Aruncăm eroare: altfel apelantul ar crede că emailul a fost trimis
+      throw new Error('RESEND_API_KEY sau EMAIL_FROM nu sunt setate.');
     }
 
     const { data, error } = await resend.emails.send({
@@ -22,6 +23,7 @@ const sendEmail = async ({ to, subject, html, senderName }) => {
       to: Array.isArray(to) ? to : [to],
       subject,
       html,
+      ...(attachments && attachments.length ? { attachments } : {}),
     });
 
     if (error) {

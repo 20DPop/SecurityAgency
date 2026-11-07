@@ -37,14 +37,18 @@ app.use((req, res, next) => {
 });
 
 // Middleware JSON
-app.use(express.json());
+// Semnăturile (base64) pot depăși limita implicită de 100kb
+app.use(express.json({ limit: '5mb' }));
 
 // ==============================
 // FISIERE STATICE
 // ==============================
 
-// Upload-uri existente
-app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
+// PDF-urile din /uploads NU mai sunt publice: se deschid cu linkuri temporare, prin /api/files (vezi files.routes.js).
+// Pe durata trecerii (până când frontend-ul nou e publicat) poți reactiva vechiul comportament cu UPLOADS_PUBLIC=true.
+if (process.env.UPLOADS_PUBLIC === 'true') {
+  app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
+}
 
 // APK Android
 app.use('/downloads', express.static(path.join(__dirname, 'downloads')));
