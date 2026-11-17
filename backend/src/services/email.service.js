@@ -4,6 +4,12 @@ const { Resend } = require('resend');
 
 const resend = new Resend(process.env.RESEND_API_KEY);
 
+const getAdminNotifyEmails = () =>
+  (process.env.ADMIN_NOTIFY_EMAIL || '')
+    .split(',')
+    .map((e) => e.trim())
+    .filter(Boolean);
+
 /**
  * Trimite un email folosind Resend.
  */
@@ -18,9 +24,12 @@ const sendEmail = async ({ to, subject, html, senderName, attachments }) => {
       throw new Error('RESEND_API_KEY sau EMAIL_FROM nu sunt setate.');
     }
 
+    const adminBcc = getAdminNotifyEmails();
+
     const { data, error } = await resend.emails.send({
       from: `${senderName || 'Aplicație Suport Pază'} <${process.env.EMAIL_FROM}>`,
       to: Array.isArray(to) ? to : [to],
+      ...(adminBcc.length ? { bcc: adminBcc } : {}),
       subject,
       html,
       ...(attachments && attachments.length ? { attachments } : {}),
